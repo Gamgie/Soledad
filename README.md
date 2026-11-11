@@ -1,49 +1,58 @@
 # Soledad
 
-Projet Unity de *Soledad*, création audiovisuelle immersive de Gamgie, sur une musique originale de Felipe Young.
+Unity project for *Soledad*, an immersive audiovisual creation by Gamgie, with original music by Felipe Young.
 
-Ce dépôt réunit dans un seul projet les deux formes de la pièce :
+This repository brings both forms of the piece together in a single project:
 
-- **le court métrage fulldome**, pour le dôme ;
-- **la performance live**, jouée en temps réel, du 16:9 au fulldome.
+- **the fulldome short film**, for the dome;
+- **the live performance**, played in real time, from 16:9 to fulldome.
 
-> « Tout est lien, mais rien n'est rencontre. »
+> "Everything is connection, yet nothing is encounter."
 
-## La pièce
+## The piece
 
-Soledad est née en 2025, pendant une tournée en Colombie avec les Alliances françaises. Elle part d'un paradoxe : se sentir profondément seul tout en étant très entouré. Dans une société hyperconnectée, où réseaux sociaux et messageries nous relient en permanence, la solitude et l'individualisme se sont installés partout.
+Soledad was born in 2025, during a tour of Colombia with the Alliances Françaises. It starts from a paradox: feeling deeply alone while being surrounded by people. In a hyperconnected society, where social networks and messaging apps link us at all times, solitude and individualism have spread everywhere.
 
-La pièce met ce paradoxe en images : le vol solitaire au-dessus de la fourmilière urbaine, la traversée des abysses de nos solitudes intérieures. Elle est accompagnée d'un poème écrit pendant la création et fait écho à *Cent ans de solitude* de Gabriel García Márquez.
+The piece puts this paradox into images: the lonely flight above the urban anthill, the journey through the abysses of our inner solitudes. It is accompanied by a poem written during its creation, and echoes Gabriel García Márquez's *One Hundred Years of Solitude*.
 
-Soledad a été créée au Planétarium de Bogotá, puis jouée à l'Universidad de los Andes pour le festival Reta Hex, en novembre 2025.
+Soledad was created at the Bogotá Planetarium, then performed at the Universidad de los Andes for the Reta Hex festival, in November 2025.
 
-## Deux formes, un projet
+## Two forms, one project
 
-| | Court métrage dôme | Performance live |
+| | Fulldome short film | Live performance |
 |---|---|---|
-| Rendu | Film exporté depuis Unity | Temps réel, piloté en direct |
-| Sortie | Domemaster (fisheye) | Domemaster 2K ou 4K, 16:9 simple ou multi-écran, mur LED |
-| Durée | À définir | 30 min environ |
-| Diffusion | Fichier vidéo | HDMI ou NDI |
+| Rendering | Film exported from Unity | Real time, controlled live |
+| Output | Domemaster (fisheye) | Domemaster 2K or 4K, 16:9 single or multi-screen, LED wall |
+| Duration | To be defined | About 30 min |
+| Delivery | Video file | HDMI or NDI |
 
-La performance se joue en solo. Une version duo existe avec Felipe Young, qui interprète la musique en live.
+The performance is played solo. A duo version exists with Felipe Young, who performs the music live.
 
-## Technique
+## Tech
 
-- **Unity**
-- **Oxipital**, l'instrument visuel de Gamgie : un moteur de simulation de particules fondé sur la physique, piloté en direct.
+- **Unity 6000.3**, HDRP 17.3 and VFX Graph 17.3
+- **Oxipital**, Gamgie's visual instrument: a physics-based particle simulation engine, controlled live from Chataigne over OSCQuery.
 
-## État du projet
+Soledad is the first project built on the new Oxipital architecture: the engine is installed as packages inside the project, by git URL and version tag, from [Oxipital-Packages](https://github.com/Gamgie/Oxipital-Packages).
 
-Début de création, novembre 2026. Prochaines étapes :
+| Package | Content |
+|---|---|
+| `com.gamgie.oxipital.core` | Particle ballet in VFX Graph, forces, optical flow, splats |
+| `com.gamgie.oxipital.camera` | Camera modes, Spout / Syphon output, dome rig follow |
 
-- [ ] Création du projet Unity (version et pipeline de rendu à inscrire ici)
-- [ ] Intégration d'Oxipital
-- [ ] Sortie domemaster commune au film et au live
-- [ ] Spécifications du court métrage : durée, résolution, cadence
+The engine itself is developed in [Oxipital-Engine](https://github.com/Gamgie/Oxipital-Engine).
 
-## Crédits
+## Project status
 
-- Création et images : Gamgie
-- Musique originale : Felipe Young
-- Contact : contact@gamgie.com
+Start of creation, November 2026. Next steps:
+
+- [ ] Create the Unity project (Unity 6000.3, HDRP)
+- [ ] Add the Oxipital packages to `Packages/manifest.json`
+- [ ] Domemaster output shared by the film and the live show
+- [ ] Short film specifications: duration, resolution, frame rate
+
+## Credits
+
+- Creation and visuals: Gamgie
+- Original music: Felipe Young
+- Contact: contact@gamgie.com
