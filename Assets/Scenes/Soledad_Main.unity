@@ -475,6 +475,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Dome Creator
       objectReference: {fileID: 0}
+    - target: {fileID: 5718747801437189429, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5718747801437189434, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -676,7 +680,7 @@ MonoBehaviour:
   - Act4_SeeThrough
   - Act5_MementoMori
   actsParent: {fileID: 1264136422}
-  act: 0
+  act: 1
   transitionDuration: 4
   preloadNextAct: 1
 --- !u!1001 &826275307
@@ -856,6 +860,10 @@ PrefabInstance:
     - target: {fileID: 1618330211047868648, guid: 2d8ae6407d50bd54f89baf6a52091c8a, type: 3}
       propertyPath: m_Name
       value: Ballet
+      objectReference: {fileID: 0}
+    - target: {fileID: 1618330211047868648, guid: 2d8ae6407d50bd54f89baf6a52091c8a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2530438436232717069, guid: 2d8ae6407d50bd54f89baf6a52091c8a, type: 3}
       propertyPath: m_LocalPosition.x

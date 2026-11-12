@@ -57,6 +57,27 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
 - `Player Settings > Run In Background` is on (as in Oxipital-Engine): the show keeps running while Chataigne or
   TouchDesigner has the focus.
 
+## Act content
+
+Each act keeps its own assets in `Assets/Acts/<ActScene>/` (Scripts, Shaders, Materials), code in `namespace Soledad`.
+Same performance rule as Oxipital: no allocation in `Update`, `Shader.PropertyToID` for material properties.
+Each act root holds a `<ActScene> Volume` (global, priority 10, profile `<ActScene> Volume Profile.asset` in the
+act folder) for the act's own look; `Act` scales its weight, so it crossfades with the act. Act 1: black gradient
+sky, no bloom, fog off.
+
+- **Act 1, `GridTunnel`** (`Assets/Acts/Act1_BeyondTheVeil/`): endless box tunnel of thin grid lines whose cells are
+  "windows" that light up (random blink, or one solo window: the lonely lit window of a building at night), deformed
+  by a fractal noise like a Noise SOP. The script builds the dense mesh on the child `Grid Tunnel Mesh` (not saved
+  in the scene) and slides it in whole cells to follow the camera named "Main Camera"; grid, blink and noise are
+  computed in tunnel space so the slide is invisible. Two line families appear on their own: rails (along the
+  tunnel, grow from the camera towards the end) and rings (around it, grow from the middle of the floor up both
+  sides), each with a growth speed, a start delay spread, an order (Chase, Reverse, Random, Mirror) and a light
+  effect modelled on Blux effects (None, Sine, Noise, Pulse, Saw: phase = time x speed - spread x line order). Shader `Soledad/GridTunnel` is a hand-written HDRP unlit shader
+  on HDRP's own passes (`DepthForwardOnly`, `ForwardOnly`, `SceneSelectionPass`), deforming vertices through the
+  `HAVE_MESH_MODIFICATION` hook of `VertMesh.hlsl`; the displacement depends on position only so walls never crack
+  at the corners. Its time is accumulated from `Time.deltaTime` (deterministic Recorder renders). Do not reference
+  objects of `Soledad_Main` from an act scene (cross-scene references are dropped on save): find them at run time.
+
 ## Film workflow: perform, then render
 
 The film is rendered offline, slower than real time, so it cannot be driven by Chataigne live. Each act is
