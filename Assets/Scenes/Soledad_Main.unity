@@ -905,6 +905,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4683047101970836729, guid: 2d8ae6407d50bd54f89baf6a52091c8a, type: 3}
+      propertyPath: firstItemIntensity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -959,6 +963,7 @@ MonoBehaviour:
   - Rigidbody
   - Camera
   - Dancer
+  - VideoPlayer
   excludeInternalUnityParams: 1
   excludeGlobalTransformParams: 0
   excludeLocalTransformParams: 1
