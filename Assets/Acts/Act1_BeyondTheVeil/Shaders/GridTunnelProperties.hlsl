@@ -29,12 +29,12 @@ float  _BlinkTime;
 float  _NoiseTime;
 float4 _TunnelOffset;       // x = tunnel z offset (m), y = row offset integer part, z = row offset fractional part
 
-// Line appearance. Rails run along the tunnel (grow from the camera towards the end), rings go around it
-// (grow from the middle of the floor up both sides). Ages are in seconds since the line family was shown / hidden.
+// Line appearance. Rails run along the tunnel (drawn from the camera towards the end), rings go around it
+// (drawn from the middle of the floor up both sides).
 float  _ShowTime;
 float  _CameraRow;          // row of the camera, relative to the integer row offset
 float4 _GridInfo;           // x = cells across floor / ceiling, y = cells across side walls, z = cell size (m), w = rail reveal length (m)
-float4 _RailsGrow;          // x = age since shown, y = age since hidden (-1 = shown), z = growth speed (m/s), w = delay spread (s)
+float4 _RailsGrow;          // x = reveal (0 = no line, 1 = all drawn), y = stagger (0 = together, 1 = one after another)
 float4 _RailsFx;            // x = order, y = effect type, z = effect speed (cycles/s), w = effect spread (s)
 float4 _RingsGrow;
 float4 _RingsFx;

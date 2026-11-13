@@ -69,10 +69,12 @@ sky, no bloom, fog off.
   "windows" that light up (random blink, or one solo window: the lonely lit window of a building at night), deformed
   by a fractal noise like a Noise SOP. The script builds the dense mesh on the child `Grid Tunnel Mesh` (not saved
   in the scene) and slides it in whole cells to follow the camera named "Main Camera"; grid, blink and noise are
-  computed in tunnel space so the slide is invisible. Two line families appear on their own: rails (along the
-  tunnel, grow from the camera towards the end) and rings (around it, grow from the middle of the floor up both
-  sides), each with a growth speed, a start delay spread, an order (Chase, Reverse, Random, Mirror) and a light
-  effect modelled on Blux effects (None, Sine, Noise, Pulse, Saw: phase = time x speed - spread x line order). Shader `Soledad/GridTunnel` is a hand-written HDRP unlit shader
+  computed in tunnel space so the slide is invisible. Two line families: rails (along the tunnel, drawn from the
+  camera towards the end) and rings (around it, drawn from the middle of the floor up both sides), each with a
+  `Reveal` (0 = no line, 1 = all drawn, meant to be animated from a Timeline or Chataigne), a `Stagger` (0 = all
+  lines together, 1 = one after another; per line `saturate((reveal - stagger x id) / (1 - stagger))`), an order
+  (Chase, Reverse, Random, Mirror) and a light effect modelled on Blux effects (None, Sine, Noise, Pulse, Saw:
+  phase = time x speed - delay x line order), played on top of the reveal. Shader `Soledad/GridTunnel` is a hand-written HDRP unlit shader
   on HDRP's own passes (`DepthForwardOnly`, `ForwardOnly`, `SceneSelectionPass`), deforming vertices through the
   `HAVE_MESH_MODIFICATION` hook of `VertMesh.hlsl`; the displacement depends on position only so walls never crack
   at the corners. Its time is accumulated from `Time.deltaTime` (deterministic Recorder renders). Do not reference

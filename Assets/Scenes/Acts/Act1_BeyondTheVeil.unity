@@ -181,17 +181,15 @@ MonoBehaviour:
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
   fadeStart: 150
   fadeEnd: 600
-  railsShown: 1
-  railsGrowSpeed: 6.5
-  railsDelay: 17.6
+  railsReveal: 1
+  railsStagger: 0.5
   railsOrder: 2
   railsEffect: 0
   railsEffectSpeed: 0.62
   railsEffectDelay: 1
   railsEffectMin: 0
-  ringsShown: 1
-  ringsGrowSpeed: 12.4
-  ringsDelay: 11.56
+  ringsReveal: 1
+  ringsStagger: 0.5
   ringsOrder: 2
   ringsEffect: 0
   ringsEffectSpeed: 0.5

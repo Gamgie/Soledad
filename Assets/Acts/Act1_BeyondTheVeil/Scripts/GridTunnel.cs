@@ -22,7 +22,7 @@ namespace Soledad
     [ExecuteAlways]
     public class GridTunnel : MonoBehaviour
     {
-        /// <summary>In which order the lines of a family start (growth delay and light effect).</summary>
+        /// <summary>In which order the lines of a family appear (stagger) and light up (effect delay).</summary>
         public enum LineOrder { Chase, Reverse, Random, Mirror }
 
         /// <summary>Light effect running on each line, like the effects of Blux (Ben Kuper).</summary>
@@ -63,13 +63,11 @@ namespace Soledad
         [Tooltip("Distance (m) where they are gone. Kept short of the end of the mesh.")]
         public float fadeEnd = 180f;
 
-        [Header("Rails: lines along the tunnel, growing from the camera towards the end")]
-        [Tooltip("On: the rails grow. Off: they shrink back towards the camera.")]
-        public bool railsShown = true;
-        [Tooltip("Growth speed (m/s). 0 = appear at once.")]
-        public float railsGrowSpeed = 60f;
-        [Tooltip("Delay between the first and the last rail to start (s). 0 = all together.")]
-        public float railsDelay = 0f;
+        [Header("Rails: lines along the tunnel, drawn from the camera towards the end")]
+        [Tooltip("0 = no rail, 1 = every rail fully drawn. Meant to be animated (Timeline, Chataigne).")]
+        [Range(0f, 1f)] public float railsReveal = 1f;
+        [Tooltip("0 = all rails drawn together, 1 = one after another, in the order below.")]
+        [Range(0f, 1f)] public float railsStagger = 0.5f;
         [Tooltip("Chase: around the tunnel from the middle of the floor. Reverse, Random, Mirror: both sides of the floor first.")]
         public LineOrder railsOrder = LineOrder.Chase;
         public LineEffect railsEffect = LineEffect.None;
@@ -80,13 +78,11 @@ namespace Soledad
         [Tooltip("Brightness at the low point of the effect.")]
         [Range(0f, 1f)] public float railsEffectMin = 0f;
 
-        [Header("Rings: lines around the tunnel, growing from the middle of the floor up both sides")]
-        [Tooltip("On: the rings grow. Off: they shrink back to the floor.")]
-        public bool ringsShown = true;
-        [Tooltip("Growth speed (m/s). 0 = appear at once.")]
-        public float ringsGrowSpeed = 20f;
-        [Tooltip("Delay between the first and the last ring to start (s). 0 = all together.")]
-        public float ringsDelay = 0f;
+        [Header("Rings: lines around the tunnel, drawn from the middle of the floor up both sides")]
+        [Tooltip("0 = no ring, 1 = every ring fully drawn. Meant to be animated (Timeline, Chataigne).")]
+        [Range(0f, 1f)] public float ringsReveal = 1f;
+        [Tooltip("0 = all rings drawn together, 1 = one after another, in the order below.")]
+        [Range(0f, 1f)] public float ringsStagger = 0.5f;
         [Tooltip("Chase: from the camera towards the end. Reverse: from the end. Random. Mirror: near and far first.")]
         public LineOrder ringsOrder = LineOrder.Chase;
         public LineEffect ringsEffect = LineEffect.None;
@@ -207,33 +203,12 @@ namespace Soledad
         float _boundsAmplitude = -1f;
 
         double _blinkTime, _noiseTime, _soloTime, _travel, _showTime;
-        // Line appearance: when each family was last shown / hidden (show time), and the state it was set to
-        double _railsShownAt = -1e4, _railsHiddenAt = -1, _ringsShownAt = -1e4, _ringsHiddenAt = -1;
-        bool _railsState = true, _ringsState = true, _linesInitialized;
         float _soloOn;
         float _nextTargetSearch;
         Transform _foundTarget;     // found at run time, kept out of the scene (the camera lives in another scene)
 
         /// <summary>Picks a new random pattern.</summary>
         public void Reseed() => randomSeed++;
-
-        /// <summary>Makes the rails grow again from nothing.</summary>
-        public void GrowRails()
-        {
-            railsShown = true;
-            _railsState = true;
-            _railsShownAt = _showTime;
-            _railsHiddenAt = -1;
-        }
-
-        /// <summary>Makes the rings grow again from nothing.</summary>
-        public void GrowRings()
-        {
-            ringsShown = true;
-            _ringsState = true;
-            _ringsShownAt = _showTime;
-            _ringsHiddenAt = -1;
-        }
 
         /// <summary>Brings the travel scroll back to 0.</summary>
         public void ResetTravel() => _travel = 0.0;
@@ -319,7 +294,6 @@ namespace Soledad
             _noiseTime += dt * noiseSpeed;
             _travel += dt * travelSpeed;
             _showTime += dt;
-            UpdateLineStates();
 
             float s = Mathf.Max(cellSize, 1e-3f);
 
@@ -384,9 +358,9 @@ namespace Soledad
             _block.SetFloat(ShowTimeId, (float)_showTime);
             _block.SetFloat(CameraRowId, (float)(cameraCells + travelCells - rowInt));
             _block.SetVector(GridInfoId, new Vector4(Mathf.Max(1, widthCells), Mathf.Max(1, heightCells), s, end));
-            _block.SetVector(RailsGrowId, GrowVector(_railsShownAt, _railsHiddenAt, railsGrowSpeed, railsDelay));
+            _block.SetVector(RailsGrowId, new Vector4(Mathf.Clamp01(railsReveal), Mathf.Clamp01(railsStagger), 0f, 0f));
             _block.SetVector(RailsFxId, new Vector4((int)railsOrder, (int)railsEffect, railsEffectSpeed, railsEffectDelay));
-            _block.SetVector(RingsGrowId, GrowVector(_ringsShownAt, _ringsHiddenAt, ringsGrowSpeed, ringsDelay));
+            _block.SetVector(RingsGrowId, new Vector4(Mathf.Clamp01(ringsReveal), Mathf.Clamp01(ringsStagger), 0f, 0f));
             _block.SetVector(RingsFxId, new Vector4((int)ringsOrder, (int)ringsEffect, ringsEffectSpeed, ringsEffectDelay));
             _block.SetVector(LinesFxMinId, new Vector4(railsEffectMin, ringsEffectMin, 0f, 0f));
 
@@ -394,41 +368,6 @@ namespace Soledad
 
             float amplitude = Mathf.Abs(noiseAmplitude);
             if (amplitude != _boundsAmplitude) UpdateBounds(amplitude);
-        }
-
-        // Start a growth or a shrink when a family is switched on or off
-        void UpdateLineStates()
-        {
-            if (!_linesInitialized)
-            {
-                // Start as set in the scene, fully grown or fully hidden
-                _linesInitialized = true;
-                _railsState = railsShown;
-                _ringsState = ringsShown;
-                _railsShownAt = _showTime - 1e4;
-                _ringsShownAt = _showTime - 1e4;
-                _railsHiddenAt = railsShown ? -1 : _showTime - 5e3;
-                _ringsHiddenAt = ringsShown ? -1 : _showTime - 5e3;
-            }
-            if (railsShown != _railsState)
-            {
-                _railsState = railsShown;
-                if (railsShown) { _railsShownAt = _showTime; _railsHiddenAt = -1; }
-                else _railsHiddenAt = _showTime;
-            }
-            if (ringsShown != _ringsState)
-            {
-                _ringsState = ringsShown;
-                if (ringsShown) { _ringsShownAt = _showTime; _ringsHiddenAt = -1; }
-                else _ringsHiddenAt = _showTime;
-            }
-        }
-
-        Vector4 GrowVector(double shownAt, double hiddenAt, float speed, float delay)
-        {
-            float ageShown = (float)(_showTime - shownAt);
-            float ageHidden = hiddenAt < 0 ? -1f : (float)(_showTime - hiddenAt);
-            return new Vector4(ageShown, ageHidden, Mathf.Max(0f, speed), Mathf.Max(0f, delay));
         }
 
         float SoloBlinkLevel()

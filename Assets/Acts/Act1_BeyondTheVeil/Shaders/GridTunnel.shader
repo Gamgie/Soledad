@@ -36,9 +36,9 @@ Shader "Soledad/GridTunnel"
         _ShowTime("Show Time", Float) = 0
         _CameraRow("Camera Row", Float) = 0
         _GridInfo("Grid (width, height, cell size, rail reveal)", Vector) = (12, 12, 1, 180)
-        _RailsGrow("Rails Grow (age shown, age hidden, speed, spread)", Vector) = (10000, -1, 60, 0)
+        _RailsGrow("Rails Grow (reveal, stagger)", Vector) = (1, 0.5, 0, 0)
         _RailsFx("Rails Effect (order, type, speed, spread)", Vector) = (0, 0, 0.5, 1)
-        _RingsGrow("Rings Grow (age shown, age hidden, speed, spread)", Vector) = (10000, -1, 20, 0)
+        _RingsGrow("Rings Grow (reveal, stagger)", Vector) = (1, 0.5, 0, 0)
         _RingsFx("Rings Effect (order, type, speed, spread)", Vector) = (0, 0, 0.5, 1)
         _LinesFxMin("Effect Minimum (rails, rings)", Vector) = (0, 0, 0, 0)
 

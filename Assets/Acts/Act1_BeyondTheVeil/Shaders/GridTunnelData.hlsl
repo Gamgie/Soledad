@@ -29,15 +29,12 @@ float GT_LineOrder(float u, float order, uint key)
     return min(u, 1.0 - u) * 2.0;                               // Mirror: both ends first
 }
 
-// Length (m) a line has grown to, from its family's ages, its delay and the growth speed
+// Length (m) a line is drawn to, from its family's reveal (grow.x, 0 to 1) and stagger (grow.y, 0 = all lines
+// together, 1 = one after another) and its order id (0 to 1)
 float GT_LineLength(float4 grow, float id, float maxLength)
 {
-    float delay = grow.w * id;
-    float speed = grow.z > 0.0 ? grow.z : 1e6;                  // 0 = appear at once
-    if (grow.y < 0.0)
-        return clamp((grow.x - delay) * speed, 0.0, maxLength);
-    float atHide = clamp((grow.x - grow.y - delay) * speed, 0.0, maxLength);
-    return max(0.0, atHide - max(0.0, grow.y - delay) * speed);
+    float local = saturate((grow.x - grow.y * id) / max(1.0 - grow.y, 1e-4));
+    return local * maxLength;
 }
 
 // Light effect on a line, like Blux effects: the phase runs with time, offset by the line's order
