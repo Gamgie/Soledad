@@ -39,18 +39,25 @@ namespace Soledad
         [Tooltip("Displacement (m). 0 = straight tunnel.")]
         public float GridTunnel_noiseAmplitude = 0f;
 
+        [Header("PhoneScreen")]
+        [Range(0f, 1f)] public float PhoneScreen_Zdepth = 0f;
+        [Range(0f, 1f)] public float PhoneScreen_alpha = 0f;
+
         global::Soledad.GridTunnel _target0;
+        global::Soledad.PhoneScreen _target1;
 
         protected override string ActName => "Act1_BeyondTheVeil";
 
         protected override void Bind(Transform root)
         {
             _target0 = Find<global::Soledad.GridTunnel>(root);
+            _target1 = Find<global::Soledad.PhoneScreen>(root);
         }
 
         protected override void Unbind()
         {
             _target0 = null;
+            _target1 = null;
         }
 
         protected override void Push()
@@ -72,6 +79,11 @@ namespace Soledad
                 _target0.randomDensity = GridTunnel_randomDensity;
                 _target0.soloEnabled = GridTunnel_soloEnabled;
                 _target0.noiseAmplitude = GridTunnel_noiseAmplitude;
+            }
+            if (_target1 != null)
+            {
+                _target1.Zdepth = PhoneScreen_Zdepth;
+                _target1.alpha = PhoneScreen_alpha;
             }
         }
 

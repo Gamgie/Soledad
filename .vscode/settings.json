@@ -67,5 +67,9 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Soledad.slnx"
+    "dotnet.defaultSolution": "Soledad.slnx",
+    // Unity scripts belong to the generated .csproj files: never load a .cs file as a standalone
+    // .NET 10 "file-based program" (no Unity references, everything shows as an error)
+    "dotnet.projects.enableFileBasedPrograms": false,
+    "dotnet.fileBasedApps.enableAutomaticDiscovery": false
 }

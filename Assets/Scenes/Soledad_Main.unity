@@ -681,6 +681,7 @@ MonoBehaviour:
   - Act4_SeeThrough
   - Act5_MementoMori
   actsParent: {fileID: 1264136422}
+  hideActsFromOSCQuery: 1
   act: 1
   transitionDuration: 4
   preloadNextAct: 1
@@ -711,6 +712,8 @@ MonoBehaviour:
   GridTunnel_randomDensity: 0
   GridTunnel_soloEnabled: 0
   GridTunnel_noiseAmplitude: 0
+  PhoneScreen_Zdepth: 1
+  PhoneScreen_alpha: 0
 --- !u!1001 &826275307
 PrefabInstance:
   m_ObjectHideFlags: 0
