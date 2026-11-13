@@ -96,6 +96,22 @@ sky, no bloom, fog off.
   at the corners. Its time is accumulated from `Time.deltaTime` (deterministic Recorder renders). Do not reference
   objects of `Soledad_Main` from an act scene (cross-scene references are dropped on save): find them at run time.
 
+- **Act 2, `FlythroughTerrain`** (`Assets/Acts/Act2_Flythrough/`, on `Act2_Flythrough/Flythrough`): a bird's
+  flight over an endless landscape laid out along a route (terrain +Z): desert, mountains with a winding pass, then
+  the valley (fields between two ridges); shape in `TerrainShape` (`TerrainField.cs`, pure Burst-compatible height
+  and biome functions). The bird is the object's position, the flight runs along world +Z: like the Act 1 tunnel,
+  the camera rig stays put and the generated child `Terrain (generated)` is placed every frame so the route point is
+  `altitude` metres above the (smoothed, anticipated) ground. Tiles form a quadtree around "Main Camera" (dense near
+  it, coarse to the horizon, `detailDistance`), built in terrain space by a parallel Burst job with skirts hiding
+  the seams, never saved. Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
+  shadows, motion vectors) with a hand-written surface (`FlythroughTerrainData.hlsl`: biome colours, rock on slopes,
+  fields, per-pixel relief from terrain coordinates) and the world curl in the `HAVE_MESH_MODIFICATION` hook
+  (`curlLateral` rolls the ground into a tube around the flight axis, `curlForward` lifts it ahead into a wall);
+  `_Smoothness` and other Lit names are taken by `LitProperties.hlsl`, so terrain properties are plain uniforms with
+  their own names. In Play mode the act pushes every camera's far plane to `farClip` (40 km) and restores it when
+  disabled. Act 2 Volume: landscape haze (fog base -250 m, 2 km thick, 9 km mean free path, volumetric).
+  Next: real elevation data for the Bogota valley, mirror cubes and monoliths, cubic clouds, 70s look.
+
 ## Film workflow: perform, then render
 
 The film is rendered offline, slower than real time, so it cannot be driven by Chataigne live. Each act is

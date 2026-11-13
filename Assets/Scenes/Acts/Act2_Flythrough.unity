@@ -119,6 +119,87 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &1038405469
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1038405470}
+  - component: {fileID: 1038405471}
+  m_Layer: 0
+  m_Name: Flythrough
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1038405470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1038405469}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1982944511}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1038405471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1038405469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b377017abe4cd7549b506047b70f1074, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.FlythroughTerrain
+  speed: 60
+  altitude: 140
+  followRoute: 1
+  routeOffset: 0
+  turnRate: 0
+  altitudeSmoothing: 2.5
+  lookAhead: 600
+  startDistance: 0
+  curlLateral: 0
+  curlRadius: 2500
+  curlForward: 0
+  bendRadius: 4000
+  shape:
+    seed: 0
+    desertEnd: 3000
+    mountainEnd: 7500
+    transition: 1200
+    borderWarp: 600
+    meanderAmplitude: 500
+    meanderWavelength: 6000
+    duneHeight: 35
+    duneWavelength: 170
+    duneDirection: 25
+    desertRelief: 60
+    mountainHeight: 1100
+    mountainScale: 2600
+    passWidth: 700
+    valleyWidth: 9000
+    valleyRidgeHeight: 700
+  leafSize: 32
+  levels: 10
+  cellsPerTile: 32
+  detailDistance: 1.5
+  farClip: 40000
+  animateInEditMode: 0
+  terrainMaterial: {fileID: 2100000, guid: 98ccd38a12b4b4343a1952b5089dbbb5, type: 2}
+  followTarget: {fileID: 0}
 --- !u!1 &1268012188
 GameObject:
   m_ObjectHideFlags: 0
@@ -212,6 +293,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1268012189}
+  - {fileID: 1038405470}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
