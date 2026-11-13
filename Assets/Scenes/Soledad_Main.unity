@@ -639,6 +639,7 @@ GameObject:
   m_Component:
   - component: {fileID: 517179240}
   - component: {fileID: 517179241}
+  - component: {fileID: 517179242}
   m_Layer: 0
   m_Name: Show
   m_TagString: Untagged
@@ -683,6 +684,33 @@ MonoBehaviour:
   act: 1
   transitionDuration: 4
   preloadNextAct: 1
+--- !u!114 &517179242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 517179239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eae48334062de4f418e3f47ab4c204e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.Act1Controller
+  GridTunnel_travelSpeed: 0
+  GridTunnel_masterIntensity: 1
+  GridTunnel_railsReveal: 1
+  GridTunnel_railsStagger: 0.5
+  GridTunnel_railsEffect: 0
+  GridTunnel_railsEffectSpeed: 0.62
+  GridTunnel_railsEffectDelay: 1
+  GridTunnel_ringsReveal: 1
+  GridTunnel_ringsStagger: 0.5
+  GridTunnel_ringsEffect: 0
+  GridTunnel_ringsEffectSpeed: 0.5
+  GridTunnel_ringsEffectDelay: 1
+  GridTunnel_randomDensity: 0
+  GridTunnel_soloEnabled: 0
+  GridTunnel_noiseAmplitude: 0
 --- !u!1001 &826275307
 PrefabInstance:
   m_ObjectHideFlags: 0

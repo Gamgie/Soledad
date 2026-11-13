@@ -10,7 +10,11 @@ namespace Soledad
     //
     // OSCQuery only exposes one scene (Soledad_Main, under its Root Scene object), so an act scene is loaded
     // additively, its root object is moved under actsParent in the main scene, and the emptied act scene is
-    // unloaded right away. Chataigne sees the act's objects after its next sync. Leaving an act destroys them.
+    // unloaded right away. Leaving an act destroys it.
+    //
+    // Act objects come and go, so they are hidden from OSCQuery (added to its excluded objects): the Chataigne tree
+    // stays the same whichever act is loaded, and act parameters are reached through the ActNController components
+    // on Show (generated from the [Animate] members of the act scripts).
     //
     // Driven by Chataigne (or a Timeline when rendering the film) through the act field: changing it crossfades
     // from the shown act to the new one over transitionDuration, then preloads the following act, inactive.
@@ -31,6 +35,10 @@ namespace Soledad
         [Tooltip("Where loaded acts are parented: the OSCQuery root object (Root Scene), so Chataigne sees them.")]
         public Transform actsParent;
 
+        [OSCQuery.DoNotExpose]
+        [Tooltip("Hide the loaded acts from OSCQuery, so the Chataigne tree does not change with the act. Off only to debug an act from Chataigne.")]
+        public bool hideActsFromOSCQuery = true;
+
         [Tooltip("Act to show: 1 to 5, 0 for none.")]
         public int act;
 
@@ -45,6 +53,7 @@ namespace Soledad
         readonly HashSet<int> _loading = new HashSet<int>();
         readonly List<int> _toUnload = new List<int>();
         Scene _mainScene;
+        OSCQuery.OSCQuery _oscQuery;
         Act _shownAct;
         int _shownIndex;
         bool _switching;
@@ -56,6 +65,9 @@ namespace Soledad
         void Start()
         {
             _mainScene = gameObject.scene;
+            _oscQuery = FindFirstObjectByType<OSCQuery.OSCQuery>(FindObjectsInactive.Include);
+            if (hideActsFromOSCQuery && _oscQuery != null && _oscQuery.objectFilterMode == OSCQuery.OSCQuery.FilterMode.All)
+                Debug.LogWarning("ShowController: OSCQuery exposes all objects (filter mode All), the acts cannot be hidden from Chataigne. Use Exclude.", _oscQuery);
             AdoptOpenActScenes();
         }
 
@@ -133,6 +145,7 @@ namespace Soledad
                     _toUnload.Add(index);
             foreach (int index in _toUnload)
             {
+                ShowInOSCQuery(_loaded[index].gameObject);
                 Destroy(_loaded[index].gameObject);
                 _loaded.Remove(index);
             }
@@ -200,8 +213,24 @@ namespace Soledad
             SceneManager.MoveGameObjectToScene(actRoot.gameObject, _mainScene);
             if (actsParent != null)
                 actRoot.transform.SetParent(actsParent, true);
+            HideFromOSCQuery(actRoot.gameObject);
             _loaded[index] = actRoot;
             return actRoot;
+        }
+
+        // In Exclude mode an object in filteredObjects is skipped with all its children. Include mode already hides
+        // anything not listed, and the acts are never listed.
+        void HideFromOSCQuery(GameObject actRoot)
+        {
+            if (!hideActsFromOSCQuery || _oscQuery == null) return;
+            if (_oscQuery.objectFilterMode != OSCQuery.OSCQuery.FilterMode.Exclude) return;
+            _oscQuery.filteredObjects ??= new List<GameObject>();
+            if (!_oscQuery.filteredObjects.Contains(actRoot)) _oscQuery.filteredObjects.Add(actRoot);
+        }
+
+        void ShowInOSCQuery(GameObject actRoot)
+        {
+            if (_oscQuery != null && _oscQuery.filteredObjects != null) _oscQuery.filteredObjects.Remove(actRoot);
         }
     }
 }

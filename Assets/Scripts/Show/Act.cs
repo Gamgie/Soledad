@@ -9,7 +9,7 @@ namespace Soledad
     [DisallowMultipleComponent]
     public class Act : MonoBehaviour
     {
-        [Tooltip("0 = hidden, 1 = fully shown. Set by ShowController during transitions, can be driven by Chataigne.")]
+        [Tooltip("0 = hidden, 1 = fully shown. Set by ShowController during transitions.")]
         [Range(0f, 1f)]
         public float weight = 1f;
 

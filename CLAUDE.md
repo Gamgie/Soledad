@@ -47,8 +47,24 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
 - `ShowController` (`Assets/Scripts/Show`): OSCQuery only sees `Root Scene`, so an act scene is loaded additively,
   its root is moved under `Root Scene` in the main scene, and the emptied act scene is unloaded at once. Setting
   `act` (1 to 5, 0 = none; also `NextAct()` / `PreviousAct()`) crossfades `Act.weight` over `transitionDuration`,
-  keeps only the shown act and the next one (preloaded, inactive), and destroys the others. Chataigne sees an act's
-  objects after its next sync.
+  keeps only the shown act and the next one (preloaded, inactive), and destroys the others. Loaded act roots are
+  added to OSCQuery's excluded objects (`hideActsFromOSCQuery`, on by default; OSCQuery's object filter must stay in
+  Exclude mode), so the Chataigne tree is the same whichever act is loaded and a resync rebuilds it identically.
+  Act parameters are reached through the generated controllers on `Show` (below).
+- **Act parameters for Chataigne and Timeline**: act objects come and go, so their addresses are not stable. Mark
+  the act script members to drive with `[Animate]` (`Assets/Scripts/Show/AnimateAttribute.cs`; public fields of
+  type float, int, bool, enum, Color, Vector3, and parameterless public methods; `[Animate("fixedName")]` keeps the
+  address when the field is renamed). After each compile, `ActControllerGenerator` (`Assets/Scripts/Show/Editor`,
+  also menu `Soledad > Generate Act Controllers`) writes `Assets/Scripts/Show/Generated/ActNController.cs` for each
+  `Assets/Acts/ActN_Name/` folder: flat fields `Type_field` (same default, Range, Tooltip) and forwarding methods.
+  Never edit them by hand. The generator adds missing controllers to `Show` (Soledad_Main must be open, then save
+  it) and copies new fields' values from the act scene when it is open (`Soledad > Pull Act Controller Values From
+  Open Acts` copies all of them). In Play mode the controller (`ActController`) is the source of truth: it binds
+  to its act root under `Root Scene` once loaded, pushes its values every frame (also while the act is preloaded),
+  and drops the references when the act is destroyed. So drive and record (Timeline) `Show/ActNController`, not the
+  act objects: values set on the act itself are overwritten. One component of each type per act is driven. If an
+  `[Animate]` field is renamed or removed, the generated code stops compiling, the generator writes a stub and the
+  next compile restores it; the controller value of a renamed field is lost unless it had a fixed name.
 - `Act.weight` scales every Volume under the act, so two acts blend during a transition. Act-specific scripts read it
   to fade their own content.
 - Working on an act in the Editor: open `Soledad_Main`, then the act scene additively. On Play, `ShowController`

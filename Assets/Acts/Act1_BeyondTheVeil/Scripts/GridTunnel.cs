@@ -46,11 +46,11 @@ namespace Soledad
         [Tooltip("Slide the mesh along the tunnel to stay around the camera.")]
         public bool followCamera = true;
         [Tooltip("Scrolls the grid and the noise towards the camera (m/s), as if flying forward along +Z.")]
-        public float travelSpeed = 0f;
+        [Animate] public float travelSpeed = 0f;
 
         [Header("Look")]
         [Tooltip("Global brightness of the lines and windows (also multiplied by the weight of the parent Act).")]
-        [Range(0f, 1f)] public float masterIntensity = 1f;
+        [Animate] [Range(0f, 1f)] public float masterIntensity = 1f;
         public Color lineColor = Color.white;
         public float lineIntensity = 1f;
         [Tooltip("Width of the grid lines, in cells.")]
@@ -65,37 +65,37 @@ namespace Soledad
 
         [Header("Rails: lines along the tunnel, drawn from the camera towards the end")]
         [Tooltip("0 = no rail, 1 = every rail fully drawn. Meant to be animated (Timeline, Chataigne).")]
-        [Range(0f, 1f)] public float railsReveal = 1f;
+        [Animate] [Range(0f, 1f)] public float railsReveal = 1f;
         [Tooltip("0 = all rails drawn together, 1 = one after another, in the order below.")]
-        [Range(0f, 1f)] public float railsStagger = 0.5f;
+        [Animate] [Range(0f, 1f)] public float railsStagger = 0.5f;
         [Tooltip("Chase: around the tunnel from the middle of the floor. Reverse, Random, Mirror: both sides of the floor first.")]
         public LineOrder railsOrder = LineOrder.Chase;
-        public LineEffect railsEffect = LineEffect.None;
+        [Animate] public LineEffect railsEffect = LineEffect.None;
         [Tooltip("Effect cycles per second.")]
-        public float railsEffectSpeed = 0.5f;
+        [Animate] public float railsEffectSpeed = 0.5f;
         [Tooltip("Effect time offset between the first and the last rail (s), in the order above. 0 = all in sync.")]
-        public float railsEffectDelay = 1f;
+        [Animate] public float railsEffectDelay = 1f;
         [Tooltip("Brightness at the low point of the effect.")]
         [Range(0f, 1f)] public float railsEffectMin = 0f;
 
         [Header("Rings: lines around the tunnel, drawn from the middle of the floor up both sides")]
         [Tooltip("0 = no ring, 1 = every ring fully drawn. Meant to be animated (Timeline, Chataigne).")]
-        [Range(0f, 1f)] public float ringsReveal = 1f;
+        [Animate] [Range(0f, 1f)] public float ringsReveal = 1f;
         [Tooltip("0 = all rings drawn together, 1 = one after another, in the order below.")]
-        [Range(0f, 1f)] public float ringsStagger = 0.5f;
+        [Animate] [Range(0f, 1f)] public float ringsStagger = 0.5f;
         [Tooltip("Chase: from the camera towards the end. Reverse: from the end. Random. Mirror: near and far first.")]
         public LineOrder ringsOrder = LineOrder.Chase;
-        public LineEffect ringsEffect = LineEffect.None;
+        [Animate] public LineEffect ringsEffect = LineEffect.None;
         [Tooltip("Effect cycles per second.")]
-        public float ringsEffectSpeed = 0.5f;
+        [Animate] public float ringsEffectSpeed = 0.5f;
         [Tooltip("Effect time offset between the first and the last ring (s), in the order above. 0 = all in sync.")]
-        public float ringsEffectDelay = 1f;
+        [Animate] public float ringsEffectDelay = 1f;
         [Tooltip("Brightness at the low point of the effect.")]
         [Range(0f, 1f)] public float ringsEffectMin = 0f;
 
         [Header("Random blink")]
         [Tooltip("Probability that a cell is lit during one of its ticks. 0 = no random window.")]
-        [Range(0f, 1f)] public float randomDensity = 0.02f;
+        [Animate] [Range(0f, 1f)] public float randomDensity = 0.02f;
         [Tooltip("Ticks per second per cell. 0 = static pattern.")]
         public float randomRate = 0.5f;
         [Tooltip("0 = every cell ticks at the same rate, 1 = rates spread from 0x to 2x.")]
@@ -105,7 +105,7 @@ namespace Soledad
         public int randomSeed = 0;
 
         [Header("Solo window")]
-        public bool soloEnabled = false;
+        [Animate] public bool soloEnabled = false;
         [Tooltip("0 floor, 1 right, 2 ceiling, 3 left.")]
         [Range(0, 3)] public int soloWall = 3;
         [Tooltip("Column on the wall, from 0.")]
@@ -133,7 +133,7 @@ namespace Soledad
 
         [Header("Noise deformation")]
         [Tooltip("Displacement (m). 0 = straight tunnel.")]
-        public float noiseAmplitude = 0f;
+        [Animate] public float noiseAmplitude = 0f;
         [Tooltip("Size of the noise features (m).")]
         public float noisePeriod = 8f;
         [Range(1, 8)] public int noiseHarmonics = 3;
@@ -208,7 +208,7 @@ namespace Soledad
         Transform _foundTarget;     // found at run time, kept out of the scene (the camera lives in another scene)
 
         /// <summary>Picks a new random pattern.</summary>
-        public void Reseed() => randomSeed++;
+        [Animate] public void Reseed() => randomSeed++;
 
         /// <summary>Brings the travel scroll back to 0.</summary>
         public void ResetTravel() => _travel = 0.0;
