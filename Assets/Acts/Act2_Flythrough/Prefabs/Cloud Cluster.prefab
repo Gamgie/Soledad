@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3997140052095242495
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8974649038953230264}
+  - component: {fileID: 4331472120801529317}
+  m_Layer: 0
+  m_Name: Cloud Cluster
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8974649038953230264
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3997140052095242495}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4331472120801529317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3997140052095242495}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95ecd66cd5a5e1b4ba33192f87bf02b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.CloudCluster
+  cubeCount: 24
+  cubeSize: {x: 82.3, y: 132}
+  boxiness: 0.3
+  flatness: 0.6
+  alignRotation: 1
+  seed: 1
+  ellipse: {x: 120, y: 30, z: 80}
+  orbitSpeed: 3
+  attraction: 1.45
+  collisions: 0
+  damping: 0.25
+  turbulence: 8.16
+  turbulenceFrequency: 1.05
+  spinSpeed: {x: 2, y: 8}
+  spinResponse: 0.2
+  drift: {x: 0, y: 0, z: 1.5}
+  cloudMaterial: {fileID: 2100000, guid: 09f0d9caa4170fd439c3586be2f2ab84, type: 2}
+  volumeShader: {fileID: 4800000, guid: 9749a7e96ffd4c242a8068b43d9b883e, type: 3}

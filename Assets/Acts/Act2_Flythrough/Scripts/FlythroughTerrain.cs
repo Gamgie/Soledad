@@ -70,6 +70,8 @@ namespace Soledad
         [Range(-180f, 180f)] public float sunAzimuth = 150f;
         [Tooltip("Sun shadow map resolution while the act is shown. Low sun = long shadows: 512 makes them blocky.")]
         public int sunShadowResolution = 4096;
+        [Tooltip("Largest blur of the sun's soft shadows (m) while the act is shown. The blur grows with the distance between the object and the ground, so cloud shadows soften while the dunes stay crisp. The main Sun caps it at 0.56 m.")]
+        public float sunMaxPenumbra = 40f;
 
         [Header("Landscape (rebuilds the terrain)")]
         public TerrainShape shape = TerrainShape.Default;
@@ -259,6 +261,7 @@ namespace Soledad
         bool _sunOverridden;
         UnityEngine.Rendering.HighDefinition.HDAdditionalLightData _sunData;
         int _sunResolutionOriginal;
+        float _sunPenumbraOriginal;
         bool _sunResolutionUseOverride;
 
         void ApplySun()
@@ -280,6 +283,8 @@ namespace Soledad
                     _sunResolutionUseOverride = _sunData.shadowResolution.useOverride;
                     _sunData.shadowResolution.useOverride = true;
                     _sunData.shadowResolution.@override = sunShadowResolution;
+                    _sunPenumbraOriginal = _sunData.dirLightPCSSMaxPenumbraSize;
+                    _sunData.dirLightPCSSMaxPenumbraSize = sunMaxPenumbra;
                 }
                 _sunOverridden = true;
             }
@@ -296,6 +301,7 @@ namespace Soledad
                 {
                     _sunData.shadowResolution.@override = _sunResolutionOriginal;
                     _sunData.shadowResolution.useOverride = _sunResolutionUseOverride;
+                    _sunData.dirLightPCSSMaxPenumbraSize = _sunPenumbraOriginal;
                 }
             }
             _sunOverridden = false;

@@ -134,8 +134,21 @@ sky, no bloom, fog off.
   Bogota terrain stands at 90 degrees, seen as from above; on reaching it the camera turns 90 degrees up and follows
   the Bogota terrain, the valley left behind (sky and sun orientation to be solved then). Act 2 to 3 = cut to the
   abyss as the bird enters a lake in the Bogota landscape.
-  Next: cubic clouds, mirror cubes and monoliths, Bogota mesh from Blender (Clement), mountain erosion and more
-  varied ridges, per-pixel dune relief to remove the stepped slip-face edges, 70s look.
+  Cubic clouds: `World/Clouds` (`CloudField`, the cluster manager) spreads `clusterCount` `CloudCluster`s over the
+  route at `altitude` above the ground, from its base cube, motion and look values, each varied by `variation`
+  (+-20%), deterministic per seed, generated and never saved. A cluster is cubes that only cast the shadow
+  (`Soledad/CloudCube`, `CloudCube.mat`, GPU instancing) plus one fake volume through all of them
+  (`Soledad/CloudCluster`: smooth union of rounded boxes eroded by billowy noise, ray-marched, lit at the point
+  where it becomes visible, fake forward scattering). Colour, scattering, Samples and shadow core come from
+  `CloudCube.mat`; Fluff, Puff Size, Density and Softness from the field. No physics unless `collisions` (rigidbodies
+  cost ~4 ms CPU for 40 clusters); far clusters take fewer samples and are hidden beyond `drawDistance`.
+  The prefab `Prefabs/Cloud Cluster.prefab` is a single standalone cluster.
+  Next: mirror cubes and monoliths, Bogota mesh from Blender (Clement).
+  Kept for later (agreed with Clement): mountain erosion and more varied ridges; per-pixel dune relief to remove the
+  stepped slip-face edges; vegetation and rocks scattered on the terrain; better light for the final render (SSGI,
+  contact shadows, higher shadow/fog quality, path tracing: the terrain shader would need ray tracing passes and
+  the vertex curl is invisible to it); 70s look. Option parked: render the Act 2 film shot in Unreal (Megascans,
+  Nanite, Lumen; fisheye via cubemaps) if there is time before the September 2027 deadline.
 
 ## Film workflow: perform, then render
 
