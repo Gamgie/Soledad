@@ -15,17 +15,20 @@ float  _TerrainSmoothness;
 float  _RockSlope;          // slope (1 - normal.y) where rock takes over
 float  _FieldSize;          // size of the valley fields (m)
 
+// One sampler for every scanned texture (inline state: trilinear, repeat, anisotropic 8): a pixel shader has only 16
+SAMPLER(sampler_trilinear_repeat_aniso8);
+
 // Scanned sand layers (desert): rippled sand and dry sand, PBR sets of the same physical size
-TEXTURE2D(_RippleSandAlbedo);    SAMPLER(sampler_RippleSandAlbedo);
-TEXTURE2D(_RippleSandNormal);    SAMPLER(sampler_RippleSandNormal);
-TEXTURE2D(_RippleSandHeight);    SAMPLER(sampler_RippleSandHeight);
-TEXTURE2D(_RippleSandRoughness); SAMPLER(sampler_RippleSandRoughness);
-TEXTURE2D(_RippleSandAO);        SAMPLER(sampler_RippleSandAO);
-TEXTURE2D(_DrySandAlbedo);       SAMPLER(sampler_DrySandAlbedo);
-TEXTURE2D(_DrySandNormal);       SAMPLER(sampler_DrySandNormal);
-TEXTURE2D(_DrySandHeight);       SAMPLER(sampler_DrySandHeight);
-TEXTURE2D(_DrySandRoughness);    SAMPLER(sampler_DrySandRoughness);
-TEXTURE2D(_DrySandAO);           SAMPLER(sampler_DrySandAO);
+TEXTURE2D(_RippleSandAlbedo);
+TEXTURE2D(_RippleSandNormal);
+TEXTURE2D(_RippleSandHeight);
+TEXTURE2D(_RippleSandRoughness);
+TEXTURE2D(_RippleSandAO);
+TEXTURE2D(_DrySandAlbedo);
+TEXTURE2D(_DrySandNormal);
+TEXTURE2D(_DrySandHeight);
+TEXTURE2D(_DrySandRoughness);
+TEXTURE2D(_DrySandAO);
 float4 _SandTint;
 float  _SandTile;           // physical size of one texture repeat (m)
 float  _SandNormalStrength;
@@ -38,6 +41,30 @@ float  _RippleHeightBias;     // + = ripples on the upper part of the dunes, - =
 float  _RippleSlopeLimit;     // steeper than this (1 - normal.y) is always dry sand
 float  _RipplePatchiness;     // large noise patches breaking the placement
 float  _RippleBlendSharpness; // sharpness of the border between the two sands
+
+// Volcanic ground (mountain slopes, foothills) and rock (steep slopes, triplanar): scanned PBR sets
+TEXTURE2D(_VolcanicAlbedo);
+TEXTURE2D(_VolcanicNormal);
+TEXTURE2D(_VolcanicHeight);
+TEXTURE2D(_VolcanicRoughness);
+TEXTURE2D(_VolcanicAO);
+TEXTURE2D(_RockAlbedo);
+TEXTURE2D(_RockNormal);
+TEXTURE2D(_RockHeight);
+TEXTURE2D(_RockRoughness);
+TEXTURE2D(_RockAO);
+float4 _VolcanicTint;
+float  _VolcanicTile;
+float  _VolcanicNormalStrength;
+float  _VolcanicLargeScale;
+float  _VolcanicLargeStrength;
+float  _VolcanicAOStrength;
+float4 _RockTint;
+float  _RockTile;
+float  _RockNormalStrength;
+float  _RockAOStrength;
+float  _RockSlopeSoftness;
+float  _RockBlendSharpness;
 
 // Fine relief, computed per pixel (below the mesh resolution)
 float  _DetailStrength;

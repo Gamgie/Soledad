@@ -206,12 +206,19 @@ namespace Soledad
         VolumeProfile _sharedProfile, _runtimeProfile;
         UnityEngine.Rendering.HighDefinition.Fog _fog;
         UnityEngine.Rendering.HighDefinition.VolumetricClouds _clouds;
-        float _fogMeanFreePath, _cloudDensity;
 
-        // Play mode only: works on a copy of the act Volume's profile, the asset is never touched
+        // Play mode only, and only while curled: the act Volume then uses a copy of its profile with thinner fog and
+        // fainter clouds. Flat, the real profile is back, so editing it in Play mode shows at once.
         void UpdateAtmosphere()
         {
             if (!Application.isPlaying || actVolume == null) return;
+            float curl = math.max(curlLateral, curlForward);
+            bool clearing = curl > 0f && (curlClearsFog > 0f || curlClearsClouds > 0f);
+            if (!clearing)
+            {
+                RestoreAtmosphere();
+                return;
+            }
             if (_runtimeProfile == null)
             {
                 _sharedProfile = actVolume.sharedProfile;
@@ -219,21 +226,20 @@ namespace Soledad
                 _runtimeProfile = Instantiate(_sharedProfile);
                 _runtimeProfile.name = _sharedProfile.name + " (runtime)";
                 actVolume.sharedProfile = _runtimeProfile;
-                // A value only counts when its override is on: switch them on, keeping the profile's own values
-                if (_runtimeProfile.TryGet(out _fog))
-                {
-                    _fogMeanFreePath = _fog.meanFreePath.value;
-                    _fog.meanFreePath.overrideState = true;
-                }
-                if (_runtimeProfile.TryGet(out _clouds))
-                {
-                    _cloudDensity = _clouds.densityMultiplier.value;
-                    _clouds.densityMultiplier.overrideState = true;
-                }
+                _runtimeProfile.TryGet(out _fog);
+                _runtimeProfile.TryGet(out _clouds);
             }
-            float curl = math.max(curlLateral, curlForward);
-            if (_fog != null) _fog.meanFreePath.value = _fogMeanFreePath * math.lerp(1f, 40f, curl * curlClearsFog);
-            if (_clouds != null) _clouds.densityMultiplier.value = _cloudDensity * (1f - curl * curlClearsClouds);
+            // Base values from the real profile every frame, so its edits still count while curled
+            if (_fog != null && _sharedProfile.TryGet(out UnityEngine.Rendering.HighDefinition.Fog sharedFog))
+            {
+                _fog.meanFreePath.overrideState = true;
+                _fog.meanFreePath.value = sharedFog.meanFreePath.value * math.lerp(1f, 40f, curl * curlClearsFog);
+            }
+            if (_clouds != null && _sharedProfile.TryGet(out UnityEngine.Rendering.HighDefinition.VolumetricClouds sharedClouds))
+            {
+                _clouds.densityMultiplier.overrideState = true;
+                _clouds.densityMultiplier.value = sharedClouds.densityMultiplier.value * (1f - curl * curlClearsClouds);
+            }
         }
 
         void RestoreAtmosphere()
@@ -366,7 +372,22 @@ namespace Soledad
         }
 
         [ContextMenu("Rebuild Terrain")]
-        void Rebuild() => _dirty = true;
+        void Rebuild()
+        {
+            _dirty = true;
+#if UNITY_EDITOR
+            if (!Application.isPlaying) UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+#endif
+        }
+
+#if UNITY_EDITOR
+        // Outside Play mode Update only runs when the Editor decides to: ask for one after every Inspector change, so
+        // a landscape or tile setting rebuilds the terrain at once
+        void OnValidate()
+        {
+            if (!Application.isPlaying) UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+        }
+#endif
 
         void Tick(float dt)
         {
@@ -757,6 +778,7 @@ namespace Soledad
             public float4 color;
             public float2 uv0;
             public float2 uv1;
+            public float2 uv2;     // terrain normal xz, before the curl (triplanar rock)
 
             public static readonly VertexAttributeDescriptor[] Layout =
             {
@@ -766,6 +788,7 @@ namespace Soledad
                 new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.Float32, 4),
                 new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
                 new VertexAttributeDescriptor(VertexAttribute.TexCoord1, VertexAttributeFormat.Float32, 2),
+                new VertexAttributeDescriptor(VertexAttribute.TexCoord2, VertexAttributeFormat.Float32, 2),
             };
         }
 
@@ -829,6 +852,7 @@ namespace Soledad
                             color = biomes[i + j * grid],                 // biome weights, a = dune level
                             uv0 = p,
                             uv1 = new float2(h, 1f - normal.y),
+                            uv2 = normal.xz,
                         };
                     }
                 }

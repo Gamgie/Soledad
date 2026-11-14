@@ -43,6 +43,26 @@ Material:
         m_Texture: {fileID: 2800000, guid: 278be34afe230154c97d4c4d3991e0af, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _GroundAO:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GroundAlbedo:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GroundHeight:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GroundNormal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GroundRoughness:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _RippleSandAO:
         m_Texture: {fileID: 2800000, guid: 1092f8be9ac5ab74e989789a3c3e54af, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -63,15 +83,70 @@ Material:
         m_Texture: {fileID: 2800000, guid: 385eae3c34863aa4cad4077984b2fb6b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _RockAO:
+        m_Texture: {fileID: 2800000, guid: d341eac3dfeff7b4f9ed6fe663cfe5e1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockAlbedo:
+        m_Texture: {fileID: 2800000, guid: 202c5333b545c4f43b4caffab4d91cf9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockHeight:
+        m_Texture: {fileID: 2800000, guid: f03e084879d79ee4881741fd4912d454, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockNormal:
+        m_Texture: {fileID: 2800000, guid: e459fb813576e794a9474f2913cfe329, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockRoughness:
+        m_Texture: {fileID: 2800000, guid: 83f91a452815eb5418ea67a26feed804, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VolcanicAO:
+        m_Texture: {fileID: 2800000, guid: 5ed76fbfbe5c68b40a55636cb49f9ef3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VolcanicAlbedo:
+        m_Texture: {fileID: 2800000, guid: 685a555cc52ae8d44a86c803370e2c00, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VolcanicHeight:
+        m_Texture: {fileID: 2800000, guid: 06d4c72c859ddb2448bb8a50b6fd28e2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VolcanicNormal:
+        m_Texture: {fileID: 2800000, guid: 544c3f22dbf59bc469aee7aa4bbd0471, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VolcanicRoughness:
+        m_Texture: {fileID: 2800000, guid: 0216fcd24ab17eb4f9dae92804e26f3d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _CullMode: 2
     - _CurlForward: 0
     - _CurlLateral: 0
     - _DetailScale: 24
-    - _DetailStrength: 1.5
+    - _DetailStrength: 1.41
     - _FieldSize: 140
+    - _GroundAOStrength: 0.7
+    - _GroundLargeScale: 9
+    - _GroundLargeStrength: 4
+    - _GroundNormalStrength: 1
+    - _GroundTile: 4
+    - _RippleBlendSharpness: 4
+    - _RippleCoverage: 0
+    - _RippleHeightBias: 0.8
+    - _RipplePatchiness: 0.6
+    - _RippleSlopeLimit: 0.3
+    - _RockAOStrength: 0.786
+    - _RockBlendSharpness: 1.1
+    - _RockNormalStrength: 3
     - _RockSlope: 0.35
+    - _RockSlopeSoftness: 0.307
+    - _RockTile: 738.2
     - _SandAOStrength: 1
     - _SandLargeScale: 24.2
     - _SandLargeStrength: 8.58
@@ -86,20 +161,29 @@ Material:
     - _StencilWriteMaskDepth: 8
     - _StencilWriteMaskGBuffer: 14
     - _StencilWriteMaskMV: 40
-    - _TerrainSmoothness: 0.452
+    - _TerrainSmoothness: 0.171
+    - _VolcanicAOStrength: 1
+    - _VolcanicLargeScale: 2
+    - _VolcanicLargeStrength: 3.14
+    - _VolcanicNormalStrength: 0.49
+    - _VolcanicTile: 61
     - _ZClip: 1
     - _ZTestDepthEqualForOpaque: 3
     - _ZTestGBuffer: 4
     m_Colors:
+    - _CurlFrame: {r: 0, g: 1, b: 0, a: 0}
     - _CurlOrigin: {r: 0, g: 0, b: 0, a: 0}
     - _DryGrassColor: {r: 0.62, g: 0.54999995, b: 0.31999996, a: 1}
     - _FieldColorB: {r: 0.54999995, g: 0.6, b: 0.23999995, a: 1}
     - _GrassColor: {r: 0.29999998, g: 0.45, b: 0.15999997, a: 1}
+    - _GroundTint: {r: 1, g: 1, b: 1, a: 1}
     - _RockColor: {r: 0.5, g: 0.43999997, b: 0.37999994, a: 1}
     - _RockDarkColor: {r: 0.26999995, g: 0.22999996, b: 0.19999996, a: 1}
+    - _RockTint: {r: 1, g: 1, b: 1, a: 1}
     - _SandColor: {r: 0.8, g: 0.58, b: 0.35999998, a: 1}
     - _SandDarkColor: {r: 0.8000001, g: 0.5803922, b: 0.36078432, a: 1}
     - _SandTint: {r: 1, g: 1, b: 1, a: 1}
     - _SoilColor: {r: 0.35999998, g: 0.26999995, b: 0.17999998, a: 1}
+    - _VolcanicTint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

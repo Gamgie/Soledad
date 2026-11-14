@@ -105,11 +105,11 @@ float2 FT_NormalToGradient(float4 packedNormal, float strength)
 }
 
 #define FT_SAMPLE_LAYER(prefix, uv, strength, layer)                                                         \
-    layer.albedo = SAMPLE_TEXTURE2D(prefix##Albedo, sampler##prefix##Albedo, uv).rgb;                       \
-    layer.gradient = FT_NormalToGradient(SAMPLE_TEXTURE2D(prefix##Normal, sampler##prefix##Normal, uv), strength); \
-    layer.height = SAMPLE_TEXTURE2D(prefix##Height, sampler##prefix##Height, uv).r;                         \
-    layer.roughness = SAMPLE_TEXTURE2D(prefix##Roughness, sampler##prefix##Roughness, uv).r;                \
-    layer.ao = SAMPLE_TEXTURE2D(prefix##AO, sampler##prefix##AO, uv).r;
+    layer.albedo = SAMPLE_TEXTURE2D(prefix##Albedo, sampler_trilinear_repeat_aniso8, uv).rgb;                       \
+    layer.gradient = FT_NormalToGradient(SAMPLE_TEXTURE2D(prefix##Normal, sampler_trilinear_repeat_aniso8, uv), strength); \
+    layer.height = SAMPLE_TEXTURE2D(prefix##Height, sampler_trilinear_repeat_aniso8, uv).r;                         \
+    layer.roughness = SAMPLE_TEXTURE2D(prefix##Roughness, sampler_trilinear_repeat_aniso8, uv).r;                \
+    layer.ao = SAMPLE_TEXTURE2D(prefix##AO, sampler_trilinear_repeat_aniso8, uv).r;
 
 float2 FT_Rotate2(float2 v, float angle)
 {
@@ -165,40 +165,119 @@ FTLayer FT_Desert(float2 p, float slope, float duneLevel, float variation)
     return o;
 }
 
+// Volcanic ground of the mountains and foothills: planar from above, plus a larger rotated sample against tiling
+FTLayer FT_Ground(float2 p, float variation)
+{
+    float tile = max(_VolcanicTile, 0.01);
+    FTLayer g, gl;
+    FT_SAMPLE_LAYER(_Volcanic, p / tile, _VolcanicNormalStrength, g)
+    FT_SAMPLE_LAYER(_Volcanic, FT_Rotate2(p, 1.1) / (tile * _VolcanicLargeScale), _VolcanicNormalStrength, gl)
+    FTLayer o = g;
+    o.albedo = g.albedo * lerp(0.8, 1.2, saturate(Luminance(gl.albedo) * 2.0)) * _VolcanicTint.rgb * lerp(0.85, 1.12, saturate(0.5 + variation));
+    o.gradient = g.gradient + gl.gradient * (_VolcanicLargeStrength / _VolcanicLargeScale);
+    o.ao = lerp(1.0, g.ao, _VolcanicAOStrength);
+    return o;
+}
+
+// Rock of the cliffs and steep slopes: triplanar in terrain space, so cliffs are not stretched. The normal map is
+// blended in terrain space (whiteout), then expressed as a gradient in the surface frame (terrain +X / +Z on the
+// surface) like the other layers.
+FTLayer FT_Rock(float3 position, float3 n0)
+{
+    float tile = max(_RockTile, 0.01);
+    float3 blend = pow(abs(n0), 4.0);
+    blend /= max(blend.x + blend.y + blend.z, 1e-4);
+    float2 uvX = position.zy / tile, uvY = position.xz / tile + 0.31, uvZ = position.xy / tile + 0.67;
+
+    float3 albedo = 0.0;
+    float height = 0.0, roughness = 0.0, ao = 0.0;
+    float3 tnX = 0.0, tnY = 0.0, tnZ = 0.0;
+    float flip = 1.0 - 2.0 * _SandNormalDirectX;
+#define FT_ROCK_AXIS(uv, w, tn)                                                                                      \
+    albedo += SAMPLE_TEXTURE2D(_RockAlbedo, sampler_trilinear_repeat_aniso8, uv).rgb * w;                                           \
+    height += SAMPLE_TEXTURE2D(_RockHeight, sampler_trilinear_repeat_aniso8, uv).r * w;                                             \
+    roughness += SAMPLE_TEXTURE2D(_RockRoughness, sampler_trilinear_repeat_aniso8, uv).r * w;                                    \
+    ao += SAMPLE_TEXTURE2D(_RockAO, sampler_trilinear_repeat_aniso8, uv).r * w;                                                         \
+    tn = UnpackNormalMapRGorAG(SAMPLE_TEXTURE2D(_RockNormal, sampler_trilinear_repeat_aniso8, uv), _RockNormalStrength);            \
+    tn.y *= flip;
+    FT_ROCK_AXIS(uvX, blend.x, tnX)
+    FT_ROCK_AXIS(uvY, blend.y, tnY)
+    FT_ROCK_AXIS(uvZ, blend.z, tnZ)
+#undef FT_ROCK_AXIS
+
+    // Whiteout blend (Ben Golus)
+    tnX = float3(tnX.xy + n0.zy, abs(tnX.z) * n0.x);
+    tnY = float3(tnY.xy + n0.xz, abs(tnY.z) * n0.y);
+    tnZ = float3(tnZ.xy + n0.xy, abs(tnZ.z) * n0.z);
+    float3 n = normalize(tnX.zyx * blend.x + tnY.xzy * blend.y + tnZ.xyz * blend.z);
+
+    // Into the surface frame: T = terrain +X on the surface, B = terrain +Z on the surface
+    float3 T = normalize(float3(1.0, 0.0, 0.0) - n0 * n0.x);
+    float3 B = cross(T, n0);
+    float3 ts = float3(dot(n, T), dot(n, B), max(dot(n, n0), 0.1));
+
+    FTLayer o;
+    o.albedo = albedo * _RockTint.rgb;
+    o.gradient = -ts.xy / ts.z;
+    o.height = height;
+    o.roughness = roughness;
+    o.ao = lerp(1.0, ao, _RockAOStrength);
+    return o;
+}
+
+FTLayer FT_Lerp(FTLayer a, FTLayer b, float t)
+{
+    FTLayer o;
+    o.albedo = lerp(a.albedo, b.albedo, t);
+    o.gradient = lerp(a.gradient, b.gradient, t);
+    o.height = lerp(a.height, b.height, t);
+    o.roughness = lerp(a.roughness, b.roughness, t);
+    o.ao = lerp(a.ao, b.ao, t);
+    return o;
+}
+
 void FT_Surface(FragInputs input, out float3 baseColor, out float smoothness, out float2 detailGradient, out float ao)
 {
     float2 p = input.texCoord0.xy;               // terrain xz (m)
     float height = input.texCoord1.x;
     float slope = input.texCoord1.y;
+    // Terrain normal before the curl, for the triplanar rock
+    float3 n0 = float3(input.texCoord2.x, 1.0 - slope, input.texCoord2.y);
+    n0 = normalize(n0);
     float3 biome = input.color.rgb;
     biome /= max(biome.r + biome.g + biome.b, 1e-4);
 
     float3 large = FT_FbmD(p, 900.0, 3);         // patches of colour across the landscape
     float3 detail = FT_FbmD(p, max(_DetailScale, 0.01), 6);
-    detailGradient = detail.yz * _DetailStrength;
 
-    // Rock where it is steep, in every biome
-    float rockMask = smoothstep(_RockSlope - 0.08, _RockSlope + 0.08, slope + large.x * 0.06 + detail.x * 0.04);
-    float3 rock = lerp(_RockDarkColor.rgb, _RockColor.rgb, saturate(0.5 + large.x + detail.x * 0.6));
-
-    // Desert: the scanned sand layers
+    // Desert: the scanned sand layers. Mountains: volcanic ground. Valley: procedural fields (for now).
     FTLayer desert = FT_Desert(p, slope, input.color.a, large.x);
-    float3 sand = desert.albedo;
-    detailGradient = lerp(detailGradient, desert.gradient, biome.r);
-    ao = lerp(1.0, desert.ao, biome.r);
+    FTLayer ground = FT_Ground(p, large.x);
+    FTLayer rock = FT_Rock(float3(p.x, height, p.y), n0);
 
-    // Mountains: dry grass on the gentle slopes, rock above
-    float3 mountain = lerp(_DryGrassColor.rgb * (0.85 + 0.3 * large.x), rock, saturate(slope * 2.5));
-
-    // Valley: fields with hedges
     float hedge;
     float3 fields = FT_Fields(p, hedge);
     fields = lerp(fields, _GrassColor.rgb * 0.45, hedge * 0.8);
+    FTLayer valley;
+    valley.albedo = fields * (0.9 + 0.2 * detail.x);
+    valley.gradient = detail.yz * _DetailStrength;
+    valley.height = 0.5;
+    valley.roughness = 1.0 - _TerrainSmoothness;
+    valley.ao = 1.0;
 
-    baseColor = sand * biome.r + mountain * biome.g + fields * biome.b;
-    baseColor = lerp(baseColor, rock, rockMask * (1.0 - biome.b * 0.7));
-    baseColor *= lerp(0.9 + 0.2 * detail.x, 1.0, biome.r);
-    smoothness = lerp(_TerrainSmoothness, 1.0 - desert.roughness, biome.r);
+    FTLayer surface = FT_Lerp(FT_Lerp(desert, ground, biome.g / max(biome.r + biome.g, 1e-4)), valley, biome.b);
+
+    // Rock on steep slopes, in every biome (less in the valley), height-blended against what lies below
+    float rockMask = smoothstep(_RockSlope - _RockSlopeSoftness, _RockSlope + _RockSlopeSoftness,
+                                slope + large.x * 0.06 + detail.x * 0.04) * (1.0 - biome.b * 0.5);
+    float rockBlend = saturate((rockMask - 0.5) * _RockBlendSharpness + (rock.height - surface.height) * 2.0 + 0.5);
+    rockBlend *= step(1e-3, rockMask);
+    surface = FT_Lerp(surface, rock, rockBlend);
+
+    baseColor = surface.albedo;
+    detailGradient = surface.gradient;
+    smoothness = 1.0 - surface.roughness;
+    ao = surface.ao;
 }
 
 void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs posInput, out SurfaceData surfaceData, out BuiltinData builtinData RAY_TRACING_OPTIONAL_PARAMETERS)

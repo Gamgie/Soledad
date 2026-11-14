@@ -42,6 +42,32 @@ Shader "Soledad/FlythroughTerrain"
         _RipplePatchiness("Ripple Patchiness", Range(0, 2)) = 0.6
         _RippleBlendSharpness("Sand Border Sharpness", Range(0.5, 12)) = 4
 
+        [Header(Mountain Ground (volcanic, planar))]
+        [NoScaleOffset] _VolcanicAlbedo("Ground Albedo", 2D) = "white" {}
+        [NoScaleOffset][Normal] _VolcanicNormal("Ground Normal", 2D) = "bump" {}
+        [NoScaleOffset] _VolcanicHeight("Ground Height", 2D) = "gray" {}
+        [NoScaleOffset] _VolcanicRoughness("Ground Roughness", 2D) = "white" {}
+        [NoScaleOffset] _VolcanicAO("Ground AO", 2D) = "white" {}
+        _VolcanicTint("Ground Tint", Color) = (1, 1, 1, 1)
+        _VolcanicTile("Ground Texture Size (m)", Float) = 4
+        _VolcanicNormalStrength("Ground Normal Strength", Range(0, 3)) = 1
+        _VolcanicLargeScale("Ground Anti-tiling Scale", Range(2, 50)) = 9
+        _VolcanicLargeStrength("Ground Anti-tiling Relief", Range(0, 20)) = 4
+        _VolcanicAOStrength("Ground AO Strength", Range(0, 1)) = 0.7
+
+        [Header(Rock (steep slopes, triplanar))]
+        [NoScaleOffset] _RockAlbedo("Rock Albedo", 2D) = "white" {}
+        [NoScaleOffset][Normal] _RockNormal("Rock Normal", 2D) = "bump" {}
+        [NoScaleOffset] _RockHeight("Rock Height", 2D) = "gray" {}
+        [NoScaleOffset] _RockRoughness("Rock Roughness", 2D) = "white" {}
+        [NoScaleOffset] _RockAO("Rock AO", 2D) = "white" {}
+        _RockTint("Rock Tint", Color) = (1, 1, 1, 1)
+        _RockTile("Rock Texture Size (m)", Float) = 8
+        _RockNormalStrength("Rock Normal Strength", Range(0, 3)) = 1
+        _RockAOStrength("Rock AO Strength", Range(0, 1)) = 0.7
+        _RockSlopeSoftness("Rock Slope Softness", Range(0.01, 0.4)) = 0.08
+        _RockBlendSharpness("Rock Border Sharpness", Range(0.5, 12)) = 4
+
         [Header(Fine Relief)]
         _DetailStrength("Relief (m)", Float) = 1.5
         _DetailScale("Largest Feature (m)", Float) = 24

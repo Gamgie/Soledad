@@ -119,12 +119,23 @@ sky, no bloom, fog off.
   disabled. Act 2 Volume: landscape haze (fog base -250 m, 2 km thick, 9 km mean free path, volumetric) and
   shadows out to 8 km (4 cascades). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,
   2 x 2 m, Megascans layout: BaseColor, Normal, Displacement, Roughness, AO) height-blended (ripples on gentle
-  slopes, dry sand on slip faces) plus a larger rotated sample against tiling; dunes in three size families and two
+  slopes, dry sand on slip faces) plus a larger rotated sample against tiling. Mountains and foothills: volcanic
+  ground scan (`_Volcanic*`, planar + anti-tiling sample; `_Ground*` names are taken by HDRP's sky); steep slopes in
+  every biome: cliff rock scan (`_Rock*`), triplanar in terrain space from the pre-curl terrain normal (mesh uv2 =
+  normal xz), height-blended (Rock Slope, Rock Slope Softness, Rock Border Sharpness). All scanned textures share one
+  inline sampler (`sampler_trilinear_repeat_aniso8`): a pixel shader has only 16 samplers. Only BaseColor, Normal,
+  Displacement, Roughness and AO maps are kept. Dunes in three size families and two
   wind regimes with draa underneath (`TerrainField.Dunes`). The act also aims the main scene's `Sun`
   (`sunElevation`, `sunAzimuth`, animatable; default 14 degrees, ahead-right) and raises its shadow resolution to
   4096 while shown, restoring both when disabled and around scene saves, so Soledad_Main never keeps them.
-  For the film, the Bogota valley is a separate shot (cut); a live transition is still needed for the performance.
-  Next: mountain look and textures, Bogota mesh from Blender, mirror cubes and monoliths, cubic clouds, 70s look.
+  For the film, the Bogota valley is a separate shot (cut in editing).
+  Live transitions planned (performance): Act 1 to 2 = black cut, then the sun light fades in smoothly. Inside Act 2,
+  valley to Bogota: the valley curls as the bird flies through it until it is a closed tube halfway; ahead, the
+  Bogota terrain stands at 90 degrees, seen as from above; on reaching it the camera turns 90 degrees up and follows
+  the Bogota terrain, the valley left behind (sky and sun orientation to be solved then). Act 2 to 3 = cut to the
+  abyss as the bird enters a lake in the Bogota landscape.
+  Next: cubic clouds, mirror cubes and monoliths, Bogota mesh from Blender (Clement), mountain erosion and more
+  varied ridges, per-pixel dune relief to remove the stepped slip-face edges, 70s look.
 
 ## Film workflow: perform, then render
 
