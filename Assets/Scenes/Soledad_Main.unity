@@ -210,7 +210,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 157207112}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.38268343, y: -0, z: -0, w: 0.92387956}
+  m_LocalRotation: {x: 0.03154211, y: 0.9587259, z: -0.11771675, w: 0.25688988}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -317,7 +317,7 @@ MonoBehaviour:
   m_LightAngle: 1
   m_MaxDepthBias: 0.001
   m_ShadowResolution:
-    m_Override: 512
+    m_Override: 4096
     m_UseOverride: 1
     m_Level: 0
   m_ShadowDimmer: 1
@@ -926,11 +926,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Soledad.Act2Controller
   FlythroughTerrain_speed: 60
   FlythroughTerrain_altitude: 140
-  FlythroughTerrain_followRoute: 1
-  FlythroughTerrain_routeOffset: 0
-  FlythroughTerrain_turnRate: 0
+  FlythroughTerrain_pathOffset: 0
+  FlythroughTerrain_cameraFollowsHeading: 1
   FlythroughTerrain_curlLateral: 0
   FlythroughTerrain_curlForward: 0
+  FlythroughTerrain_sunElevation: 14
+  FlythroughTerrain_sunAzimuth: 150
 --- !u!1001 &826275307
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -985,7 +986,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4088958612684985104, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4545562079074663550, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1331,7 +1332,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1618330211047868648, guid: 2d8ae6407d50bd54f89baf6a52091c8a, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2530438436232717069, guid: 2d8ae6407d50bd54f89baf6a52091c8a, type: 3}
       propertyPath: m_LocalPosition.x

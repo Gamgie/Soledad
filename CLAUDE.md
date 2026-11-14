@@ -99,18 +99,32 @@ sky, no bloom, fog off.
 - **Act 2, `FlythroughTerrain`** (`Assets/Acts/Act2_Flythrough/`, on `Act2_Flythrough/Flythrough`): a bird's
   flight over an endless landscape laid out along a route (terrain +Z): desert, mountains with a winding pass, then
   the valley (fields between two ridges); shape in `TerrainShape` (`TerrainField.cs`, pure Burst-compatible height
-  and biome functions). The bird is the object's position, the flight runs along world +Z: like the Act 1 tunnel,
-  the camera rig stays put and the generated child `Terrain (generated)` is placed every frame so the route point is
-  `altitude` metres above the (smoothed, anticipated) ground. Tiles form a quadtree around "Main Camera" (dense near
+  and biome functions). The landscape is fixed in the space of `Act2_Flythrough/World`; the bird flies along
+  `World/Flight Path` (a Splines `SplineContainer`, editable; `pathOffset`, `loopPath`) at `altitude` metres above the
+  (smoothed, anticipated) ground plus the spline's own height. Floating origin: the Oxipital camera rig stays at the
+  `Flythrough` object and the act only translates `World` (never rotates it) so the bird sits there; `World` goes
+  back to the origin when the act ends and while a scene is saved. `cameraFollowsHeading` adds the path's turns to
+  the Orbital and Spaceship rigs (not Sensor). The terrain's pass and valley follow the route centre line
+  (`TerrainField.RouteX`), not the spline: keep the spline near it. Tiles (`Terrain (generated)` under `World`) form a quadtree around "Main Camera" (dense near
   it, coarse to the horizon, `detailDistance`), built in terrain space by a parallel Burst job with skirts hiding
   the seams, never saved. Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
   shadows, motion vectors) with a hand-written surface (`FlythroughTerrainData.hlsl`: biome colours, rock on slopes,
   fields, per-pixel relief from terrain coordinates) and the world curl in the `HAVE_MESH_MODIFICATION` hook
-  (`curlLateral` rolls the ground into a tube around the flight axis, `curlForward` lifts it ahead into a wall);
+  (`curlLateral` rolls the ground into a tube around the flight direction, `curlForward` lifts it ahead into a wall;
+  in Play mode the act works on a copy of its Volume profile to thin the fog and fade the volumetric clouds while
+  curled, `curlClearsFog` / `curlClearsClouds`); sand placement: vertex colour alpha = dune level (0 trough, 1 crest)
+  and material settings Ripple Coverage, Height Preference, Slope Limit, Patchiness, Border Sharpness;
   `_Smoothness` and other Lit names are taken by `LitProperties.hlsl`, so terrain properties are plain uniforms with
   their own names. In Play mode the act pushes every camera's far plane to `farClip` (40 km) and restores it when
-  disabled. Act 2 Volume: landscape haze (fog base -250 m, 2 km thick, 9 km mean free path, volumetric).
-  Next: real elevation data for the Bogota valley, mirror cubes and monoliths, cubic clouds, 70s look.
+  disabled. Act 2 Volume: landscape haze (fog base -250 m, 2 km thick, 9 km mean free path, volumetric) and
+  shadows out to 8 km (4 cascades). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,
+  2 x 2 m, Megascans layout: BaseColor, Normal, Displacement, Roughness, AO) height-blended (ripples on gentle
+  slopes, dry sand on slip faces) plus a larger rotated sample against tiling; dunes in three size families and two
+  wind regimes with draa underneath (`TerrainField.Dunes`). The act also aims the main scene's `Sun`
+  (`sunElevation`, `sunAzimuth`, animatable; default 14 degrees, ahead-right) and raises its shadow resolution to
+  4096 while shown, restoring both when disabled and around scene saves, so Soledad_Main never keeps them.
+  For the film, the Bogota valley is a separate shot (cut); a live transition is still needed for the performance.
+  Next: mountain look and textures, Bogota mesh from Blender, mirror cubes and monoliths, cubic clouds, 70s look.
 
 ## Film workflow: perform, then render
 

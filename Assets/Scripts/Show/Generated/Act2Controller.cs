@@ -15,16 +15,18 @@ namespace Soledad
         public float FlythroughTerrain_speed = 60f;
         [Tooltip("Height above the ground (m). Smoothed, and anticipated so the flight rises before a mountain.")]
         public float FlythroughTerrain_altitude = 140f;
-        [Tooltip("Follow the route centre line (through the mountain pass, along the valley). Off: steer with turnRate.")]
-        public bool FlythroughTerrain_followRoute = true;
-        [Tooltip("Sideways offset from the route centre line (m).")]
-        public float FlythroughTerrain_routeOffset = 0f;
-        [Tooltip("Turn speed when not following the route (degrees per second, positive = right).")]
-        public float FlythroughTerrain_turnRate = 0f;
+        [Tooltip("Sideways offset from the flight path (m), positive = right.")]
+        public float FlythroughTerrain_pathOffset = 0f;
+        [Tooltip("Turn the camera with the path (added to the Orbital and Spaceship rigs, the gamepad stays on top).")]
+        public bool FlythroughTerrain_cameraFollowsHeading = true;
         [Tooltip("Rolls the ground up into a tube around the flight axis. 0 = flat, 1 = closed tube of radius curlRadius.")]
         [Range(0f, 1f)] public float FlythroughTerrain_curlLateral = 0f;
         [Tooltip("Lifts the ground ahead into a wall. 0 = flat, 1 = bend of radius bendRadius.")]
         [Range(0f, 1f)] public float FlythroughTerrain_curlForward = 0f;
+        [Tooltip("Sun height above the horizon (degrees). Low = long shadows across the dunes.")]
+        [Range(-5f, 90f)] public float FlythroughTerrain_sunElevation = 14f;
+        [Tooltip("Sun direction in the landscape (degrees): 0 = shining towards +Z (the start of the route runs along +Z).")]
+        [Range(-180f, 180f)] public float FlythroughTerrain_sunAzimuth = 150f;
 
         global::Soledad.FlythroughTerrain _target0;
 
@@ -46,11 +48,12 @@ namespace Soledad
             {
                 _target0.speed = FlythroughTerrain_speed;
                 _target0.altitude = FlythroughTerrain_altitude;
-                _target0.followRoute = FlythroughTerrain_followRoute;
-                _target0.routeOffset = FlythroughTerrain_routeOffset;
-                _target0.turnRate = FlythroughTerrain_turnRate;
+                _target0.pathOffset = FlythroughTerrain_pathOffset;
+                _target0.cameraFollowsHeading = FlythroughTerrain_cameraFollowsHeading;
                 _target0.curlLateral = FlythroughTerrain_curlLateral;
                 _target0.curlForward = FlythroughTerrain_curlForward;
+                _target0.sunElevation = FlythroughTerrain_sunElevation;
+                _target0.sunAzimuth = FlythroughTerrain_sunAzimuth;
             }
         }
 

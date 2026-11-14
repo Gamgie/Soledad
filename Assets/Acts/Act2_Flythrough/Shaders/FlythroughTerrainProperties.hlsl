@@ -15,6 +15,30 @@ float  _TerrainSmoothness;
 float  _RockSlope;          // slope (1 - normal.y) where rock takes over
 float  _FieldSize;          // size of the valley fields (m)
 
+// Scanned sand layers (desert): rippled sand and dry sand, PBR sets of the same physical size
+TEXTURE2D(_RippleSandAlbedo);    SAMPLER(sampler_RippleSandAlbedo);
+TEXTURE2D(_RippleSandNormal);    SAMPLER(sampler_RippleSandNormal);
+TEXTURE2D(_RippleSandHeight);    SAMPLER(sampler_RippleSandHeight);
+TEXTURE2D(_RippleSandRoughness); SAMPLER(sampler_RippleSandRoughness);
+TEXTURE2D(_RippleSandAO);        SAMPLER(sampler_RippleSandAO);
+TEXTURE2D(_DrySandAlbedo);       SAMPLER(sampler_DrySandAlbedo);
+TEXTURE2D(_DrySandNormal);       SAMPLER(sampler_DrySandNormal);
+TEXTURE2D(_DrySandHeight);       SAMPLER(sampler_DrySandHeight);
+TEXTURE2D(_DrySandRoughness);    SAMPLER(sampler_DrySandRoughness);
+TEXTURE2D(_DrySandAO);           SAMPLER(sampler_DrySandAO);
+float4 _SandTint;
+float  _SandTile;           // physical size of one texture repeat (m)
+float  _SandNormalStrength;
+float  _SandNormalDirectX;  // 0 = OpenGL normal maps, 1 = DirectX (green flipped)
+float  _SandLargeScale;     // the anti-tiling sample is this many times larger
+float  _SandLargeStrength;  // relief of the large sample
+float  _SandAOStrength;
+float  _RippleCoverage;       // -1 = all dry sand, 1 = ripples everywhere the slope allows
+float  _RippleHeightBias;     // + = ripples on the upper part of the dunes, - = on the lower part
+float  _RippleSlopeLimit;     // steeper than this (1 - normal.y) is always dry sand
+float  _RipplePatchiness;     // large noise patches breaking the placement
+float  _RippleBlendSharpness; // sharpness of the border between the two sands
+
 // Fine relief, computed per pixel (below the mesh resolution)
 float  _DetailStrength;
 float  _DetailScale;        // size of the largest detail feature (m)
@@ -23,3 +47,4 @@ float  _DetailScale;        // size of the largest detail feature (m)
 float4 _CurlOrigin;         // xyz
 float  _CurlLateral;        // 1 / radius of the tube the ground rolls into around the flight axis (0 = flat)
 float  _CurlForward;        // 1 / radius of the bend that lifts the ground ahead into a wall (0 = flat)
+float4 _CurlFrame;          // xy = flight direction in world xz (unit)

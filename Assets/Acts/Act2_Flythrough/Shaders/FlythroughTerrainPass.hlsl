@@ -56,13 +56,28 @@ float3 FT_Rotate(float3 v, float lateralAngle, float forwardAngle)
     return v;
 }
 
+float3 FT_ToFlightFrame(float3 v, float2 right, float2 forward)
+{
+    return float3(dot(v.xz, right), v.y, dot(v.xz, forward));
+}
+
+float3 FT_ToWorldFrame(float3 v, float2 right, float2 forward)
+{
+    return float3(right.x * v.x + forward.x * v.z, v.y, right.y * v.x + forward.y * v.z);
+}
+
 AttributesMesh ApplyMeshModification(AttributesMesh input, float3 timeParameters)
 {
     if (_CurlLateral <= 0.0 && _CurlForward <= 0.0)
         return input;
 
+    // Work in the flight frame: x = right of the flight, y = up, z = along the flight
+    float2 forward = normalize(_CurlFrame.xy + float2(0.0, 1e-6));
+    float2 right = float2(forward.y, -forward.x);
+
     float3 positionWS = GetAbsolutePositionWS(TransformObjectToWorld(input.positionOS));
-    float3 p = positionWS - _CurlOrigin.xyz;
+    float3 d = positionWS - _CurlOrigin.xyz;
+    float3 p = float3(dot(d.xz, right), d.y, dot(d.xz, forward));
 
     float lateralAngle = 0.0, forwardAngle = 0.0;
     if (_CurlLateral > 0.0)
@@ -70,12 +85,12 @@ AttributesMesh ApplyMeshModification(AttributesMesh input, float3 timeParameters
     if (_CurlForward > 0.0 && p.z > 0.0)                 // only the ground ahead lifts
         forwardAngle = FT_Roll(p.z, p.y, _CurlForward);
 
-    positionWS = p + _CurlOrigin.xyz;
-    input.positionOS = TransformWorldToObject(GetCameraRelativePositionWS(positionWS));
+    d = float3(right.x * p.x + forward.x * p.z, p.y, right.y * p.x + forward.y * p.z);
+    input.positionOS = TransformWorldToObject(GetCameraRelativePositionWS(d + _CurlOrigin.xyz));
 
-    float3 normalWS = FT_Rotate(TransformObjectToWorldNormal(input.normalOS), lateralAngle, forwardAngle);
+    float3 normalWS = FT_ToWorldFrame(FT_Rotate(FT_ToFlightFrame(TransformObjectToWorldNormal(input.normalOS), right, forward), lateralAngle, forwardAngle), right, forward);
     input.normalOS = TransformWorldToObjectNormal(normalWS);
-    float3 tangentWS = FT_Rotate(TransformObjectToWorldDir(input.tangentOS.xyz), lateralAngle, forwardAngle);
+    float3 tangentWS = FT_ToWorldFrame(FT_Rotate(FT_ToFlightFrame(TransformObjectToWorldDir(input.tangentOS.xyz), right, forward), lateralAngle, forwardAngle), right, forward);
     input.tangentOS.xyz = TransformWorldToObjectDir(tangentWS);
     return input;
 }

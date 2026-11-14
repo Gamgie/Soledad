@@ -11,9 +11,13 @@ namespace Soledad
 {
     /// <summary>
     /// Act 2 (Flythrough): a bird's flight over an endless landscape, desert, then mountains, then the valley, laid out
-    /// along a route (TerrainShape). The bird is this object's position; the flight is along world +Z. The terrain
-    /// moves under it like the Act 1 tunnel moves around the camera: the camera rig stays put, the terrain root is
-    /// placed every frame so that the flight point is <see cref="altitude"/> metres above the ground.
+    /// along a route (TerrainShape). The landscape is fixed in the space of <see cref="world"/>; the bird flies along
+    /// <see cref="flightPath"/> (a spline in that space) at <see cref="altitude"/> metres above the ground.
+    ///
+    /// Floating origin: the camera rig (Oxipital, in Soledad_Main) stays at this object's position, and the act only
+    /// translates <see cref="world"/> so the bird sits there. No rotation, so the sun stays fixed relative to the ground,
+    /// and float precision stays good however far the flight goes. The camera can follow the path's heading
+    /// (<see cref="cameraFollowsHeading"/>): the turn is added to the Orbital and Spaceship rigs, the gamepad on top.
     ///
     /// The terrain is a quadtree of tiles around the camera named "Main Camera" (dense near it, coarse towards the
     /// horizon). Tiles are built in terrain space by a Burst job (TerrainField), with skirts hiding the seams between
@@ -30,18 +34,18 @@ namespace Soledad
         public float speed = 60f;
         [Animate] [Tooltip("Height above the ground (m). Smoothed, and anticipated so the flight rises before a mountain.")]
         public float altitude = 140f;
-        [Animate] [Tooltip("Follow the route centre line (through the mountain pass, along the valley). Off: steer with turnRate.")]
-        public bool followRoute = true;
-        [Animate] [Tooltip("Sideways offset from the route centre line (m).")]
-        public float routeOffset = 0f;
-        [Animate] [Tooltip("Turn speed when not following the route (degrees per second, positive = right).")]
-        public float turnRate = 0f;
+        [Animate] [Tooltip("Sideways offset from the flight path (m), positive = right.")]
+        public float pathOffset = 0f;
+        [Animate] [Tooltip("Turn the camera with the path (added to the Orbital and Spaceship rigs, the gamepad stays on top).")]
+        public bool cameraFollowsHeading = true;
         [Tooltip("Seconds for the flight height to settle on the ground below.")]
         public float altitudeSmoothing = 2.5f;
         [Tooltip("How far ahead (m) the ground is anticipated.")]
         public float lookAhead = 600f;
-        [Tooltip("Route distance (m) where the flight starts (ResetFlight).")]
+        [Tooltip("Distance along the path (m) where the flight starts (ResetFlight).")]
         public float startDistance = 0f;
+        [Tooltip("At the end of the path: start again from the beginning. Off: stop there.")]
+        public bool loopPath = false;
 
         [Header("World curl")]
         [Animate] [Tooltip("Rolls the ground up into a tube around the flight axis. 0 = flat, 1 = closed tube of radius curlRadius.")]
@@ -52,6 +56,20 @@ namespace Soledad
         [Range(0f, 1f)] public float curlForward = 0f;
         [Tooltip("Bend radius (m) at forward curl 1.")]
         public float bendRadius = 4000f;
+        [Tooltip("While curled, thin the fog of the act Volume (Play mode): far curled ground otherwise fades into the sky.")]
+        [Range(0f, 1f)] public float curlClearsFog = 1f;
+        [Tooltip("While curled, fade the volumetric clouds of the act Volume (Play mode): the curled ground crosses the cloud layer.")]
+        [Range(0f, 1f)] public float curlClearsClouds = 1f;
+
+        [Header("Sun (the Sun of Soledad_Main, while the act is shown)")]
+        [Tooltip("Aim the main scene's Sun from this act. Its own rotation comes back when the act ends.")]
+        public bool overrideSun = true;
+        [Animate] [Tooltip("Sun height above the horizon (degrees). Low = long shadows across the dunes.")]
+        [Range(-5f, 90f)] public float sunElevation = 14f;
+        [Animate] [Tooltip("Sun direction in the landscape (degrees): 0 = shining towards +Z (the start of the route runs along +Z).")]
+        [Range(-180f, 180f)] public float sunAzimuth = 150f;
+        [Tooltip("Sun shadow map resolution while the act is shown. Low sun = long shadows: 512 makes them blocky.")]
+        public int sunShadowResolution = 4096;
 
         [Header("Landscape (rebuilds the terrain)")]
         public TerrainShape shape = TerrainShape.Default;
@@ -62,7 +80,7 @@ namespace Soledad
         [Tooltip("Quadtree levels: the largest tiles are leafSize x 2^levels.")]
         [Range(4, 14)] public int levels = 10;
         [Tooltip("Cells per tile side. More = finer relief everywhere.")]
-        [Range(8, 64)] public int cellsPerTile = 32;
+        [Range(8, 64)] public int cellsPerTile = 48;
         [Tooltip("A tile splits when the camera is closer than its size times this. More = more detail far away.")]
         [Range(1f, 6f)] public float detailDistance = 1.5f;
         [Tooltip("Far clip plane given to every camera while the act is shown, in Play mode (m). The Oxipital cameras stop at 1 km.")]
@@ -71,6 +89,12 @@ namespace Soledad
         public bool animateInEditMode = false;
 
         [Header("References")]
+        [Tooltip("The fixed landscape: tiles, path and placed objects live under it. Translated so the bird stays here.")]
+        [OSCQuery.DoNotExpose] public Transform world;
+        [Tooltip("Flight path, a spline under World. Empty = the route centre line of the landscape.")]
+        [OSCQuery.DoNotExpose] public UnityEngine.Splines.SplineContainer flightPath;
+        [Tooltip("The act's Volume, whose fog and clouds clear while curled.")]
+        [OSCQuery.DoNotExpose] public Volume actVolume;
         [OSCQuery.DoNotExpose] public Material terrainMaterial;
         [Tooltip("Empty = the camera named \"Main Camera\" (Oxipital Cameras prefab), found at run time.")]
         [OSCQuery.DoNotExpose] public Transform followTarget;
@@ -78,6 +102,7 @@ namespace Soledad
         static readonly int CurlOriginId = Shader.PropertyToID("_CurlOrigin");
         static readonly int CurlLateralId = Shader.PropertyToID("_CurlLateral");
         static readonly int CurlForwardId = Shader.PropertyToID("_CurlForward");
+        static readonly int CurlFrameId = Shader.PropertyToID("_CurlFrame");
 
         class Tile
         {
@@ -87,11 +112,15 @@ namespace Soledad
             public long key;
         }
 
-        // Flight state (terrain space: x across, z along the route)
-        double2 _position;
+        // Flight state, in the space of `world`
+        double _distance;           // along the path (m)
+        double2 _position;          // bird xz
         double _heading;            // radians, 0 = +Z
+        float _pathHeight;          // height of the path itself, added to the altitude
         float _ground;
         bool _groundReady, _started;
+        double _cameraHeading;      // heading already applied to the camera rigs
+        bool _cameraHeadingReady;
 
         Transform _root;
         readonly Dictionary<long, Tile> _tiles = new Dictionary<long, Tile>();
@@ -109,8 +138,8 @@ namespace Soledad
         [Animate]
         public void ResetFlight()
         {
-            _position = new double2(TerrainField.RouteX(startDistance, shape) + routeOffset, startDistance);
-            _heading = math.atan(TerrainField.RouteSlope(startDistance, shape));
+            _distance = startDistance;
+            SamplePath();
             _groundReady = false;
         }
 
@@ -137,6 +166,10 @@ namespace Soledad
             ApplyFarClip();
             Tick(0f);
 #if UNITY_EDITOR
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaving -= OnSceneSaving;
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaving += OnSceneSaving;
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved -= OnSceneSaved;
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved += OnSceneSaved;
             _lastEditorTime = UnityEditor.EditorApplication.timeSinceStartup;
             UnityEditor.EditorApplication.update -= EditorTick;
             UnityEditor.EditorApplication.update += EditorTick;
@@ -168,9 +201,140 @@ namespace Soledad
             _farOriginals.Clear();
         }
 
+        // ---------------------------------------------------------------- atmosphere while curled
+
+        VolumeProfile _sharedProfile, _runtimeProfile;
+        UnityEngine.Rendering.HighDefinition.Fog _fog;
+        UnityEngine.Rendering.HighDefinition.VolumetricClouds _clouds;
+        float _fogMeanFreePath, _cloudDensity;
+
+        // Play mode only: works on a copy of the act Volume's profile, the asset is never touched
+        void UpdateAtmosphere()
+        {
+            if (!Application.isPlaying || actVolume == null) return;
+            if (_runtimeProfile == null)
+            {
+                _sharedProfile = actVolume.sharedProfile;
+                if (_sharedProfile == null) return;
+                _runtimeProfile = Instantiate(_sharedProfile);
+                _runtimeProfile.name = _sharedProfile.name + " (runtime)";
+                actVolume.sharedProfile = _runtimeProfile;
+                // A value only counts when its override is on: switch them on, keeping the profile's own values
+                if (_runtimeProfile.TryGet(out _fog))
+                {
+                    _fogMeanFreePath = _fog.meanFreePath.value;
+                    _fog.meanFreePath.overrideState = true;
+                }
+                if (_runtimeProfile.TryGet(out _clouds))
+                {
+                    _cloudDensity = _clouds.densityMultiplier.value;
+                    _clouds.densityMultiplier.overrideState = true;
+                }
+            }
+            float curl = math.max(curlLateral, curlForward);
+            if (_fog != null) _fog.meanFreePath.value = _fogMeanFreePath * math.lerp(1f, 40f, curl * curlClearsFog);
+            if (_clouds != null) _clouds.densityMultiplier.value = _cloudDensity * (1f - curl * curlClearsClouds);
+        }
+
+        void RestoreAtmosphere()
+        {
+            if (_runtimeProfile == null) return;
+            if (actVolume != null && actVolume.sharedProfile == _runtimeProfile) actVolume.sharedProfile = _sharedProfile;
+            DestroyUnityObject(_runtimeProfile);
+            _runtimeProfile = null;
+            _fog = null;
+            _clouds = null;
+        }
+
+        // ---------------------------------------------------------------- sun
+
+        Light _sun;
+        Quaternion _sunOriginal;
+        bool _sunOverridden;
+        UnityEngine.Rendering.HighDefinition.HDAdditionalLightData _sunData;
+        int _sunResolutionOriginal;
+        bool _sunResolutionUseOverride;
+
+        void ApplySun()
+        {
+            if (!overrideSun)
+            {
+                RestoreSun();
+                return;
+            }
+            if (_sun == null) _sun = FindSun();
+            if (_sun == null) return;
+            if (!_sunOverridden)
+            {
+                _sunOriginal = _sun.transform.rotation;
+                _sunData = _sun.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
+                if (_sunData != null)
+                {
+                    _sunResolutionOriginal = _sunData.shadowResolution.@override;
+                    _sunResolutionUseOverride = _sunData.shadowResolution.useOverride;
+                    _sunData.shadowResolution.useOverride = true;
+                    _sunData.shadowResolution.@override = sunShadowResolution;
+                }
+                _sunOverridden = true;
+            }
+            var rotation = Quaternion.Euler(sunElevation, sunAzimuth, 0f);
+            if (_sun.transform.rotation != rotation) _sun.transform.rotation = rotation;
+        }
+
+        void RestoreSun()
+        {
+            if (_sunOverridden && _sun != null)
+            {
+                _sun.transform.rotation = _sunOriginal;
+                if (_sunData != null)
+                {
+                    _sunData.shadowResolution.@override = _sunResolutionOriginal;
+                    _sunData.shadowResolution.useOverride = _sunResolutionUseOverride;
+                }
+            }
+            _sunOverridden = false;
+        }
+
+        // The directional light named "Sun" (Soledad_Main), else the first directional light
+        static Light FindSun()
+        {
+            Light first = null;
+            foreach (var light in FindObjectsByType<Light>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (light.type != LightType.Directional) continue;
+                if (light.name == "Sun") return light;
+                if (first == null) first = light;
+            }
+            return first;
+        }
+
+#if UNITY_EDITOR
+        // Never save the act's sun into Soledad_Main: put the original back while a scene is written
+        // Same for the World offset in the act scene
+        void OnSceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
+        {
+            RestoreSun();
+            RestoreWorld();
+        }
+
+        void OnSceneSaved(UnityEngine.SceneManagement.Scene scene)
+        {
+            ApplySun();
+            if (_root != null) PlaceWorld();
+        }
+#endif
+
         void OnDisable()
         {
+#if UNITY_EDITOR
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaving -= OnSceneSaving;
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved -= OnSceneSaved;
+#endif
+            RestoreSun();
             RestoreFarClip();
+            RestoreAtmosphere();
+            RestoreWorld();
+            _cameraHeadingReady = false;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.update -= EditorTick;
 #endif
@@ -217,26 +381,20 @@ namespace Soledad
             }
 
             Fly(dt);
-            PlaceRoot();
+            PlaceWorld();
+            TurnCameras();
             UpdateTiles();
             UpdateMaterial();
+            UpdateAtmosphere();
+            ApplySun();
         }
 
         // ---------------------------------------------------------------- flight
 
         void Fly(float dt)
         {
-            if (followRoute)
-            {
-                double z = _position.y + speed * dt;
-                _position = new double2(TerrainField.RouteX((float)z, shape) + routeOffset, z);
-                _heading = math.atan(TerrainField.RouteSlope((float)z, shape));
-            }
-            else
-            {
-                _heading += math.radians(turnRate) * dt;
-                _position += new double2(math.sin(_heading), math.cos(_heading)) * (speed * dt);
-            }
+            _distance += speed * dt;
+            SamplePath();
 
             // Ground below and ahead: rise early for what is coming
             float2 p = (float2)_position;
@@ -258,13 +416,100 @@ namespace Soledad
             }
         }
 
-        // The terrain point under the bird ends up `altitude` metres below this object, the heading along world +Z
-        void PlaceRoot()
+        // Bird position and heading at _distance along the path (spline in world space), or along the route centre line
+        void SamplePath()
         {
-            var rotation = Quaternion.Euler(0f, -math.degrees((float)_heading), 0f);
-            var ground = new Vector3((float)_position.x, _ground, (float)_position.y);
-            _root.SetPositionAndRotation(transform.position - new Vector3(0f, altitude, 0f) - rotation * ground, rotation);
+            var spline = flightPath != null ? flightPath.Spline : null;
+            float3 position, tangent;
+            if (spline != null && spline.Count >= 2)
+            {
+                float length = spline.GetLength();
+                double d = loopPath ? _distance - math.floor(_distance / length) * length : math.clamp(_distance, 0.0, length);
+                float t = length > 0f ? (float)(d / length) : 0f;
+                position = UnityEngine.Splines.SplineUtility.EvaluatePosition(spline, t);
+                tangent = UnityEngine.Splines.SplineUtility.EvaluateTangent(spline, t);
+                // The container may sit anywhere under World: bring the path into World space
+                if (world != null && flightPath.transform != world)
+                {
+                    Matrix4x4 m = world.worldToLocalMatrix * flightPath.transform.localToWorldMatrix;
+                    position = m.MultiplyPoint3x4(position);
+                    tangent = m.MultiplyVector(tangent);
+                }
+            }
+            else
+            {
+                float z = (float)_distance;
+                position = new float3(TerrainField.RouteX(z, shape), 0f, z);
+                tangent = new float3(TerrainField.RouteSlope(z, shape), 0f, 1f);
+            }
+
+            float2 forward = math.normalizesafe(tangent.xz, new float2(0f, 1f));
+            float2 right = new float2(forward.y, -forward.x);
+            float2 xz = position.xz + right * pathOffset;
+            _position = new double2(xz.x, xz.y);
+            _heading = math.atan2(forward.x, forward.y);
+            _pathHeight = position.y;
         }
+
+        // Floating origin: World is translated (never rotated) so the bird sits on this object
+        void PlaceWorld()
+        {
+            Transform w = world != null ? world : _root;
+            var bird = new Vector3((float)_position.x, _ground + altitude + _pathHeight, (float)_position.y);
+            Vector3 position = transform.position - bird;
+            if (w.position != position || w.rotation != Quaternion.identity)
+                w.SetPositionAndRotation(position, Quaternion.identity);
+        }
+
+        void RestoreWorld()
+        {
+            if (world != null) world.localPosition = Vector3.zero;
+        }
+
+        // Turn the Oxipital camera rigs with the path, around this object (Play mode). Orbital and Spaceship only:
+        // the Sensor rig takes its rotation from the body sensor.
+        void TurnCameras()
+        {
+            if (!Application.isPlaying) return;
+            if (!_cameraHeadingReady)
+            {
+                _cameraHeading = _heading;
+                _cameraHeadingReady = true;
+                return;
+            }
+            float delta = (float)(_heading - _cameraHeading);
+            delta = math.atan2(math.sin(delta), math.cos(delta));
+            _cameraHeading = _heading;
+            if (!cameraFollowsHeading || math.abs(delta) < 1e-6f) return;
+
+            var turn = Quaternion.AngleAxis(math.degrees(delta), Vector3.up);
+            Vector3 pivot = transform.position;
+            if (_cameraController == null) _cameraController = FindFirstObjectByType<Oxipital.CameraController>(FindObjectsInactive.Include);
+            if (_cameraController == null) return;
+
+            if (_cameraController.orbitalCamera != null)
+            {
+                var orbital = _cameraController.orbitalCamera;
+                orbital.positionTarget = pivot + turn * (orbital.positionTarget - pivot);
+                orbital.rotateYAngle += math.degrees(delta);
+                Transform t = orbital.transform;
+                t.SetPositionAndRotation(pivot + turn * (t.position - pivot), turn * t.rotation);
+            }
+            if (_cameraController.spaceshipCamera != null)
+            {
+                Transform t = _cameraController.spaceshipCamera.transform;
+                var body = t.GetComponent<Rigidbody>();
+                if (body != null)
+                {
+                    body.position = pivot + turn * (body.position - pivot);
+                    body.rotation = turn * body.rotation;
+                    if (!body.isKinematic) body.linearVelocity = turn * body.linearVelocity;
+                }
+                t.SetPositionAndRotation(pivot + turn * (t.position - pivot), turn * t.rotation);
+            }
+        }
+
+        Oxipital.CameraController _cameraController;
 
         // ---------------------------------------------------------------- tiles
 
@@ -435,9 +680,15 @@ namespace Soledad
 
         void EnsureRoot()
         {
-            if (_root != null) return;
+            Transform parent = world != null ? world : transform;
+            if (_root != null && _root.parent == parent) return;
+            if (_root != null)
+            {
+                ClearTiles(true);
+                DestroyUnityObject(_root.gameObject);
+            }
             var go = new GameObject("Terrain (generated)") { hideFlags = HideFlags.DontSave };
-            go.transform.SetParent(transform, false);
+            go.transform.SetParent(parent, false);
             _root = go.transform;
         }
 
@@ -445,13 +696,15 @@ namespace Soledad
 
         void UpdateMaterial()
         {
-            Vector3 origin = transform.position - new Vector3(0f, altitude, 0f);
+            // Curl around the ground point under the bird, along its heading
+            Vector3 origin = transform.position - new Vector3(0f, altitude + _pathHeight, 0f);
             float lateral = curlLateral > 0f ? curlLateral / math.max(curlRadius, 1f) : 0f;
             float forward = curlForward > 0f ? curlForward / math.max(bendRadius, 1f) : 0f;
 
             _block.SetVector(CurlOriginId, origin);
             _block.SetFloat(CurlLateralId, lateral);
             _block.SetFloat(CurlForwardId, forward);
+            _block.SetVector(CurlFrameId, new Vector4((float)math.sin(_heading), (float)math.cos(_heading), 0f, 0f));
 
             // Curled vertices leave their tile bounds: stop culling the tiles while the world is curled
             bool curled = lateral > 0f || forward > 0f;
@@ -540,7 +793,7 @@ namespace Soledad
 
                 // Heights with a one-sample border, for normals that match across tiles
                 var heights = new NativeArray<float>(border * border, Allocator.Temp);
-                var biomes = new NativeArray<float3>(grid * grid, Allocator.Temp);
+                var biomes = new NativeArray<float4>(grid * grid, Allocator.Temp);
                 float2 range = new float2(float.MaxValue, float.MinValue);
                 for (int j = -1; j <= grid; j++)
                 {
@@ -548,11 +801,11 @@ namespace Soledad
                     {
                         float2 p = r.origin + new float2(i, j) * step;
                         bool inside = i >= 0 && j >= 0 && i < grid && j < grid;
-                        float h = TerrainField.Height(p, shape, out float3 biome);
+                        float h = TerrainField.Height(p, shape, out float3 biome, out float duneLevel);
                         heights[(i + 1) + (j + 1) * border] = h;
                         if (inside)
                         {
-                            biomes[i + j * grid] = biome;
+                            biomes[i + j * grid] = new float4(biome, duneLevel);
                             range = new float2(math.min(range.x, h), math.max(range.y, h));
                         }
                     }
@@ -573,7 +826,7 @@ namespace Soledad
                             position = new float3(p.x, h, p.y),
                             normal = normal,
                             tangent = new float4(math.normalize(new float3(2f * step, dx, 0f)), -1f),   // bitangent = +Z
-                            color = new float4(biomes[i + j * grid], 1f),
+                            color = biomes[i + j * grid],                 // biome weights, a = dune level
                             uv0 = p,
                             uv1 = new float2(h, 1f - normal.y),
                         };

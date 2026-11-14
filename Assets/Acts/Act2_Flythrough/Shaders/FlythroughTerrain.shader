@@ -18,6 +18,30 @@ Shader "Soledad/FlythroughTerrain"
         _RockSlope("Rock Slope (1 - normal.y)", Range(0, 1)) = 0.35
         _FieldSize("Field Size (m)", Float) = 140
 
+        [Header(Desert Sand (scanned PBR sets))]
+        [NoScaleOffset] _RippleSandAlbedo("Ripple Albedo", 2D) = "white" {}
+        [NoScaleOffset][Normal] _RippleSandNormal("Ripple Normal", 2D) = "bump" {}
+        [NoScaleOffset] _RippleSandHeight("Ripple Height", 2D) = "gray" {}
+        [NoScaleOffset] _RippleSandRoughness("Ripple Roughness", 2D) = "white" {}
+        [NoScaleOffset] _RippleSandAO("Ripple AO", 2D) = "white" {}
+        [NoScaleOffset] _DrySandAlbedo("Dry Albedo", 2D) = "white" {}
+        [NoScaleOffset][Normal] _DrySandNormal("Dry Normal", 2D) = "bump" {}
+        [NoScaleOffset] _DrySandHeight("Dry Height", 2D) = "gray" {}
+        [NoScaleOffset] _DrySandRoughness("Dry Roughness", 2D) = "white" {}
+        [NoScaleOffset] _DrySandAO("Dry AO", 2D) = "white" {}
+        _SandTint("Sand Tint", Color) = (1, 1, 1, 1)
+        _SandTile("Texture Size (m)", Float) = 2
+        _SandNormalStrength("Normal Strength", Range(0, 3)) = 1
+        [Enum(OpenGL, 0, DirectX, 1)] _SandNormalDirectX("Normal Map Convention", Float) = 0
+        _SandLargeScale("Anti-tiling Scale", Range(2, 50)) = 11
+        _SandLargeStrength("Anti-tiling Relief", Range(0, 20)) = 6
+        _SandAOStrength("AO Strength", Range(0, 1)) = 0.7
+        _RippleCoverage("Ripple Coverage", Range(-1, 1)) = 0
+        _RippleHeightBias("Ripple Height Preference (+ crests, - troughs)", Range(-2, 2)) = 0.8
+        _RippleSlopeLimit("Ripple Slope Limit", Range(0, 1)) = 0.3
+        _RipplePatchiness("Ripple Patchiness", Range(0, 2)) = 0.6
+        _RippleBlendSharpness("Sand Border Sharpness", Range(0.5, 12)) = 4
+
         [Header(Fine Relief)]
         _DetailStrength("Relief (m)", Float) = 1.5
         _DetailScale("Largest Feature (m)", Float) = 24
@@ -26,6 +50,7 @@ Shader "Soledad/FlythroughTerrain"
         _CurlOrigin("Curl Origin (world)", Vector) = (0, 0, 0, 0)
         _CurlLateral("Lateral (1 / radius)", Float) = 0
         _CurlForward("Forward (1 / radius)", Float) = 0
+        _CurlFrame("Flight Direction (world xz)", Vector) = (0, 1, 0, 0)
 
         // HDRP state, as the Lit material inspector would set it for an opaque standard surface without SSR
         [HideInInspector] _CullMode("__cullmode", Float) = 2.0

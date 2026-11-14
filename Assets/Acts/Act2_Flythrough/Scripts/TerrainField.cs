@@ -101,39 +101,76 @@ namespace Soledad
             return new float3(desert, mountains, valley);
         }
 
-        /// <summary>Ground height (m) at a terrain point.</summary>
-        public static float Height(float2 p, in TerrainShape s, out float3 biome)
+        /// <summary>
+        /// Ground height (m) at a terrain point, its biome weights, and in the desert where the point sits on its dune
+        /// (0 = trough, 1 = crest), used by the shader to place the sand layers.
+        /// </summary>
+        public static float Height(float2 p, in TerrainShape s, out float3 biome, out float duneLevel)
         {
             biome = Biome(p, s);
             float2 q = p + s.seed * 1013f;
             float h = 0f;
-            if (biome.x > 0f) h += biome.x * Desert(q, s);
+            duneLevel = 0.5f;
+            if (biome.x > 0f) h += biome.x * Desert(q, s, out duneLevel);
             if (biome.y > 0f) h += biome.y * Mountains(p, q, s);
             if (biome.z > 0f) h += biome.z * Valley(p, q, s);
             return h;
         }
 
-        public static float Height(float2 p, in TerrainShape s) => Height(p, s, out _);
+        public static float Height(float2 p, in TerrainShape s, out float3 biome) => Height(p, s, out biome, out _);
 
-        static float Desert(float2 q, in TerrainShape s)
+        public static float Height(float2 p, in TerrainShape s) => Height(p, s, out _, out _);
+
+        static float Desert(float2 q, in TerrainShape s, out float duneLevel)
         {
-            math.sincos(math.radians(s.duneDirection), out float sin, out float cos);
-            float2 wind = new float2(sin, cos);
             float lambda = math.max(s.duneWavelength, 1f);
+            float direction = math.radians(s.duneDirection);
 
-            // Transverse dunes: long gentle windward slope, short steep slip face, crests bent by a noise
-            float d = math.dot(q, wind) + lambda * 0.6f * Fbm(q / (lambda * 4f), 3);
+            // Two wind regimes: the dune fields change orientation from one region to the next
+            float regime = math.smoothstep(-0.2f, 0.2f, Fbm(q / 9000f + 71f, 2));
+
+            // Dune size changes across the desert: fields of small dunes, medium dunes, big dune seas
+            float sizeNoise = Fbm(q / 5500f + 19f, 2) * 2.2f;
+            float small = math.saturate(-sizeNoise);
+            float large = math.saturate(sizeNoise);
+            float medium = math.saturate(1f - small - large);
+
+            // x = height (scaled by wavelength), y = profile (0 trough .. 1 crest)
+            float2 h = 0f;
+            if (small > 0f)
+                h += small * math.lerp(Dunes(q, direction, lambda * 0.45f, 0f), Dunes(q, direction + 0.9f, lambda * 0.4f, 11f), regime);
+            if (medium > 0f)
+                h += medium * math.lerp(Dunes(q, direction, lambda, 23f), Dunes(q, direction + 0.9f, lambda * 0.85f, 37f), regime);
+            if (large > 0f)
+                h += large * math.lerp(Dunes(q, direction, lambda * 2.3f, 41f), Dunes(q, direction + 0.9f, lambda * 2f, 53f), regime);
+
+            // Draa: very long mega-dunes the smaller ones ride on
+            float2 draa = Dunes(q, direction + 0.25f, lambda * 9f, 67f);
+
+            duneLevel = math.saturate(h.y * 0.85f + draa.y * 0.15f);
+            return s.duneHeight / lambda * (h.x + 0.25f * draa.x) + s.desertRelief * Fbm(q / 5000f, 3);
+        }
+
+        // One field of transverse dunes, height relative to a dune of the base wavelength: a long windward slope, a
+        // sharp crest and a steep slip face whose position varies; crests bend and break into segments.
+        static float2 Dunes(float2 q, float direction, float lambda, float seed)
+        {
+            math.sincos(direction, out float sin, out float cos);
+            float2 wind = new float2(sin, cos);
+            float2 along = new float2(cos, -sin);
+
+            float d = math.dot(q, wind) + lambda * 0.7f * Fbm(q / (lambda * 3.5f) + seed, 3);
             float t = d / lambda - math.floor(d / lambda);
-            float profile = t < 0.78f ? math.smoothstep(0f, 1f, t / 0.78f) : 1f - math.smoothstep(0f, 1f, (t - 0.78f) / 0.22f);
-            float amplitude = 0.55f + 0.45f * Fbm(q / (lambda * 9f), 2);
+            float crest = 0.72f + 0.12f * Fbm(q / (lambda * 2f) + seed + 5f, 2);
+            float windward = math.pow(math.saturate(t / crest), 1.6f);                    // concave, steepening
+            float slip = math.pow(math.saturate(1f - (t - crest) / (1f - crest)), 0.75f); // steep slip face
+            // Crest rounded over a few percent of the wavelength: sharp, but never thinner than the mesh can follow
+            float profile = math.lerp(windward, slip, math.smoothstep(crest - 0.03f, crest + 0.03f, t));
 
-            // Smaller dunes across the big ones
-            float2 cross = new float2(wind.y, -wind.x);
-            float d2 = math.dot(q, cross) * 1.7f + lambda * 0.3f * Fbm(q / (lambda * 2f) + 31f, 2);
-            float t2 = d2 / (lambda * 0.37f);
-            float small = 0.5f + 0.5f * math.sin(t2 * 2f * math.PI);
-
-            return s.duneHeight * (profile * amplitude + 0.18f * small * amplitude) + s.desertRelief * Fbm(q / 5000f, 3);
+            // Crest height varies along the dune: segments, gaps, barchan-like horns
+            float segments = Fbm(new float2(math.dot(q, along) / (lambda * 2.2f), d / (lambda * 6f)) + seed + 9f, 3);
+            float amplitude = math.saturate(0.55f + 0.9f * segments);
+            return new float2(profile * amplitude * lambda, profile);     // taller when longer
         }
 
         static float Mountains(float2 p, float2 q, in TerrainShape s)

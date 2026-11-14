@@ -1,6 +1,7 @@
 // Surface of Soledad/FlythroughTerrain: an HDRP Lit standard surface whose colour and fine relief are computed from
 // terrain coordinates (uv0), so they stay put on the ground when the world curls. Replaces LitData.hlsl.
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinUtilities.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/MaterialUtilities.hlsl"
 
@@ -85,7 +86,86 @@ float3 FT_Fields(float2 p, out float hedge)
     return col * lerp(0.85, 1.05, rows * (crop < 0.9 ? 1.0 : 0.3));
 }
 
-void FT_Surface(FragInputs input, out float3 baseColor, out float smoothness, out float2 detailGradient)
+// ---------------------------------------------------------------- scanned sand layers
+
+struct FTLayer
+{
+    float3 albedo;
+    float2 gradient;     // height gradient in terrain x / z (from the normal map)
+    float height;        // 0..1 displacement, for height blending
+    float roughness;
+    float ao;
+};
+
+float2 FT_NormalToGradient(float4 packedNormal, float strength)
+{
+    float3 n = UnpackNormalMapRGorAG(packedNormal, strength);
+    n.y *= 1.0 - 2.0 * _SandNormalDirectX;
+    return -n.xy / max(n.z, 0.1);
+}
+
+#define FT_SAMPLE_LAYER(prefix, uv, strength, layer)                                                         \
+    layer.albedo = SAMPLE_TEXTURE2D(prefix##Albedo, sampler##prefix##Albedo, uv).rgb;                       \
+    layer.gradient = FT_NormalToGradient(SAMPLE_TEXTURE2D(prefix##Normal, sampler##prefix##Normal, uv), strength); \
+    layer.height = SAMPLE_TEXTURE2D(prefix##Height, sampler##prefix##Height, uv).r;                         \
+    layer.roughness = SAMPLE_TEXTURE2D(prefix##Roughness, sampler##prefix##Roughness, uv).r;                \
+    layer.ao = SAMPLE_TEXTURE2D(prefix##AO, sampler##prefix##AO, uv).r;
+
+float2 FT_Rotate2(float2 v, float angle)
+{
+    float s, c;
+    sincos(angle, s, c);
+    return float2(c * v.x - s * v.y, s * v.x + c * v.y);
+}
+
+// Desert surface from the two scans: rippled sand on the gentle windward slopes and in patches, smooth dry sand on
+// the steep slip faces, mixed by their height maps. A second, larger and rotated sample breaks the tiling and keeps
+// relief visible from altitude.
+// Where the rippled sand goes (1) versus the dry sand (0), before the height blend. Tweakable on the material:
+// coverage, preference for the upper or lower part of the dunes, slope limit, patchiness.
+float FT_RippleMask(float slope, float duneLevel, float variation)
+{
+    float mask = 0.5 + _RippleCoverage * 0.5
+               + _RippleHeightBias * (duneLevel - 0.5)
+               + _RipplePatchiness * variation;
+    float flatEnough = smoothstep(_RippleSlopeLimit + 0.06, _RippleSlopeLimit - 0.06, slope);
+    return saturate(mask) * flatEnough;
+}
+
+FTLayer FT_Desert(float2 p, float slope, float duneLevel, float variation)
+{
+    float tile = max(_SandTile, 0.01);
+    float2 uv = p / tile;
+    float2 uvLarge = FT_Rotate2(p, 0.7) / (tile * _SandLargeScale);
+
+    FTLayer ripple, dry, rippleLarge, dryLarge;
+    FT_SAMPLE_LAYER(_RippleSand, uv, _SandNormalStrength, ripple)
+    FT_SAMPLE_LAYER(_DrySand, uv * 0.83 + 0.37, _SandNormalStrength, dry)
+    FT_SAMPLE_LAYER(_RippleSand, uvLarge, _SandNormalStrength, rippleLarge)
+    FT_SAMPLE_LAYER(_DrySand, uvLarge * 1.3 + 0.61, _SandNormalStrength, dryLarge)
+
+    // Placement mask, then a height blend: the sand that stands higher in its own displacement map wins at the border
+    float rippleMask = FT_RippleMask(slope, duneLevel, variation);
+    float sharp = max(_RippleBlendSharpness, 0.5);
+    float blendRipple = saturate((rippleMask - 0.5) * sharp + (ripple.height - dry.height) * 2.5 + 0.5);
+    float blendLarge = saturate((rippleMask - 0.5) * sharp + (rippleLarge.height - dryLarge.height) * 2.5 + 0.5);
+
+    FTLayer o;
+    float3 albedoSmall = lerp(dry.albedo, ripple.albedo, blendRipple);
+    float3 albedoLarge = lerp(dryLarge.albedo, rippleLarge.albedo, blendLarge);
+    // Large sample only changes the brightness of the small one (no blur), plus a slow colour drift
+    float lumSmall = max(Luminance(albedoSmall), 1e-3);
+    o.albedo = albedoSmall * lerp(1.0, Luminance(albedoLarge) / max(Luminance(lerp(dryLarge.albedo, rippleLarge.albedo, 0.5)), 1e-3), 0.5);
+    o.albedo *= _SandTint.rgb * lerp(0.85, 1.12, saturate(0.5 + variation));
+    o.gradient = lerp(dry.gradient, ripple.gradient, blendRipple)
+               + lerp(dryLarge.gradient, rippleLarge.gradient, blendLarge) * (_SandLargeStrength / _SandLargeScale);
+    o.height = lerp(dry.height, ripple.height, blendRipple);
+    o.roughness = lerp(dry.roughness, ripple.roughness, blendRipple);
+    o.ao = lerp(1.0, lerp(dry.ao, ripple.ao, blendRipple), _SandAOStrength);
+    return o;
+}
+
+void FT_Surface(FragInputs input, out float3 baseColor, out float smoothness, out float2 detailGradient, out float ao)
 {
     float2 p = input.texCoord0.xy;               // terrain xz (m)
     float height = input.texCoord1.x;
@@ -101,8 +181,11 @@ void FT_Surface(FragInputs input, out float3 baseColor, out float smoothness, ou
     float rockMask = smoothstep(_RockSlope - 0.08, _RockSlope + 0.08, slope + large.x * 0.06 + detail.x * 0.04);
     float3 rock = lerp(_RockDarkColor.rgb, _RockColor.rgb, saturate(0.5 + large.x + detail.x * 0.6));
 
-    // Desert: sand, darker in the troughs and on the lee slopes
-    float3 sand = lerp(_SandDarkColor.rgb, _SandColor.rgb, saturate(0.65 + large.x * 0.8 + detail.x * 0.25 - slope * 1.5));
+    // Desert: the scanned sand layers
+    FTLayer desert = FT_Desert(p, slope, input.color.a, large.x);
+    float3 sand = desert.albedo;
+    detailGradient = lerp(detailGradient, desert.gradient, biome.r);
+    ao = lerp(1.0, desert.ao, biome.r);
 
     // Mountains: dry grass on the gentle slopes, rock above
     float3 mountain = lerp(_DryGrassColor.rgb * (0.85 + 0.3 * large.x), rock, saturate(slope * 2.5));
@@ -114,8 +197,8 @@ void FT_Surface(FragInputs input, out float3 baseColor, out float smoothness, ou
 
     baseColor = sand * biome.r + mountain * biome.g + fields * biome.b;
     baseColor = lerp(baseColor, rock, rockMask * (1.0 - biome.b * 0.7));
-    baseColor *= 0.9 + 0.2 * detail.x;
-    smoothness = _TerrainSmoothness;
+    baseColor *= lerp(0.9 + 0.2 * detail.x, 1.0, biome.r);
+    smoothness = lerp(_TerrainSmoothness, 1.0 - desert.roughness, biome.r);
 }
 
 void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs posInput, out SurfaceData surfaceData, out BuiltinData builtinData RAY_TRACING_OPTIONAL_PARAMETERS)
@@ -131,8 +214,9 @@ void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs p
 #ifdef FT_FULL_SURFACE
     float3 baseColor;
     float2 detailGradient;
-    float smoothness;
-    FT_Surface(input, baseColor, smoothness, detailGradient);
+    float smoothness, ao;
+    FT_Surface(input, baseColor, smoothness, detailGradient, ao);
+    surfaceData.ambientOcclusion = ao;
 
     // Fine relief on top of the mesh normal: tangent = terrain +X, bitangent = terrain +Z
     float3 T = input.tangentToWorld[0];

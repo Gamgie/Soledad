@@ -22,7 +22,47 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _DrySandAO:
+        m_Texture: {fileID: 2800000, guid: 9aa1c540ad96181459ddc4d96dc8330e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DrySandAlbedo:
+        m_Texture: {fileID: 2800000, guid: e4b88d811978a4b4a854768db98002db, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DrySandHeight:
+        m_Texture: {fileID: 2800000, guid: d2fafb1f52b7d7a4e80ccb5f19a84927, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DrySandNormal:
+        m_Texture: {fileID: 2800000, guid: 188bb17393cd3994e994777c21a5b362, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DrySandRoughness:
+        m_Texture: {fileID: 2800000, guid: 278be34afe230154c97d4c4d3991e0af, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RippleSandAO:
+        m_Texture: {fileID: 2800000, guid: 1092f8be9ac5ab74e989789a3c3e54af, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RippleSandAlbedo:
+        m_Texture: {fileID: 2800000, guid: bb1c18be01c1f3d458858476e81d1966, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RippleSandHeight:
+        m_Texture: {fileID: 2800000, guid: 6ff062847497c2b42abbc6e338211a11, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RippleSandNormal:
+        m_Texture: {fileID: 2800000, guid: cadb54847f71a8747807a6661dfac7b3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RippleSandRoughness:
+        m_Texture: {fileID: 2800000, guid: 385eae3c34863aa4cad4077984b2fb6b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _CullMode: 2
@@ -32,6 +72,12 @@ Material:
     - _DetailStrength: 1.5
     - _FieldSize: 140
     - _RockSlope: 0.35
+    - _SandAOStrength: 1
+    - _SandLargeScale: 24.2
+    - _SandLargeStrength: 8.58
+    - _SandNormalDirectX: 0
+    - _SandNormalStrength: 1.66
+    - _SandTile: 2
     - _StencilRef: 0
     - _StencilRefDepth: 0
     - _StencilRefGBuffer: 2
@@ -40,7 +86,7 @@ Material:
     - _StencilWriteMaskDepth: 8
     - _StencilWriteMaskGBuffer: 14
     - _StencilWriteMaskMV: 40
-    - _TerrainSmoothness: 0.12
+    - _TerrainSmoothness: 0.452
     - _ZClip: 1
     - _ZTestDepthEqualForOpaque: 3
     - _ZTestGBuffer: 4
@@ -52,7 +98,8 @@ Material:
     - _RockColor: {r: 0.5, g: 0.43999997, b: 0.37999994, a: 1}
     - _RockDarkColor: {r: 0.26999995, g: 0.22999996, b: 0.19999996, a: 1}
     - _SandColor: {r: 0.8, g: 0.58, b: 0.35999998, a: 1}
-    - _SandDarkColor: {r: 0.62, g: 0.39999998, b: 0.22999996, a: 1}
+    - _SandDarkColor: {r: 0.8000001, g: 0.5803922, b: 0.36078432, a: 1}
+    - _SandTint: {r: 1, g: 1, b: 1, a: 1}
     - _SoilColor: {r: 0.35999998, g: 0.26999995, b: 0.17999998, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
