@@ -10,15 +10,19 @@ namespace Soledad
     [DefaultExecutionOrder(-100)]
     public class Act2Controller : ActController
     {
+        [Header("BogotaSequence")]
+        [Tooltip("Show Bogota (Play mode). Off by default: it appears during the sequence.")]
+        public bool BogotaSequence_showBogota = false;
+        [Tooltip("Show the landscape: terrain, clouds and monoliths (Play mode). Off once Bogota fills the view.")]
+        public bool BogotaSequence_showLandscape = true;
+        [Tooltip("The Spline camera rides Bogota's path instead of the flight path, joining it where it is (Play mode).")]
+        public bool BogotaSequence_rideBogota = false;
+
         [Header("FlythroughTerrain")]
-        [Tooltip("Forward speed (m/s).")]
-        public float FlythroughTerrain_speed = 60f;
-        [Tooltip("Height above the ground (m). Smoothed, and anticipated so the flight rises before a mountain.")]
-        public float FlythroughTerrain_altitude = 140f;
-        [Tooltip("Sideways offset from the flight path (m), positive = right.")]
-        public float FlythroughTerrain_pathOffset = 0f;
-        [Tooltip("Turn the camera with the path (added to the Orbital and Spaceship rigs, the gamepad stays on top).")]
-        public bool FlythroughTerrain_cameraFollowsHeading = true;
+        [Tooltip("Camera Direction: the world curls along the direction the camera moves in (smoothed). Axis: along a fixed direction of the landscape (curlAxis).")]
+        public global::Soledad.CurlFrame FlythroughTerrain_curlFrame = global::Soledad.CurlFrame.CameraDirection;
+        [Tooltip("Axis mode: curl direction in the landscape (degrees), 0 = +Z (the route), 90 = +X.")]
+        [Range(-180f, 180f)] public float FlythroughTerrain_curlAxis = 0f;
         [Tooltip("Rolls the ground up into a tube around the flight axis. 0 = flat, 1 = closed tube of radius curlRadius.")]
         [Range(0f, 1f)] public float FlythroughTerrain_curlLateral = 0f;
         [Tooltip("Lifts the ground ahead into a wall. 0 = flat, 1 = bend of radius bendRadius.")]
@@ -27,39 +31,49 @@ namespace Soledad
         [Range(-5f, 90f)] public float FlythroughTerrain_sunElevation = 14f;
         [Tooltip("Sun direction in the landscape (degrees): 0 = shining towards +Z (the start of the route runs along +Z).")]
         [Range(-180f, 180f)] public float FlythroughTerrain_sunAzimuth = 150f;
+        [Tooltip("Sun colour temperature (K) while the act is shown: about 3000 to 4000 = sunset, 6500 = white noon light.")]
+        [Range(1500f, 20000f)] public float FlythroughTerrain_sunTemperature = 3500f;
 
-        global::Soledad.FlythroughTerrain _target0;
+        global::Soledad.BogotaSequence _target0;
+        global::Soledad.FlythroughTerrain _target1;
 
         protected override string ActName => "Act2_Flythrough";
 
         protected override void Bind(Transform root)
         {
-            _target0 = Find<global::Soledad.FlythroughTerrain>(root);
+            _target0 = Find<global::Soledad.BogotaSequence>(root);
+            _target1 = Find<global::Soledad.FlythroughTerrain>(root);
         }
 
         protected override void Unbind()
         {
             _target0 = null;
+            _target1 = null;
         }
 
         protected override void Push()
         {
             if (_target0 != null)
             {
-                _target0.speed = FlythroughTerrain_speed;
-                _target0.altitude = FlythroughTerrain_altitude;
-                _target0.pathOffset = FlythroughTerrain_pathOffset;
-                _target0.cameraFollowsHeading = FlythroughTerrain_cameraFollowsHeading;
-                _target0.curlLateral = FlythroughTerrain_curlLateral;
-                _target0.curlForward = FlythroughTerrain_curlForward;
-                _target0.sunElevation = FlythroughTerrain_sunElevation;
-                _target0.sunAzimuth = FlythroughTerrain_sunAzimuth;
+                _target0.showBogota = BogotaSequence_showBogota;
+                _target0.showLandscape = BogotaSequence_showLandscape;
+                _target0.rideBogota = BogotaSequence_rideBogota;
+            }
+            if (_target1 != null)
+            {
+                _target1.curlFrame = FlythroughTerrain_curlFrame;
+                _target1.curlAxis = FlythroughTerrain_curlAxis;
+                _target1.curlLateral = FlythroughTerrain_curlLateral;
+                _target1.curlForward = FlythroughTerrain_curlForward;
+                _target1.sunElevation = FlythroughTerrain_sunElevation;
+                _target1.sunAzimuth = FlythroughTerrain_sunAzimuth;
+                _target1.sunTemperature = FlythroughTerrain_sunTemperature;
             }
         }
 
         public void FlythroughTerrain_ResetFlight()
         {
-            if (_target0 != null) _target0.ResetFlight();
+            if (_target1 != null) _target1.ResetFlight();
         }
     }
 }

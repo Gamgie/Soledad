@@ -99,12 +99,20 @@ sky, no bloom, fog off.
 - **Act 2, `FlythroughTerrain`** (`Assets/Acts/Act2_Flythrough/`, on `Act2_Flythrough/Flythrough`): a bird's
   flight over an endless landscape laid out along a route (terrain +Z): desert, mountains with a winding pass, then
   the valley (fields between two ridges); shape in `TerrainShape` (`TerrainField.cs`, pure Burst-compatible height
-  and biome functions). The landscape is fixed in the space of `Act2_Flythrough/World`; the bird flies along
-  `World/Flight Path` (a Splines `SplineContainer`, editable; `pathOffset`, `loopPath`) at `altitude` metres above the
-  (smoothed, anticipated) ground plus the spline's own height. Floating origin: the Oxipital camera rig stays at the
-  `Flythrough` object and the act only translates `World` (never rotates it) so the bird sits there; `World` goes
-  back to the origin when the act ends and while a scene is saved. `cameraFollowsHeading` adds the path's turns to
-  the Orbital and Spaceship rigs (not Sensor). The terrain's pass and valley follow the route centre line
+  and biome functions). The landscape is fixed in the space of `Act2_Flythrough/World` (at the origin, no floating
+  origin: HDRP renders camera-relative and the route is about 13 km) and the Oxipital camera really flies through it.
+  Film: the **Spline camera** (Oxipital Camera 1.3.0, `Cameras/Spline Camera target`, `SplineMovement`) rides
+  `World/Flight Path` (a Splines `SplineContainer`, editable), which the act hands to it in Play mode with itself as
+  the ground (`Oxipital.ICameraGround`, `GetGroundHeight`), so it flies at its `altitude` above the (smoothed,
+  anticipated) relief plus the spline's own height. Speed, altitude, offset, look (gamepad on `yaw1D` / `pitch1D` /
+  `roll1D` in Spline And Look or Free), bank and seeded drift are set on that object (Soledad_Main: 60 m/s, 140 m,
+  600 m look-ahead, no loop), not on the act. Show: the Spaceship camera flies freely. `ResetFlight()` (also on the
+  first show of the act) restarts the ride and puts the Spaceship at the start of the path, at the same altitude.
+  Movie mode for now (`startOnSplineCamera`, on): the first show of the act also switches the camera to Spline, so
+  Play rides the path from its start (later the gamepad picks the mode).
+  Switching back to Spline joins the path at the point nearest to the camera. The curl follows the camera: around
+  the ground under it (smoothed), oriented by `curlFrame`: Camera Direction = along its smoothed direction of motion
+  (`curlHeadingSmoothing`), Axis = along the fixed landscape direction `curlAxis` (degrees, 0 = +Z). The terrain's pass and valley follow the route centre line
   (`TerrainField.RouteX`), not the spline: keep the spline near it. Tiles (`Terrain (generated)` under `World`) form a quadtree around "Main Camera" (dense near
   it, coarse to the horizon, `detailDistance`), built in terrain space by a parallel Burst job with skirts hiding
   the seams, never saved. Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
@@ -117,8 +125,9 @@ sky, no bloom, fog off.
   Sand placement: vertex colour alpha = dune level (0 trough, 1 crest)
   and material settings Ripple Coverage, Height Preference, Slope Limit, Patchiness, Border Sharpness;
   `_Smoothness` and other Lit names are taken by `LitProperties.hlsl`, so terrain properties are plain uniforms with
-  their own names. In Play mode the act pushes every camera's far plane to `farClip` (40 km) and restores it when
-  disabled. Act 2 Volume: landscape haze (fog base -250 m, 2 km thick, 9 km mean free path, volumetric; the Physically
+  their own names. In Play mode the act pushes every camera's far plane, and every Cinemachine camera's lens (the brain gives
+  it to the main camera each frame), to `farClip` (40 km) and restores them when disabled. Act 2 Volume: sunset haze (fog base 0 m, fading out by 2.5 km, 2.2 km mean free path, warm albedo
+  (1, 0.86, 0.72), volumetric with forward glow 0.8 towards the sun, white balance +14 / +4; the Physically
   Based Sky's own Atmospheric Scattering stays off: its aerial haze flickers on ridges near the sun while flying) and
   shadows out to 8 km (4 cascades). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,
   2 x 2 m, Megascans layout: BaseColor, Normal, Displacement, Roughness, AO) height-blended (ripples on gentle
@@ -129,8 +138,9 @@ sky, no bloom, fog off.
   inline sampler (`sampler_trilinear_repeat_aniso8`): a pixel shader has only 16 samplers. Only BaseColor, Normal,
   Displacement, Roughness and AO maps are kept. Dunes in three size families and two
   wind regimes with draa underneath (`TerrainField.Dunes`). The act also aims the main scene's `Sun`
-  (`sunElevation`, `sunAzimuth`, animatable; default 14 degrees, ahead-right) and raises its shadow resolution to
-  4096 while shown, restoring both when disabled and around scene saves, so Soledad_Main never keeps them.
+  (`sunElevation`, `sunAzimuth`, `sunTemperature`, animatable; set to 5 degrees, azimuth -81, 3500 K for a sunset;
+  the Physically Based Sky reddens it near the horizon) and raises its shadow resolution to
+  4096 while shown, restoring all of it (direction, colour, shadows) when disabled and around scene saves, so Soledad_Main never keeps them.
   For the film, the Bogota valley is a separate shot (cut in editing).
   Live transitions planned (performance): Act 1 to 2 = black cut, then the sun light fades in smoothly. Inside Act 2,
   valley to Bogota: the valley curls as the bird flies through it until it is a closed tube halfway; ahead, the
@@ -156,7 +166,33 @@ sky, no bloom, fog off.
   monoliths (about 1 ms GPU each), frozen for the next ones up to `reflectionProbes`, and switched off beyond (they
   reflect the sky): HDRP draws at most 32 reflection probes on screen (Maximum Cube Reflection Probes on Screen in
   the HDRP assets).
-  Next: Bogota mesh from Blender (Clement).
+  Bogota: `World/Bogota` (prefab `Bogota/Bogota.prefab`, the GIS terrain of Bogota_GIS: zoom-18 strip and zoom-15
+  surroundings, local x east, y height, z north, metres from San Rafael lake). Film ending (`Act2_Flythrough/Bogota
+  Sequence`, `BogotaSequence`): Bogota stands upright across the valley about 9 km after the hand-off, its map facing
+  the camera, so it closes the hole of the curled tube. Three `[Animate]` switches, Play mode only (in the Editor
+  everything stays visible): `showBogota` (off by default: hidden in the show), `showLandscape` (terrain, clouds,
+  monoliths, Valley) and `rideBogota` (the act hands the Spline camera `Bogota/Bogota Path` instead of the flight path,
+  without ground; the camera joins it where it is). The context menu **Build Bogota Path** places Bogota and rebuilds
+  the path from the flight path and the settings on the component (`handoffDistance` 10700 m, `approachLength`
+  9000 m, `climbRadius` 500 m, `bogotaAltitude` 300 m above the ridges near the route): straight on, a quarter turn
+  up onto Bogota (the knots' up turns from the sky to Bogota's face), then the z18 route to the lake (64.8 km, from
+  `Bogota/film_path.json`, written by Bogota_GIS `scripts/film_path.py`: route smoothed, ground = highest within
+  300 m). On Bogota the camera needs `splineUp` 1 (its up is then the map's). Bogota closer than ~9 km sticks its
+  relief (up to 1.3 km towards the camera) into the tube. Sun and sky over upright Bogota are still to be solved.
+  `Bogota/Bogota Volume` (local Volume, priority 20, profile `Bogota/Bogota Volume Profile.asset`): a box over the
+  whole map (Bogota local x and z, height -3 to +2 km), blend distance 1.5 km, so the look changes smoothly during
+  the approach; it lowers the exposure compensation (-1.5 EV) because the automatic exposure (HDRP default profile:
+  the main `Sky and Fog Volume` is at weight 0) brightens the dark upright map. Volumes cannot change a light's
+  intensity.
+  **Act 2 film Timeline**: `Act2_Timeline` in Soledad_Main (PlayableDirector, `Assets/Acts/Act2_Flythrough/Timeline/Act2_Timeline.playable`,
+  120 s at 60 fps) with two Animation tracks: `Show/Act2Controller` (curl, Bogota switches) and
+  `Cameras/Spline Camera target` (speed, look, `splineUp`, offset), plus markers for each beat; the director holds its last values when it ends (Wrap Mode Hold), otherwise the
+  camera values snap back to their defaults over Bogota. `FilmTimeline`
+  (`Assets/Scripts/Show`) starts it in Play mode once the act has handed its path: camera to Spline, ride reset at
+  `startDistance` (8924 m), then the director plays. Beats are timed from distances (speed x time), so changing a
+  speed moves every later event: curl 2 to 26 s, hand-off 24 s, look right 30 to 36 s, Bogota appears 33 s,
+  accelerate to 350 m/s from 37 s, landscape hidden 61.5 s, turn up about 63 s, then 800 m/s and 300 m higher
+  over Bogota (about 40 km of the 65 km route by 120 s).
   Kept for later (agreed with Clement): mountain erosion and more varied ridges; per-pixel dune relief to remove the
   stepped slip-face edges; vegetation and rocks scattered on the terrain; better light for the final render (SSGI,
   contact shadows, higher shadow/fog quality, path tracing: the terrain shader would need ray tracing passes and
