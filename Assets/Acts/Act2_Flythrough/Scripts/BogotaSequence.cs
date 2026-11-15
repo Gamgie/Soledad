@@ -6,9 +6,10 @@ namespace Soledad
 {
     /// <summary>
     /// Act 2 film ending: from the curled valley into Bogota. Bogota (the GIS terrain, World/Bogota) stands upright
-    /// across the valley ahead, its map facing the camera, so it fills the hole of the closed tube. The Spline camera
-    /// hands over from the flight path to <see cref="bogotaPath"/>: straight on towards Bogota, a quarter turn up onto it,
-    /// then over the zoom-18 strip to the lake, the map below it (the camera's up is then the map's).
+    /// across the valley ahead, its map facing the camera, so it fills the hole of the closed tube. <see cref="bogotaPath"/>
+    /// is the whole film: the flight path from <see cref="filmStartDistance"/> (ground height baked in), straight on
+    /// towards Bogota from <see cref="handoffDistance"/>, a quarter turn up onto it, then over the zoom-18 strip to the
+    /// lake, the map below the camera (its up is then the map's). A Timeline rides it by progress (0..1).
     ///
     /// Three switches, meant for the Act 2 Timeline (through Show/Act2Controller): <see cref="showBogota"/>,
     /// <see cref="showLandscape"/> (terrain, clouds, monoliths) and <see cref="rideBogota"/>. Play mode only: in the
@@ -35,7 +36,9 @@ namespace Soledad
         [Header("Bogota path (context menu: Build Bogota Path)")]
         [Tooltip("The z18 route (Bogota_GIS film_path.json): x east, y ground height, z north, metres from the lake.")]
         [OSCQuery.DoNotExpose] public TextAsset route;
-        [Tooltip("Distance along the flight path (m) where the camera hands over to Bogota's path.")]
+        [Tooltip("Distance along the flight path (m) where the film starts: Bogota's path begins there, so the film rides one spline.")]
+        public float filmStartDistance = 8924f;
+        [Tooltip("Distance along the flight path (m) where Bogota's path leaves it, straight on towards Bogota.")]
         public float handoffDistance = 10700f;
         [Tooltip("Camera height above the valley at the hand-off (m): the Spline camera's altitude.")]
         public float handoffAltitude = 140f;
@@ -93,22 +96,38 @@ namespace Soledad
             var points = ParseRoute(route.text);
             if (points.Count < 4) { Debug.LogError("BogotaSequence: route has too few points"); return; }
 
-            // Hand-off: on the flight path, heading A (level), at the camera's height
+            // The film starts on the flight path at filmStartDistance: that stretch is baked into this path, at
+            // handoffAltitude above the ground (anticipated and smoothed like the Spline camera does), so the whole
+            // film rides one spline and a Timeline drives it with one progress curve (0..1)
             var flight = terrain.flightPath;
-            Spline fs = flight.Spline;
-            float t = fs.ConvertIndexUnit(handoffDistance, PathIndexUnit.Distance, PathIndexUnit.Normalized);
-            SplineUtility.Evaluate(fs, t, out float3 lp, out float3 ltan, out float3 _);
-            Vector3 h = flight.transform.TransformPoint((Vector3)lp);
-            Vector3 a = flight.transform.TransformDirection((Vector3)ltan);
-            a.y = 0f;
-            a.Normalize();
-            h.y = terrain.GetGroundHeight(h) + handoffAltitude;
-
-            // Knots in world space: position, direction, up
             var pos = new System.Collections.Generic.List<Vector3>();
             var up = new System.Collections.Generic.List<Vector3>();
-            pos.Add(h - a * 300f); up.Add(Vector3.up);
-            pos.Add(h); up.Add(Vector3.up);
+            float start = Mathf.Min(filmStartDistance, handoffDistance);
+            int n = Mathf.Max(1, Mathf.CeilToInt((handoffDistance - start) / 200f));
+            Vector3 a = Vector3.forward;
+            for (int i = 0; i <= n; i++)
+            {
+                float d = Mathf.Lerp(start, handoffDistance, i / (float)n);
+                FlightPoint(flight, d, out Vector3 p, out a);
+                float g = terrain.GetGroundHeight(p);
+                for (int k = 1; k <= 4; k++)
+                {
+                    FlightPoint(flight, d + 600f * k / 4f, out Vector3 q, out _);
+                    g = Mathf.Max(g, terrain.GetGroundHeight(q) - handoffAltitude * 0.25f * k);
+                }
+                p.y = g + handoffAltitude;
+                pos.Add(p);
+                up.Add(Vector3.up);
+            }
+            for (int pass = 0; pass < 3; pass++)
+            {
+                var ys = new float[pos.Count];
+                for (int i = 0; i < pos.Count; i++)
+                    ys[i] = (pos[Mathf.Max(i - 1, 0)].y + 2f * pos[i].y + pos[Mathf.Min(i + 1, pos.Count - 1)].y) / 4f;
+                for (int i = 0; i < pos.Count; i++) pos[i] = new Vector3(pos[i].x, ys[i], pos[i].z);
+            }
+            // Hand-off: straight on from there, level, at that height
+            Vector3 h = pos[pos.Count - 1];
             Vector3 b = h + a * approachLength;
             pos.Add(Vector3.Lerp(h, b, 0.5f)); up.Add(Vector3.up);
             // Quarter turn up: from level towards A to straight up, the camera's up turning to -A (Bogota's face)
@@ -176,6 +195,19 @@ namespace Soledad
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
             Debug.Log(string.Format("Bogota path: {0} knots, {1:F1} km; Bogota placed at {2}, turn up {3:F0} m after the hand-off",
                 pos.Count, spline.GetLength() / 1000f, bogota.transform.localPosition, approachLength));
+        }
+
+
+        // World point and level direction of the flight path at a distance (m)
+        static void FlightPoint(SplineContainer flight, float distance, out Vector3 position, out Vector3 direction)
+        {
+            Spline s = flight.Spline;
+            float t = s.ConvertIndexUnit(Mathf.Clamp(distance, 0f, s.GetLength()), PathIndexUnit.Distance, PathIndexUnit.Normalized);
+            SplineUtility.Evaluate(s, t, out float3 p, out float3 tangent, out float3 _);
+            position = flight.transform.TransformPoint((Vector3)p);
+            direction = flight.transform.TransformDirection((Vector3)tangent);
+            direction.y = 0f;
+            direction.Normalize();
         }
 
         static System.Collections.Generic.List<float3> ParseRoute(string json)

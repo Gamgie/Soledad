@@ -101,7 +101,7 @@ sky, no bloom, fog off.
   the valley (fields between two ridges); shape in `TerrainShape` (`TerrainField.cs`, pure Burst-compatible height
   and biome functions). The landscape is fixed in the space of `Act2_Flythrough/World` (at the origin, no floating
   origin: HDRP renders camera-relative and the route is about 13 km) and the Oxipital camera really flies through it.
-  Film: the **Spline camera** (Oxipital Camera 1.3.0, `Cameras/Spline Camera target`, `SplineMovement`) rides
+  Film: the **Spline camera** (Oxipital Camera 1.4.0, `Cameras/Spline Camera target`, `SplineMovement`) rides
   `World/Flight Path` (a Splines `SplineContainer`, editable), which the act hands to it in Play mode with itself as
   the ground (`Oxipital.ICameraGround`, `GetGroundHeight`), so it flies at its `altitude` above the (smoothed,
   anticipated) relief plus the spline's own height. Speed, altitude, offset, look (gamepad on `yaw1D` / `pitch1D` /
@@ -173,8 +173,10 @@ sky, no bloom, fog off.
   everything stays visible): `showBogota` (off by default: hidden in the show), `showLandscape` (terrain, clouds,
   monoliths, Valley) and `rideBogota` (the act hands the Spline camera `Bogota/Bogota Path` instead of the flight path,
   without ground; the camera joins it where it is). The context menu **Build Bogota Path** places Bogota and rebuilds
-  the path from the flight path and the settings on the component (`handoffDistance` 10700 m, `approachLength`
-  9000 m, `climbRadius` 500 m, `bogotaAltitude` 300 m above the ridges near the route): straight on, a quarter turn
+  the path from the flight path and the settings on the component (`filmStartDistance` 8924 m, `handoffDistance` 10700 m, `approachLength`
+  9000 m, `climbRadius` 500 m, `bogotaAltitude` 300 m above the ridges near the route): the flight path from
+  `filmStartDistance` (its ground height baked in at `handoffAltitude`, anticipated and smoothed), straight on from
+  `handoffDistance`, a quarter turn
   up onto Bogota (the knots' up turns from the sky to Bogota's face), then the z18 route to the lake (64.8 km, from
   `Bogota/film_path.json`, written by Bogota_GIS `scripts/film_path.py`: route smoothed, ground = highest within
   300 m). On Bogota the camera needs `splineUp` 1 (its up is then the map's). Bogota closer than ~9 km sticks its
@@ -186,13 +188,16 @@ sky, no bloom, fog off.
   intensity.
   **Act 2 film Timeline**: `Act2_Timeline` in Soledad_Main (PlayableDirector, `Assets/Acts/Act2_Flythrough/Timeline/Act2_Timeline.playable`,
   120 s at 60 fps) with two Animation tracks: `Show/Act2Controller` (curl, Bogota switches) and
-  `Cameras/Spline Camera target` (speed, look, `splineUp`, offset), plus markers for each beat; the director holds its last values when it ends (Wrap Mode Hold), otherwise the
+  `Cameras/Spline Camera target` (`useProgress` on, `progress` 0 to 1 along Bogota's path, the whole film: 76 km;
+  look, `splineUp`, offset), plus markers for each beat; the director holds its last values when it ends (Wrap Mode Hold), otherwise the
   camera values snap back to their defaults over Bogota. `FilmTimeline`
   (`Assets/Scripts/Show`) starts it in Play mode once the act has handed its path: camera to Spline, ride reset at
-  `startDistance` (8924 m), then the director plays. Beats are timed from distances (speed x time), so changing a
-  speed moves every later event: curl 2 to 26 s, hand-off 24 s, look right 30 to 36 s, Bogota appears 33 s,
-  accelerate to 350 m/s from 37 s, landscape hidden 61.5 s, turn up about 63 s, then 800 m/s and 300 m higher
-  over Bogota (about 40 km of the 65 km route by 120 s).
+  `startDistance` (rides by speed only), then the director plays. The camera rides `Bogota Path` from t = 0
+  (`rideBogota` on) by progress, so its position is keyed directly and the other beats stay put when it changes;
+  speed = slope of the curve. Keys: curl 2 to 26 s, leaves the flight path 24 s, look right 30 to 36 s, Bogota
+  appears 33 s, faster towards Bogota from 37 s, landscape hidden 61.5 s, turn up 63 s, faster again and 300 m
+  higher over Bogota (progress 0.68 at 120 s; 1 = the lake). Rebuilding the path changes its length, so the
+  progress keys must be checked after Build Bogota Path.
   Kept for later (agreed with Clement): mountain erosion and more varied ridges; per-pixel dune relief to remove the
   stepped slip-face edges; vegetation and rocks scattered on the terrain; better light for the final render (SSGI,
   contact shadows, higher shadow/fog quality, path tracing: the terrain shader would need ray tracing passes and

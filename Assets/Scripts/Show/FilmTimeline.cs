@@ -14,7 +14,7 @@ namespace Soledad
     {
         public PlayableDirector director;
         public Oxipital.CameraController cameraController;
-        [Tooltip("Distance along the act's path (m) where the shot starts.")]
+        [Tooltip("Distance along the act's path (m) where the shot starts, for a ride by speed. A Timeline that rides by progress places the camera itself.")]
         public float startDistance;
         [Tooltip("Start by itself when entering Play mode. Off: call Play() (or play the director by hand).")]
         public bool playOnStart = true;
