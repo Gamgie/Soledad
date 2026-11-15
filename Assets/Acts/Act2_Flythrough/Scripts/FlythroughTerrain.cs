@@ -60,6 +60,9 @@ namespace Soledad
         [Range(0f, 1f)] public float curlClearsFog = 1f;
         [Tooltip("While curled, fade the volumetric clouds of the act Volume (Play mode): the curled ground crosses the cloud layer.")]
         [Range(0f, 1f)] public float curlClearsClouds = 1f;
+        [Tooltip("Curl at which the fog and clouds are fully cleared: low = they clear early in the curl, so the " +
+                 "curled ground overhead stays solid instead of fading into the haze.")]
+        [Range(0.05f, 1f)] public float curlClearRamp = 0.25f;
 
         [Header("Sun (the Sun of Soledad_Main, while the act is shown)")]
         [Tooltip("Aim the main scene's Sun from this act. Its own rotation comes back when the act ends.")]
@@ -225,22 +228,30 @@ namespace Soledad
             {
                 _sharedProfile = actVolume.sharedProfile;
                 if (_sharedProfile == null) return;
-                _runtimeProfile = Instantiate(_sharedProfile);
+                // A deep copy: Instantiate of a profile keeps referencing the same settings (its components are
+                // separate objects), and editing them would change the real profile, compounding every frame
+                _runtimeProfile = ScriptableObject.CreateInstance<VolumeProfile>();
                 _runtimeProfile.name = _sharedProfile.name + " (runtime)";
+                foreach (var component in _sharedProfile.components)
+                    if (component != null) _runtimeProfile.components.Add(Instantiate(component));
+                _runtimeProfile.isDirty = true;
                 actVolume.sharedProfile = _runtimeProfile;
                 _runtimeProfile.TryGet(out _fog);
                 _runtimeProfile.TryGet(out _clouds);
             }
+            // Cleared early in the curl (smoothly, fully at curlClearRamp): the curled ground overhead is kilometres
+            // away and the haze would wash it out and sparkle on it
+            float clear = math.smoothstep(0f, math.max(curlClearRamp, 0.01f), curl);
             // Base values from the real profile every frame, so its edits still count while curled
             if (_fog != null && _sharedProfile.TryGet(out UnityEngine.Rendering.HighDefinition.Fog sharedFog))
             {
                 _fog.meanFreePath.overrideState = true;
-                _fog.meanFreePath.value = sharedFog.meanFreePath.value * math.lerp(1f, 40f, curl * curlClearsFog);
+                _fog.meanFreePath.value = sharedFog.meanFreePath.value * math.pow(200f, clear * curlClearsFog);
             }
             if (_clouds != null && _sharedProfile.TryGet(out UnityEngine.Rendering.HighDefinition.VolumetricClouds sharedClouds))
             {
                 _clouds.densityMultiplier.overrideState = true;
-                _clouds.densityMultiplier.value = sharedClouds.densityMultiplier.value * (1f - curl * curlClearsClouds);
+                _clouds.densityMultiplier.value = sharedClouds.densityMultiplier.value * (1f - clear * curlClearsClouds);
             }
         }
 
@@ -248,6 +259,7 @@ namespace Soledad
         {
             if (_runtimeProfile == null) return;
             if (actVolume != null && actVolume.sharedProfile == _runtimeProfile) actVolume.sharedProfile = _sharedProfile;
+            foreach (var component in _runtimeProfile.components) DestroyUnityObject(component);
             DestroyUnityObject(_runtimeProfile);
             _runtimeProfile = null;
             _fog = null;

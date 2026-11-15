@@ -112,11 +112,14 @@ sky, no bloom, fog off.
   fields, per-pixel relief from terrain coordinates) and the world curl in the `HAVE_MESH_MODIFICATION` hook
   (`curlLateral` rolls the ground into a tube around the flight direction, `curlForward` lifts it ahead into a wall;
   in Play mode the act works on a copy of its Volume profile to thin the fog and fade the volumetric clouds while
-  curled, `curlClearsFog` / `curlClearsClouds`); sand placement: vertex colour alpha = dune level (0 trough, 1 crest)
+  curled, `curlClearsFog` / `curlClearsClouds`, fully cleared at `curlClearRamp`; a deep copy of its components: a plain
+  Instantiate of a VolumeProfile shares them and would edit the real profile);
+  Sand placement: vertex colour alpha = dune level (0 trough, 1 crest)
   and material settings Ripple Coverage, Height Preference, Slope Limit, Patchiness, Border Sharpness;
   `_Smoothness` and other Lit names are taken by `LitProperties.hlsl`, so terrain properties are plain uniforms with
   their own names. In Play mode the act pushes every camera's far plane to `farClip` (40 km) and restores it when
-  disabled. Act 2 Volume: landscape haze (fog base -250 m, 2 km thick, 9 km mean free path, volumetric) and
+  disabled. Act 2 Volume: landscape haze (fog base -250 m, 2 km thick, 9 km mean free path, volumetric; the Physically
+  Based Sky's own Atmospheric Scattering stays off: its aerial haze flickers on ridges near the sun while flying) and
   shadows out to 8 km (4 cascades). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,
   2 x 2 m, Megascans layout: BaseColor, Normal, Displacement, Roughness, AO) height-blended (ripples on gentle
   slopes, dry sand on slip faces) plus a larger rotated sample against tiling. Mountains and foothills: volcanic
@@ -143,7 +146,17 @@ sky, no bloom, fog off.
   `CloudCube.mat`; Fluff, Puff Size, Density and Softness from the field. No physics unless `collisions` (rigidbodies
   cost ~4 ms CPU for 40 clusters); far clusters take fewer samples and are hidden beyond `drawDistance`.
   The prefab `Prefabs/Cloud Cluster.prefab` is a single standalone cluster.
-  Next: mirror cubes and monoliths, Bogota mesh from Blender (Clement).
+  Monoliths: `World/Monoliths` (`MonolithField`) spreads copies of `Prefabs/Monolith.prefab` along the route,
+  outside `routeClearance` of the centre line, on the lowest ground under their foot, with base shape and growth
+  values varied by `variation`, random yaw, generated and never saved. A `Monolith` is a standing triangular prism
+  with rounded edges (mesh generated on the child `Slab`, Default layer: the Dome Creator cameras only render
+  Default, TransparentFX, Ignore Raycast and Water, so never put act content on another layer), blurred mirror finish (`Monolith.mat`,
+  HDRP Lit metallic), growing (Scale or Rise) by depth ahead of the camera along the route (Z), from `growStart` to `growEnd`, staying grown (`keepGrown`). Its own realtime
+  reflection probe (128, time-sliced, inside the prism so its own faces are culled) is live only for the `liveReflections` nearest grown
+  monoliths (about 1 ms GPU each), frozen for the next ones up to `reflectionProbes`, and switched off beyond (they
+  reflect the sky): HDRP draws at most 32 reflection probes on screen (Maximum Cube Reflection Probes on Screen in
+  the HDRP assets).
+  Next: Bogota mesh from Blender (Clement).
   Kept for later (agreed with Clement): mountain erosion and more varied ridges; per-pixel dune relief to remove the
   stepped slip-face edges; vegetation and rocks scattered on the terrain; better light for the final render (SSGI,
   contact shadows, higher shadow/fog quality, path tracing: the terrain shader would need ray tracing passes and

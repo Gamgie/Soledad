@@ -632,7 +632,7 @@ MonoBehaviour:
   cameraTarget: {fileID: 826275310}
   offsetTarget: {fileID: 1302259459}
   offset: -0.01
-  rigTiltOffset: 25
+  rigTiltOffset: 30
 --- !u!1 &428664498 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4347002669117784366, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
@@ -704,12 +704,12 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   volumeAnchorOverride: {fileID: 0}
-  antialiasing: 0
+  antialiasing: 2
   SMAAQuality: 2
   dithering: 0
   stopNaNs: 0
   taaSharpenStrength: 0.5
-  TAAQuality: 1
+  TAAQuality: 2
   taaSharpenMode: 0
   taaRingingReduction: 0
   taaHistorySharpening: 0.35
@@ -1059,6 +1059,14 @@ PrefabInstance:
     - target: {fileID: 7063691907787950941, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.z
       value: -5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7420833268190230354, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
+      propertyPath: TAAQuality
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7420833268190230354, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
+      propertyPath: antialiasing
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8493101936819523701, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1459,12 +1467,12 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   volumeAnchorOverride: {fileID: 0}
-  antialiasing: 0
+  antialiasing: 2
   SMAAQuality: 2
   dithering: 0
   stopNaNs: 0
   taaSharpenStrength: 0.5
-  TAAQuality: 1
+  TAAQuality: 2
   taaSharpenMode: 0
   taaRingingReduction: 0
   taaHistorySharpening: 0.35
