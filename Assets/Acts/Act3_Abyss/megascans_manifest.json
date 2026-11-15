@@ -1,0 +1,119 @@
+[
+ {
+  "name": "GraniteRock_qdzfz",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/GraniteRock_qdzfz",
+  "baseColor": "GraniteRock_qdzfz_BaseColor.jpg",
+  "normal": "GraniteRock_qdzfz_Normal.jpg",
+  "mask": "GraniteRock_qdzfz_MaskMap.png",
+  "mesh": "GraniteRock_qdzfz.fbx"
+ },
+ {
+  "name": "GrasslandPakistaniRockBoulderStoneLarge08_wg1hchg",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/GrasslandPakistaniRockBoulderStoneLarge08_wg1hchg",
+  "baseColor": "GrasslandPakistaniRockBoulderStoneLarge08_wg1hchg_BaseColor.jpg",
+  "normal": "GrasslandPakistaniRockBoulderStoneLarge08_wg1hchg_Normal.jpg",
+  "mask": "GrasslandPakistaniRockBoulderStoneLarge08_wg1hchg_MaskMap.png",
+  "mesh": "GrasslandPakistaniRockBoulderStoneLarge08_wg1hchg.fbx"
+ },
+ {
+  "name": "HugeIcelandicLavaCliff_sjnbp",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/HugeIcelandicLavaCliff_sjnbp",
+  "baseColor": "HugeIcelandicLavaCliff_sjnbp_BaseColor.jpg",
+  "normal": "HugeIcelandicLavaCliff_sjnbp_Normal.jpg",
+  "mask": "HugeIcelandicLavaCliff_sjnbp_MaskMap.png",
+  "mesh": "HugeIcelandicLavaCliff_sjnbp.fbx"
+ },
+ {
+  "name": "NordicBeachRockFormation_vd4iecjva",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/NordicBeachRockFormation_vd4iecjva",
+  "baseColor": "NordicBeachRockFormation_vd4iecjva_BaseColor.jpg",
+  "normal": "NordicBeachRockFormation_vd4iecjva_Normal.jpg",
+  "mask": "NordicBeachRockFormation_vd4iecjva_MaskMap.png",
+  "mesh": "NordicBeachRockFormation_vd4iecjva.fbx"
+ },
+ {
+  "name": "NordicBeachRockFormation_vflrejtfa",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/NordicBeachRockFormation_vflrejtfa",
+  "baseColor": "NordicBeachRockFormation_vflrejtfa_BaseColor.jpg",
+  "normal": "NordicBeachRockFormation_vflrejtfa_Normal.jpg",
+  "mask": "NordicBeachRockFormation_vflrejtfa_MaskMap.png",
+  "mesh": "NordicBeachRockFormation_vflrejtfa.fbx"
+ },
+ {
+  "name": "NordicCoastalCliff_ulejebpfa",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/NordicCoastalCliff_ulejebpfa",
+  "baseColor": "NordicCoastalCliff_ulejebpfa_BaseColor.jpg",
+  "normal": "NordicCoastalCliff_ulejebpfa_Normal.jpg",
+  "mask": "NordicCoastalCliff_ulejebpfa_MaskMap.png",
+  "mesh": "NordicCoastalCliff_ulejebpfa.fbx"
+ },
+ {
+  "name": "SmallForestRock_viljajdaw",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/SmallForestRock_viljajdaw",
+  "baseColor": "SmallForestRock_viljajdaw_BaseColor.jpg",
+  "normal": "SmallForestRock_viljajdaw_Normal.jpg",
+  "mask": "SmallForestRock_viljajdaw_MaskMap.png",
+  "mesh": "SmallForestRock_viljajdaw.fbx"
+ },
+ {
+  "name": "VolcanicDoleriteCliff_qegwv",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/VolcanicDoleriteCliff_qegwv",
+  "baseColor": "VolcanicDoleriteCliff_qegwv_BaseColor.jpg",
+  "normal": "VolcanicDoleriteCliff_qegwv_Normal.jpg",
+  "mask": "VolcanicDoleriteCliff_qegwv_MaskMap.png",
+  "mesh": "VolcanicDoleriteCliff_qegwv.fbx"
+ },
+ {
+  "name": "VolcanicDoleriteCliff_qjyci",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/VolcanicDoleriteCliff_qjyci",
+  "baseColor": "VolcanicDoleriteCliff_qjyci_BaseColor.jpg",
+  "normal": "VolcanicDoleriteCliff_qjyci_Normal.jpg",
+  "mask": "VolcanicDoleriteCliff_qjyci_MaskMap.png",
+  "mesh": "VolcanicDoleriteCliff_qjyci.fbx"
+ },
+ {
+  "name": "VolcanicDoleriteCliff_qkbtz",
+  "kind": "rock",
+  "folder": "Assets/Acts/Act3_Abyss/Rocks/VolcanicDoleriteCliff_qkbtz",
+  "baseColor": "VolcanicDoleriteCliff_qkbtz_BaseColor.jpg",
+  "normal": "VolcanicDoleriteCliff_qkbtz_Normal.jpg",
+  "mask": "VolcanicDoleriteCliff_qkbtz_MaskMap.png",
+  "mesh": "VolcanicDoleriteCliff_qkbtz.fbx"
+ },
+ {
+  "name": "MossyRockSurface_xdjrbag",
+  "kind": "surface",
+  "folder": "Assets/Acts/Act3_Abyss/Surfaces/MossyRockSurface_xdjrbag",
+  "baseColor": "MossyRockSurface_xdjrbag_BaseColor.jpg",
+  "normal": "MossyRockSurface_xdjrbag_Normal.jpg",
+  "mask": "MossyRockSurface_xdjrbag_MaskMap.png",
+  "tile_m": 0.5
+ },
+ {
+  "name": "WeatheredRock026",
+  "kind": "surface",
+  "folder": "Assets/Acts/Act3_Abyss/Surfaces/WeatheredRock026",
+  "baseColor": "WeatheredRock026_BaseColor.png",
+  "normal": "WeatheredRock026_Normal.png",
+  "mask": "WeatheredRock026_MaskMap.png",
+  "tile_m": 2.0
+ },
+ {
+  "name": "WeatheredRock027",
+  "kind": "surface",
+  "folder": "Assets/Acts/Act3_Abyss/Surfaces/WeatheredRock027",
+  "baseColor": "WeatheredRock027_BaseColor.png",
+  "normal": "WeatheredRock027_Normal.png",
+  "mask": "WeatheredRock027_MaskMap.png",
+  "tile_m": 2.0
+ }
+]
