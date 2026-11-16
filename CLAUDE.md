@@ -208,7 +208,10 @@ sky, no bloom, fog off.
   around the origin, `Zone` = the placeholder walls, off) open at the top around y = 75 to 90. Very dark, lit by:
   - `Abyss Lights`: an Oxipital **Light Group** (Core 1.6.0, `Light Group.prefab` instance in the act): 5 glowing
     orange spheres on a flat circle of 12 m at the centre (circle pattern only, group turned 90 degrees on X),
-    20000 lm, range 60 m, volumetric halos, shadows. Lights exist in Play mode only, like every Oxipital dancer group.
+    20000 lm, range 60 m, volumetric halos, no shadows: 5 shadowed point lights = 30 shadow faces, each redrawing every
+    lit particle (about 16 ms with 264 k grains). Lights exist in Play mode only, like every Oxipital dancer group.
+    Lit particles (orb render types LitCube / LitSphere / LitMesh) cost per vertex and per pass: use the OrbOctahedron
+    grain (6 vertices, the Orb Group default since Oxipital 1.6.1), not the icosphere (42).
   - `Light Shafts`: a second Light Group of 4 narrow spots (8 degrees, 2500 lm, volumetric 3.5, shadows) on a 7 m
     circle at y = 85, the opening: beams through the fog, cut by the rocks. Aimed down by the group (turned 90 degrees
     on X, `dancerRotation` 8 degrees), wavering with a `NoiseDancePattern` (0.6 m) and flickering with the Noise wave.

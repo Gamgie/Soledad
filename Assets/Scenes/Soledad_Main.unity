@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &113057635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -916,7 +916,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &517179240
 Transform:
   m_ObjectHideFlags: 0
@@ -1042,7 +1042,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Soledad.Act3Controller
   AbyssLighting_sunElevation: 78
   AbyssLighting_sunAzimuth: 30
-  AbyssLighting_sunIntensity: 2500
+  AbyssLighting_sunIntensity: 11243
   AbyssLighting_sunColor: {r: 0.55, g: 0.82, b: 1, a: 1}
   AbyssLighting_shaftStrength: 1
 --- !u!114 &567022511 stripped
@@ -1669,7 +1669,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   volumeAnchorOverride: {fileID: 0}
-  antialiasing: 2
+  antialiasing: 0
   SMAAQuality: 2
   dithering: 0
   stopNaNs: 0
