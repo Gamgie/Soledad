@@ -206,17 +206,21 @@ sky, no bloom, fog off.
 
 - **Act 3, Abyss** (`Assets/Acts/Act3_Abyss/`): a pit of Megascans rocks (`Environnement/Rocks`, about 80 x 150 x 80 m
   around the origin, `Zone` = the placeholder walls, off) open at the top around y = 75 to 90. Very dark, lit by:
-  - `Abyss Lights`: an Oxipital **Light Group** (Core 1.5.0, `Light Group.prefab` instance in the act): 5 glowing
+  - `Abyss Lights`: an Oxipital **Light Group** (Core 1.6.0, `Light Group.prefab` instance in the act): 5 glowing
     orange spheres on a flat circle of 12 m at the centre (circle pattern only, group turned 90 degrees on X),
     20000 lm, range 60 m, volumetric halos, shadows. Lights exist in Play mode only, like every Oxipital dancer group.
-  - `Light Shafts`: a second Light Group of 4 narrow spots (8 degrees, 2500 lm, volumetric 3.5, shadows, aimed down,
-    a little noise so the beams waver) on a 7 m circle at y = 85, the opening: beams through the fog, cut by the rocks.
+  - `Light Shafts`: a second Light Group of 4 narrow spots (8 degrees, 2500 lm, volumetric 3.5, shadows) on a 7 m
+    circle at y = 85, the opening: beams through the fog, cut by the rocks. Aimed down by the group (turned 90 degrees
+    on X, `dancerRotation` 8 degrees), wavering with a `NoiseDancePattern` (0.6 m) and flickering with the Noise wave.
+    Any group can follow another one (`targetMasterBallet`, Oxipital 1.6.0), the ring included.
   - `Abyss Lighting` (`AbyssLighting`): while the act is shown, aims the Sun of Soledad_Main almost straight down
     (78 degrees, `sunElevation` / `sunAzimuth`, cold `sunColor`, `sunIntensity` 2500 lux, `shaftStrength` = its
     volumetric dimmer), all `[Animate]` (`Show/Act3Controller`), and restores the Sun when disabled and around saves.
   - Act 3 Volume: **Fixed exposure EV 8.5** (automatic exposure would lift the dark back up), gradient sky x6 (almost
     no ambient), fog in constant near-black colour with no sky light in it (`globalLightProbeDimmer` 0), volumetric
-    fog only in the pit (full below 40 m, gone by 95 m, mean free path 55 m, neutral cool albedo), bloom 0.45.
+    fog only in the pit (full below 40 m, gone by 95 m, mean free path 55 m, neutral cool albedo, quality Medium: High
+    cost 4 ms more for the same image), bloom 0.45. Measured GPU cost (laptop, dome 2048): volumetric fog ~7 ms,
+    volumetric lights ~6.5 ms, the ring's point light shadows ~3 ms, the dome itself ~11 ms.
   `1m Ref` (scale cube at the centre) is turned off: it sat in the middle of the ring.
 
 ## Film workflow: perform, then render

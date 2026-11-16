@@ -739,6 +739,13 @@ MonoBehaviour:
   sunIntensity: 2500
   sunColor: {r: 0.55, g: 0.82, b: 1, a: 1}
   shaftStrength: 1
+  _overridden: 0
+  _rotation: {x: 0.03154211, y: 0.9587259, z: -0.11771675, w: 0.25688988}
+  _intensity: 130000
+  _temperature: 6500
+  _volumetric: 1
+  _color: {r: 1, g: 1, b: 1, a: 1}
+  _useTemperature: 1
 --- !u!1001 &236857098
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2625,7 +2632,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: patternSize
-      value: 12
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: meshEmission
@@ -2641,7 +2648,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2495122535985444785, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: blendMode
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2495122535985444785, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: speedWeight
@@ -6116,6 +6123,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: wave
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: count
       value: 4
       objectReference: {fileID: 0}
@@ -6156,6 +6167,14 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: waveDepth
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: waveSpeed
+      value: 0.45
+      objectReference: {fileID: 0}
+    - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: noiseSpeed
       value: 0.15
       objectReference: {fileID: 0}
@@ -6184,6 +6203,10 @@ PrefabInstance:
       value: 0.25
       objectReference: {fileID: 0}
     - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: dancerRotation.x
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2038854991789431341, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: volumetricIntensity
       value: 3.5
       objectReference: {fileID: 0}
@@ -6206,6 +6229,22 @@ PrefabInstance:
     - target: {fileID: 4659298708232109781, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
       propertyPath: weight
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6836379516333950201, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: seed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6836379516333950201, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: weight
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6836379516333950201, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: amplitude
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6836379516333950201, guid: 6dd12668ca84f51429e10d1f16e5cbc8, type: 3}
+      propertyPath: frequency
+      value: 0.15
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
