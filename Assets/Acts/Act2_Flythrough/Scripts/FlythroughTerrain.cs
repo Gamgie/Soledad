@@ -356,15 +356,17 @@ namespace Soledad
         // ---------------------------------------------------------------- sun
 
         Light _sun;
-        Quaternion _sunOriginal;
-        bool _sunOverridden;
+        // The Sun's own values, serialized so a script reload in the Editor keeps them (otherwise the act would take
+        // its own values for the originals after a recompile and leave them on the Sun)
+        [SerializeField, HideInInspector] Quaternion _sunOriginal;
+        [SerializeField, HideInInspector] bool _sunOverridden;
         UnityEngine.Rendering.HighDefinition.HDAdditionalLightData _sunData;
-        int _sunResolutionOriginal;
-        float _sunPenumbraOriginal;
-        bool _sunResolutionUseOverride;
-        float _sunTemperatureOriginal;
-        bool _sunUseTemperatureOriginal;
-        Color _sunColorOriginal;
+        [SerializeField, HideInInspector] int _sunResolutionOriginal;
+        [SerializeField, HideInInspector] float _sunPenumbraOriginal;
+        [SerializeField, HideInInspector] bool _sunResolutionUseOverride;
+        [SerializeField, HideInInspector] float _sunTemperatureOriginal;
+        [SerializeField, HideInInspector] bool _sunUseTemperatureOriginal;
+        [SerializeField, HideInInspector] Color _sunColorOriginal;
 
         void ApplySun()
         {
@@ -375,6 +377,7 @@ namespace Soledad
             }
             if (_sun == null) _sun = FindSun();
             if (_sun == null) return;
+            if (_sunData == null) _sunData = _sun.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
             if (!_sunOverridden)
             {
                 _sunOriginal = _sun.transform.rotation;

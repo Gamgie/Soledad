@@ -101,7 +101,7 @@ sky, no bloom, fog off.
   the valley (fields between two ridges); shape in `TerrainShape` (`TerrainField.cs`, pure Burst-compatible height
   and biome functions). The landscape is fixed in the space of `Act2_Flythrough/World` (at the origin, no floating
   origin: HDRP renders camera-relative and the route is about 13 km) and the Oxipital camera really flies through it.
-  Film: the **Spline camera** (Oxipital Camera 1.4.0, `Cameras/Spline Camera target`, `SplineMovement`) rides
+  Film: the **Spline camera** (Oxipital Camera 1.5.0, `Cameras/Spline Camera target`, `SplineMovement`) rides
   `World/Flight Path` (a Splines `SplineContainer`, editable), which the act hands to it in Play mode with itself as
   the ground (`Oxipital.ICameraGround`, `GetGroundHeight`), so it flies at its `altitude` above the (smoothed,
   anticipated) relief plus the spline's own height. Speed, altitude, offset, look (gamepad on `yaw1D` / `pitch1D` /
@@ -203,6 +203,21 @@ sky, no bloom, fog off.
   contact shadows, higher shadow/fog quality, path tracing: the terrain shader would need ray tracing passes and
   the vertex curl is invisible to it); 70s look. Option parked: render the Act 2 film shot in Unreal (Megascans,
   Nanite, Lumen; fisheye via cubemaps) if there is time before the September 2027 deadline.
+
+- **Act 3, Abyss** (`Assets/Acts/Act3_Abyss/`): a pit of Megascans rocks (`Environnement/Rocks`, about 80 x 150 x 80 m
+  around the origin, `Zone` = the placeholder walls, off) open at the top around y = 75 to 90. Very dark, lit by:
+  - `Abyss Lights`: an Oxipital **Light Group** (Core 1.5.0, `Light Group.prefab` instance in the act): 5 glowing
+    orange spheres on a flat circle of 12 m at the centre (circle pattern only, group turned 90 degrees on X),
+    20000 lm, range 60 m, volumetric halos, shadows. Lights exist in Play mode only, like every Oxipital dancer group.
+  - `Light Shafts`: a second Light Group of 4 narrow spots (8 degrees, 2500 lm, volumetric 3.5, shadows, aimed down,
+    a little noise so the beams waver) on a 7 m circle at y = 85, the opening: beams through the fog, cut by the rocks.
+  - `Abyss Lighting` (`AbyssLighting`): while the act is shown, aims the Sun of Soledad_Main almost straight down
+    (78 degrees, `sunElevation` / `sunAzimuth`, cold `sunColor`, `sunIntensity` 2500 lux, `shaftStrength` = its
+    volumetric dimmer), all `[Animate]` (`Show/Act3Controller`), and restores the Sun when disabled and around saves.
+  - Act 3 Volume: **Fixed exposure EV 8.5** (automatic exposure would lift the dark back up), gradient sky x6 (almost
+    no ambient), fog in constant near-black colour with no sky light in it (`globalLightProbeDimmer` 0), volumetric
+    fog only in the pit (full below 40 m, gone by 95 m, mean free path 55 m, neutral cool albedo), bloom 0.45.
+  `1m Ref` (scale cube at the centre) is turned off: it sat in the middle of the ring.
 
 ## Film workflow: perform, then render
 

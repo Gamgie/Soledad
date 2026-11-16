@@ -218,7 +218,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 47499.996
+  m_Intensity: 130000
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 0
@@ -261,7 +261,7 @@ Light:
   m_LightShadowCasterMode: 2
   m_AreaSize: {x: 0.5, y: 0.5}
   m_BounceIntensity: 1
-  m_ColorTemperature: 3500
+  m_ColorTemperature: 6500
   m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
@@ -280,7 +280,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 157207112}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.033168443, y: -0.64882994, z: 0.028328525, w: 0.75968224}
+  m_LocalRotation: {x: 0.03154211, y: 0.9587259, z: -0.11771675, w: 0.25688988}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -909,6 +909,7 @@ GameObject:
   - component: {fileID: 517179242}
   - component: {fileID: 517179243}
   - component: {fileID: 517179244}
+  - component: {fileID: 517179245}
   m_Layer: 0
   m_Name: Show
   m_TagString: Untagged
@@ -1027,6 +1028,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &517179245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 517179239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee5ed40be0373324fa52d2bff1d8156d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.Act3Controller
+  AbyssLighting_sunElevation: 78
+  AbyssLighting_sunAzimuth: 30
+  AbyssLighting_sunIntensity: 2500
+  AbyssLighting_sunColor: {r: 0.55, g: 0.82, b: 1, a: 1}
+  AbyssLighting_shaftStrength: 1
 --- !u!114 &567022511 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9198803938699052465, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
@@ -1176,11 +1194,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4592129141062553480, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: field of view
-      value: 49.9
+      value: 24.24999
       objectReference: {fileID: 0}
     - target: {fileID: 4592129141062553480, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: orthographic size
-      value: 10
+      value: 2.06
       objectReference: {fileID: 0}
     - target: {fileID: 5919385600610907065, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1212,7 +1230,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7063691907787950941, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: 7420833268190230354, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: TAAQuality
