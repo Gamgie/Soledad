@@ -8,7 +8,7 @@
       "url": "https://package.openupm.com"
     },
     "com.gamgie.oxipital.camera": {
-      "version": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Camera#v1.7.2",
+      "version": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Camera#v1.7.3",
       "depth": 0,
       "source": "git",
       "dependencies": {
@@ -21,10 +21,10 @@
         "jp.keijiro.klak.spout": "2.0.6",
         "jp.keijiro.klak.syphon": "1.0.4"
       },
-      "hash": "dc7d180790c0fb8b072f05cdd118940a324b6f57"
+      "hash": "2a36376599d1a4882bdb2b1ee0d2b5bcae70bb21"
     },
     "com.gamgie.oxipital.core": {
-      "version": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Core#v1.7.2",
+      "version": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Core#v1.7.3",
       "depth": 0,
       "source": "git",
       "dependencies": {
@@ -36,7 +36,7 @@
         "com.benkuper.oscquery": "1.2.4",
         "jp.keijiro.klak.spout": "2.0.6"
       },
-      "hash": "dc7d180790c0fb8b072f05cdd118940a324b6f57"
+      "hash": "2a36376599d1a4882bdb2b1ee0d2b5bcae70bb21"
     },
     "com.pfc.dome-tools": {
       "version": "0.8.1",

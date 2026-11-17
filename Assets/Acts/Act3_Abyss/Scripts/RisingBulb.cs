@@ -64,12 +64,19 @@ namespace Soledad
 
         void Awake()
         {
-            _block = new MaterialPropertyBlock();
-            if (lightSource != null) _lightData = lightSource.GetComponent<HDAdditionalLightData>();
+            Init();
+        }
+
+        // Also from OnEnable: a script recompile in Play mode clears these fields and calls OnEnable without Awake
+        void Init()
+        {
+            if (_block == null) _block = new MaterialPropertyBlock();
+            if (_lightData == null && lightSource != null) _lightData = lightSource.GetComponent<HDAdditionalLightData>();
         }
 
         void OnEnable()
         {
+            Init();
             if (finished == null) Launch(transform.position, seed);
         }
 
