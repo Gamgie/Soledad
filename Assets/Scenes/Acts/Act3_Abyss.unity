@@ -1015,14 +1015,14 @@ MonoBehaviour:
   riseSpeedMin: 1.5
   riseSpeedMax: 3.5
   driftMin: 0.5
-  driftMax: 6.21
+  driftMax: 6
   color: {r: 1, g: 0.38, b: 0.16, a: 1}
   intensity: 169910
-  range: 16.2
+  range: 71.6
   size: 0.5
   meshEmission: 6
   volumetric: 1
-  volumetricIntensity: 0.94
+  volumetricIntensity: 0.51
   shadows: 0
 --- !u!1 &250517440
 GameObject:
