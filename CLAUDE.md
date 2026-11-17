@@ -212,6 +212,27 @@ sky, no bloom, fog off.
     lit particle (about 16 ms with 264 k grains). Lights exist in Play mode only, like every Oxipital dancer group.
     Lit particles (orb render types LitCube / LitSphere / LitMesh) cost per vertex and per pass: use the OrbOctahedron
     grain (6 vertices, the Orb Group default since Oxipital 1.6.1), not the icosphere (42).
+  - `Rising Bulb` (`Prefabs/Rising Bulb.prefab`, `RisingBulb`): a light bulb rising from the deep, the same look as the
+    ring (HDRP point light "Light" + Oxipital's Light Sphere on "Mesh"). From its start it rises along Y at
+    `riseSpeed` with a slow seeded brownian drift on X and Z (`drift`, `driftFrequency`), fades in (`fadeIn`), and at
+    the end of `life` fades out (`fadeOut`): light intensity and bulb size to 0. A spawner calls `Launch(start, seed)`
+    and gets it back through `finished`; alone it restarts from its start (`loop`) or is destroyed.
+  - `Bulb Spawner` (`BulbSpawner`): launches Rising Bulbs at `spawnRate` per second (0.5) from its children, the spawn
+    points (`Spawn Point 1` to `9`, instances of `Prefabs/Spawn Point.prefab`, placed by hand on the cave floor: move,
+    add (duplicate one) or remove them freely, also while playing), offset by up to `spawnRadius`. Each point carries
+    a `Marker`: a 2 m orange sphere (`Materials/Spawn Point Marker.mat`, HDRP Unlit, emission with exposure weight 0 so
+    it shows whatever the exposure) to place them in edit mode; the spawner deactivates every child of its spawn
+    points in Play mode (also for points added while playing), so they never show in the show or the film. Each bulb draws its
+    `life` (25 to 45 s), `riseSpeed` (1.5 to 3.5 m/s) and `drift` (0.5 to 3 m) between the min and max fields, from a
+    seeded generator (`seed`), so renders repeat. `maxBulbs` caps the bulbs in flight, live: when reached, launches
+    wait; lowered, the bulbs in flight end their life. Pool created in Play mode under `Bulbs (generated)` (never
+    saved), `maxBulbs` bulbs at the start, grown (one allocation each) if `maxBulbs` is raised beyond it. The look of all bulbs is set on the
+    spawner (Look: `color`, `intensity`, `range`, `size`, `meshEmission`, `volumetric`, `volumetricIntensity`,
+    `shadows`), pushed every frame to the bulbs in flight (the spawner runs before them, execution order -10), so the
+    prefab's own look values are ignored under a spawner. Rate and min / max are `[Animate]`
+    (`Show/Act3Controller`, `BulbSpawner_*`: in Play mode edit them there, not on the spawner); the look is set on
+    the spawner itself (not animated). Each live bulb is a volumetric point light, capped by `maxBulbs` (8 in the
+    scene); without shadows, 8 bulbs measured no visible GPU cost (`shadows` costs 6 shadow faces per bulb).
   - `Light Shafts`: a second Light Group of 4 narrow spots (8 degrees, 2500 lm, volumetric 3.5, shadows) on a 7 m
     circle at y = 85, the opening: beams through the fog, cut by the rocks. Aimed down by the group (turned 90 degrees
     on X, `dancerRotation` 8 degrees), wavering with a `NoiseDancePattern` (0.6 m) and flickering with the Noise wave.

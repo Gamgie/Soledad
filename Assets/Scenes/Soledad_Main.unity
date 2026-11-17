@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &113057635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -916,7 +916,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &517179240
 Transform:
   m_ObjectHideFlags: 0
@@ -1042,9 +1042,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Soledad.Act3Controller
   AbyssLighting_sunElevation: 78
   AbyssLighting_sunAzimuth: 30
-  AbyssLighting_sunIntensity: 11243
+  AbyssLighting_sunIntensity: 1381.5168
   AbyssLighting_sunColor: {r: 0.55, g: 0.82, b: 1, a: 1}
   AbyssLighting_shaftStrength: 1
+  BulbSpawner_spawnRate: 0.5
+  BulbSpawner_lifeMin: 25
+  BulbSpawner_lifeMax: 45
+  BulbSpawner_riseSpeedMin: 1.5
+  BulbSpawner_riseSpeedMax: 3.5
+  BulbSpawner_driftMin: 0.5
+  BulbSpawner_driftMax: 6
 --- !u!114 &567022511 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9198803938699052465, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
@@ -1194,11 +1201,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4592129141062553480, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: field of view
-      value: 24.24999
+      value: 49.9
       objectReference: {fileID: 0}
     - target: {fileID: 4592129141062553480, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: orthographic size
-      value: 2.06
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 5919385600610907065, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1230,7 +1237,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7063691907787950941, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7420833268190230354, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: TAAQuality

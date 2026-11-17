@@ -21,18 +21,34 @@ namespace Soledad
         [Tooltip("How much the sun lights the fog: the strength of the shafts against the lit rocks.")]
         [Range(0f, 16f)] public float AbyssLighting_shaftStrength = 6f;
 
+        [Header("BulbSpawner")]
+        [Tooltip("Bulbs launched per second.")]
+        [Range(0f, 20f)] public float BulbSpawner_spawnRate = 0.5f;
+        [Tooltip("Seconds from launch to the end of the fade out.")]
+        public float BulbSpawner_lifeMin = 25f;
+        public float BulbSpawner_lifeMax = 45f;
+        [Tooltip("Rising speed (m/s).")]
+        public float BulbSpawner_riseSpeedMin = 1.5f;
+        public float BulbSpawner_riseSpeedMax = 3.5f;
+        [Tooltip("Sideways drift (m, on X and Z).")]
+        public float BulbSpawner_driftMin = 0.5f;
+        public float BulbSpawner_driftMax = 3f;
+
         global::Soledad.AbyssLighting _target0;
+        global::Soledad.BulbSpawner _target1;
 
         protected override string ActName => "Act3_Abyss";
 
         protected override void Bind(Transform root)
         {
             _target0 = Find<global::Soledad.AbyssLighting>(root);
+            _target1 = Find<global::Soledad.BulbSpawner>(root);
         }
 
         protected override void Unbind()
         {
             _target0 = null;
+            _target1 = null;
         }
 
         protected override void Push()
@@ -44,6 +60,16 @@ namespace Soledad
                 _target0.sunIntensity = AbyssLighting_sunIntensity;
                 _target0.sunColor = AbyssLighting_sunColor;
                 _target0.shaftStrength = AbyssLighting_shaftStrength;
+            }
+            if (_target1 != null)
+            {
+                _target1.spawnRate = BulbSpawner_spawnRate;
+                _target1.lifeMin = BulbSpawner_lifeMin;
+                _target1.lifeMax = BulbSpawner_lifeMax;
+                _target1.riseSpeedMin = BulbSpawner_riseSpeedMin;
+                _target1.riseSpeedMax = BulbSpawner_riseSpeedMax;
+                _target1.driftMin = BulbSpawner_driftMin;
+                _target1.driftMax = BulbSpawner_driftMax;
             }
         }
     }
