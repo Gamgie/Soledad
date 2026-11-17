@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.andbc.texturepacker": "2.0.7",
     "com.gamgie.oxipital.camera": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Camera#v1.7.5",
     "com.gamgie.oxipital.core": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Core#v1.7.5",
     "com.pfc.dome-tools": "0.8.1",
@@ -64,6 +65,13 @@
       "url": "https://registry.npmjs.com",
       "scopes": [
         "jp.keijiro"
+      ]
+    },
+    {
+      "name": "andbc",
+      "url": "https://registry.npmjs.com",
+      "scopes": [
+        "com.andbc"
       ]
     }
   ]

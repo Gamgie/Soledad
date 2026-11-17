@@ -32,6 +32,12 @@ namespace Soledad
         float _builtRadius, _builtCap;
         int _builtSegments, _builtRings;
 
+        /// <summary>The generated mesh (null until built).</summary>
+        public Mesh GeneratedMesh => _mesh;
+
+        /// <summary>Local to world matrix of the generated mesh's renderer.</summary>
+        public Matrix4x4 MeshToWorld => _filter != null ? _filter.transform.localToWorldMatrix : transform.localToWorldMatrix;
+
         /// <summary>Sphere centre in world space.</summary>
         public Vector3 CenterWorld => transform.TransformPoint(new Vector3(0f, -radius, 0f));
 
@@ -105,8 +111,8 @@ namespace Soledad
             _renderer = child.GetComponent<MeshRenderer>();
             if (_renderer == null) _renderer = child.gameObject.AddComponent<MeshRenderer>();
             _renderer.sharedMaterial = material;
-            // A convex sphere never shadows itself: casting would only add shadow acne
-            _renderer.shadowCastingMode = ShadowCastingMode.Off;
+            // Casts on the landscape around it (and receives the mounds' shadows)
+            _renderer.shadowCastingMode = ShadowCastingMode.On;
         }
 
         void Build()

@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.andbc.texturepacker": {
+      "version": "2.0.7",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://registry.npmjs.com"
+    },
     "com.benkuper.oscquery": {
       "version": "1.2.4",
       "depth": 1,

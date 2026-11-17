@@ -19,18 +19,25 @@ namespace Soledad
         [Range(0f, 130000f)] public float HillLighting_sunIntensity = 100000f;
         public Color HillLighting_sunColor = new Color(1f, 0.96f, 0.9f, 1f);
 
+        [Header("TreeEmitter")]
+        [Tooltip("Fraction of the tree's particles shown (0 = none, 1 = maxInfiniteParticles of each Orb Group).")]
+        [Range(0f, 1f)] public float TreeEmitter_density = 1f;
+
         global::Soledad.HillLighting _target0;
+        global::Soledad.TreeEmitter _target1;
 
         protected override string ActName => "Act4_SeeThrough";
 
         protected override void Bind(Transform root)
         {
             _target0 = Find<global::Soledad.HillLighting>(root);
+            _target1 = Find<global::Soledad.TreeEmitter>(root);
         }
 
         protected override void Unbind()
         {
             _target0 = null;
+            _target1 = null;
         }
 
         protected override void Push()
@@ -41,6 +48,10 @@ namespace Soledad
                 _target0.sunAzimuth = HillLighting_sunAzimuth;
                 _target0.sunIntensity = HillLighting_sunIntensity;
                 _target0.sunColor = HillLighting_sunColor;
+            }
+            if (_target1 != null)
+            {
+                _target1.density = TreeEmitter_density;
             }
         }
     }

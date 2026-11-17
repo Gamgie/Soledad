@@ -255,19 +255,110 @@ sky, no bloom, fog off.
   lit particles by Oxipital (`StreamingAssets/emitters`). Planned: a crown grafted on the cut stems (mesh, not
   particles), particles falling from the roots below the ground (emitted from a top-view map of the roots, pulled
   down with a linear force plus Perlin into strings; ref Marshmallow Laser Feast, Of the Oak), the act's own sun.
+  **Grass: to revisit later (Gamgie, 2026-11-17: "enough for now")**: the shell grass is a good velvet lawn from
+  40 cm up but stays a photo of grass at insect height (no blades to fly through). Next steps when coming back: GPU
+  blades near the camera only (Ghost of Tsushima style: compute-generated blades in clumps, bent, widened with
+  distance) over the current shell lawn; stronger anti-tiling; mounds less bubble-like (longer, gentler waves).
+  Remind Gamgie of this when working on Act 4 again.
+  - `Tree`, `Crown` and `Tree Shadow Proxy` all sit at (0, **1.72**, 0): the scan's own ground (the root plate with its scanned soil) is
+    1.64 to 1.83 m below the scan's origin (rim measured per direction from its points, flat within 0.5 degree), so
+    this lift lays the roots on the hilltop, the rim just at grass level. Move them together.
+  - **One point cloud, scan + grafted stems**: `Tree` emits from `Tree_AF_Grafted` (the scan with the first ~2.5 m of
+    the 7 grafted stems joined in, 7.94 M triangles, 1.4 GB, 2 M particles = the OrbVFX capacity), so the force groups
+    move the stems with the scan. Oxipital picks a random triangle then a random point in it (Orb VFX
+    `ParticleSpawnPosition`, placement Surface): density follows triangle density, so `Blender/Act4_Tree/make_stems.py`
+    tessellates the stem tubes at the scan's own triangle density (56 900 tris/m2 measured on the scan's stems below
+    the cut: 6 mm quads, 1.07 M triangles for 18.6 m2). Bark: each tube vertex takes the scan's UV at the same angle a
+    little below the cut on the same stem (repeating every 0.9 m), with the scan's own atlas. The crown's wood starts
+    where the particle stems end (`STEM_LENGTH` 2.6 m, `STEM_MIN_RADIUS` in `make_crown.py`).
+  - **Tree shadows**: the grains cast no shadow (`TreeEmitter.grainShadows` off sets the VFXRenderers' shadow casting);
+    `Tree Shadow Proxy` (`Tree/TreeShadowProxy.glb`: the scan decimated to 80 k faces and shrunk 2 cm inward, plus the
+    stems; Shadows Only renderer; `make_shadow_proxy.py`) casts the tree's shadow instead. Same view, 2.2 M grains:
+    16.6 ms GPU without grain shadows, 38.6 ms with (each grain was drawn again in every shadow cascade); the proxy
+    itself costs nothing measurable (18.9 ms with or without it, 2 M grains). It shadows the ground and the grains (the
+    crown shades the trunk). No particle removed. Bigger grains (`particleSize`) remain an option if holes show.
+  - **Soil around the roots** (`Hill Grass.mat`, Soil Patch section of `Soledad/HillGrass`): an irregular disc
+    (`Radius` 2.3 m, `Edge Width` 0.9, `Edge Irregularity` 0.6, two noise octaves) of Meadow's dry meadow soil mixed
+    with its forest leaf litter by patches (`Materials/Soil`, extracted from the Meadow package in the Asset Store
+    cache), tinted towards the scan's soil; the grass shortens across the edge (`Grass Fades Into Soil`) and its lower
+    blades get dusty. `Landscape Grass.mat` has the patch off (radius 0).
+  - `Tree` (on `Act4_SeeThrough/Tree`): an Oxipital **Orb Group** (instance of Core's
+    `Orb Group.prefab`, not `Orb Group Lit.prefab`: that one has no VFX asset and crashes Unity natively in
+    `updateInfiniteLife` on the first Play frame) with custom mesh `Tree_AF_Grafted` (above), infinite life (1 999 000 particles of
+    the OrbVFX's 2 M capacity), one dancer, pattern size 0, no forces, LitMesh octahedron grains size 0.3, texture
+    opacity 1 (the scan's bark colours). `Tree_AF_Grafted.glb` is in `Assets/StreamingAssets/emitters` but **not in
+    git** (`.gitignore`): on a new machine rebuild it with `make_crown.py` then `make_stems.py` (they read the scan from
+    `E:/Projets/Oxipital/Asset/emitters/Tree_AF.glb`). Oxipital loads every .glb of that folder at Play, so keep only
+    the emitters in use there. Loading takes a few seconds (2.8 GB in memory); `TreeEmitter` (same object) holds the group's intensity at 0
+    until the meshes are loaded (infinite particles spawned earlier would stay on the default shape), then follows
+    `density` (`[Animate]`, `Show/Act4Controller`).
+  - `Crown` (sibling of `Tree`, origin, `Tree/Crown.glb` imported by glTFast, the same conversion as the scan loaded
+    by Oxipital, so both line up): a crown modelled in Blender to look like Realistic Tree Pack 3 for HDRP (Gamgie's
+    reference: dense rounded broadleaf crowns of glossy leaves), grown on the 7 cut stems of the scan (cut at about
+    3.78 m; their tips, axes and radii in `Blender/Act4_Tree/stem_tips.json`, found from the scan's points), top at
+    about 11 m, 11 m wide. Wood: space colonization from the stem tips towards attractors in 11 foliage clumps
+    (lobes, one above each stem first, hollow cores), pipe-model radii scaled so each branch starts at its stem's
+    radius, thin outer branches sagging (`DROOP`), continuous tubes (24 k faces: each chain follows the thickest
+    child, one ring per node shared by both segments, parallel-transported frames, side branches start sunk inside
+    their parent; separate frustums per segment opened gaps on the outside of every bend), bark v continuous along
+    each branch. Foliage: 12 700 twig cards (`CARDS_PER_TIP`, scattered in clumps by
+    `CARD_SCATTER`), front face out of the crown, normals bent outward (`NORMAL_OUTWARD`; the leaf material keeps
+    the same normal on both faces) so the canopy shades as one soft volume, cut from the Meadow pack's poplar atlas (`T_Poplar_leaves_BC`, Gamgie's purchase; the full
+    package is in the Asset Store cache, the trees were trimmed from the project). Materials: `Crown Leaves`
+    (NatureManufacture foliage shader from `M_grass_meadow_02`, poplar maps, wind off for now), `Crown Bark` (HDRP
+    Lit, poplar bark tinted grey like the scan). Rebuild: `Blender/Act4_Tree/make_crown.py` (run on
+    `tree_scan_proxy.blend`, a 200 k-face proxy of the scan made by importing `Tree_AF.glb` and decimating), settings
+    at its top (crown size, attractors, card count and size, seed), then copy `Crown.glb` into `Tree/`;
+    `render_preview.py` renders Blender previews. GPU (laptop, 1200 x 677 game view, camera 12 m from the tree):
+    whole frame 43 ms; the crown about 4 ms; **the scan's 1.9 M lit particles about 28 ms** (to reduce before the
+    dome: fewer particles, no shadow casting for the grains, or only near the camera). The .blend, .npy, textures and glb in `Blender/Act4_Tree` are not in
+    git (regenerated by the scripts).
   - `Hill` (on `Act4_SeeThrough/Hill`): a perfect sphere (`radius` 50 m, 100 m wide) with its top at the object's
     origin (the tree's foot), drawn down to `capAngle` (100 degrees); mesh built on the child `Hill Mesh`, never
-    saved, UVs = surface coordinates in metres (seamless), outward faces only (the ground vanishes from below), no
-    shadow casting (a convex sphere cannot shadow itself, it only made acne). Material `Materials/Hill Ground.mat`.
-  - `HillVegetation` (same object): layers (a prefab, LOD 0 and LOD 1 of its LODGroup, or a mesh and materials)
+    saved, UVs = surface coordinates in metres (seamless), outward faces only (the ground vanishes from below), casts
+    shadows on the landscape. Material `Materials/Hill Grass.mat`.
+  - `Landscape` (`HillLandscape`): the world around the hill, so the horizon is never a line (refs: rolling grassy
+    hills): a plain (`plainHeight` -16 m, gentle undulation) covered with ~120 rounded, elongated mounds (bigger with
+    the distance, merged by a smooth maximum that starts under the plain so a mound adds no step at its edge), rising
+    to rounded mountains from 2.2 km (`mountainHeight` 650 m), out to 9 km. **Seen from the hilltop only sky shows
+    behind the hill** (the tree stands against the sky): the whole landscape falls away from the hill
+    (`fallStart` 40 m, rounded over `fallSoftness` 60 m, then `fallSlope` 0.5 m per m, plain at -20 m, mounds from
+    150 m and flatter), so from up to ~1.5 m above the top everything stays under the hill's own horizon (from 5 m up
+    the mountains start to show); it reappears as soon as the camera leaves the top. The hill emerges with a fillet; the
+    first ring lies on the sphere, under the hill's own mesh; where the smooth maximum has become the sphere itself the
+    landscape is sunk 30 cm under it (otherwise both surfaces coincide and z-fight in rings). Polar mesh (dense at the hill's foot) in two parts, never
+    saved: `Landscape Mesh` up to `shadowRadius` (2 km) casts shadows, `Landscape Far Mesh` does not (a caster
+    kilometres long gets clamped in the sun's shadow map and blackened the hill). Noise: its own value noise, not
+    `Mathf.PerlinNoise` (it jumps by metres along thin strips at these coordinates: black steps). Material
+    `Materials/Landscape Grass.mat` (same shader, `Ground Only`).
+  - **Grass: the scanned Megascans "Uncut Grass" set** (`Materials/uncut_grass_oilos0_2k`, 1 x 1 m, normal map in the
+    OpenGL convention, checked against its height map) with real relief: shader `Soledad/HillGrass` (`Shaders/`,
+    hand-written on HDRP's Lit passes like the Act 2 terrain). The ground is the scan (albedo pulled towards green
+    by `Recolour`, the straw blades of the scan otherwise read yellow; roughness, AO, normal); anti-tiling: a second
+    sample rotated 40 degrees and 1.37 x larger takes over by 4 m patches, height-blended; 18 m light / dark patches.
+    `HillGrass` (on `Hill`) draws the hill mesh again for each shell (`shells` 48, down to `minShells` 16 from 4 m up,
+    top shell first; none closer than `minCameraHeight` 0.2 m, where the shells show as slices and the scan alone is
+    better, nor beyond `drawDistance`), pushed out along the normal by `_ShellHeight` x `Height` (3 cm), each keeping
+    the scan where its height map (`Height Map at Ground` / `at Tips`) reaches it: the scanned blades stand up with
+    parallax, like the Fab preview (which renders the scan with displacement; a plain HDRP Lit with the same maps
+    stays flat). Alpha-tested: depth prepass, then GBuffer with an equal depth test and no depth write; the shells do
+    not cast shadows. Shells fade with distance (10 to 30 m) and when a blade is smaller than a pixel (footprint from
+    distance and angle, not screen derivatives: those are constant per triangle and show the facets) by flattening the
+    relief (each pixel keeps the shells under height x fade), not by dropping whole shells; depth shading comes from
+    the blade's own height (height map), so the lawn keeps one tone where the shells fade (a darkening tied to the
+    shell index made a dark cap around the camera). Comb, wind,
+    anti-tiling and patch noise per vertex (uv1, uv2). GPU cost measured with the earlier procedural-blade version:
+    about +2.3 ms for 40 shells at 1200 x 677, camera 25 cm above the grass.
+  - `HillVegetation` (same object, all layers off since the shell grass, kept to bring back flowers or tufts):
+    layers (a prefab, LOD 0 and LOD 1 of its LODGroup, or a mesh and materials)
     scattered on the hill once, seeded, along the sphere normal, with patches and a bare `clearRadius` around the
     top, drawn with `Graphics.RenderMeshInstanced` from `RenderPipelineManager.beginCameraRendering` (every camera:
     dome, Scene view in edit mode). Culling per 4 m cell: distance (`maxDistance`, density down to `farDensity`),
     behind the hill's horizon, and nothing while the camera is below the surface. Layers (Meadow prefabs, ~280 k
     instances, Act 4 at 135 fps alone): short meadow grass detailed (3D blades, shadows, up to 18 m) and crossed
     cards (up to 110 m, density down to 10 %), low tufts, a few tall clumps, clover and daisies, sparse chamomile,
-    cornflower and poppy in patches. Ground `Materials/Hill Ground.mat`: Meadow's meadow grass ground (HDRP Lit,
-    triplanar), tinted darker.
+    cornflower and poppy in patches. Previous ground `Materials/Hill Ground.mat`: Meadow's meadow grass ground (HDRP
+    Lit, triplanar), tinted darker.
   - **Meadow Environment** (NatureManufacture, Asset Store) in `Assets/NatureManufacture Assets`, trimmed to what
     Act 4 uses (466 MB instead of 3.9 GB): the grass, flower and detail prefabs above with their models, materials
     and textures, the meadow grass ground, insects and particles (bees, butterfly, pollen dust, falling leaves, for
@@ -277,10 +368,14 @@ sky, no bloom, fog off.
     bushes, fences, roads, demo scenes and the support packs were deleted (reimport from the Asset Store if needed).
     The grass materials' Healthy and Dry colours are tinted towards a deeper green.
   - `Wind` (Meadow `Prefab_Wind`, `NM_Wind`, 20 km/h): global wind for the foliage shader, direction = its forward.
-  - `Hill Lighting` (`HillLighting`): while the act is shown, a clear day Sun (50 degrees high, azimuth -40,
-    100000 lux, warm white), all `[Animate]` (`Show/Act4Controller`), restored when disabled and around saves.
-  - Act 4 Volume: Physically Based Sky tinted teal-blue (zenith and horizon tints, dark green-grey ground below the
-    horizon), volumetric clouds (Sparse preset: a few white cumulus), light fog (6 km), fixed exposure EV 13.6.
+  - `Hill Lighting` (`HillLighting`): while the act is shown, a clear day Sun (32 degrees high, azimuth 120,
+    100000 lux, warm white: low and from the side, so the mounds model each other), all `[Animate]`
+    (`Show/Act4Controller`), restored when disabled and around saves.
+  - Act 4 Volume: Physically Based Sky tinted teal-blue (zenith and horizon tints; its ground below the horizon is
+    tinted sky blue: from the hilltop the camera sees up to 14 degrees below the horizontal past the hill's edge, and a
+    dark ground there read as a grey band instead of sky), volumetric clouds (Sparse preset: a few white cumulus), aerial haze (fog mean free path 3.5 km, height
+    150 m to 1.2 km, out to 20 km: the mountains fade into the sky), shadows out to 2.5 km (4 cascades), indirect
+    diffuse x 1.8 (lighter shaded slopes), fixed exposure EV 13.1.
 
 ## Film workflow: perform, then render
 

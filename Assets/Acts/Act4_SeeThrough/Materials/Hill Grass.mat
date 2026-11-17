@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Hill Grass
+  m_Shader: {fileID: 4800000, guid: 23be929977087ff4ca4a05105d319c1e, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _GrassAO:
+        m_Texture: {fileID: 2800000, guid: 050b964b320cbe74aba7a645833c7571, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GrassAlbedo:
+        m_Texture: {fileID: 2800000, guid: bd8f4f60cba22394b9b3c1a39c678a0c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GrassHeightMap:
+        m_Texture: {fileID: 2800000, guid: c8b368de56898bb45802502c17c930ca, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GrassNormal:
+        m_Texture: {fileID: 2800000, guid: a5accb2d373560f4c96227ef64a201ed, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GrassRoughness:
+        m_Texture: {fileID: 2800000, guid: 8c42d3bf93a41e94089404ebb4ad23c6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _LitterAlbedo:
+        m_Texture: {fileID: 2800000, guid: 570c364537149694f8cc248b47c206fc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SoilAlbedo:
+        m_Texture: {fileID: 2800000, guid: 531f7548afe02ba4ea6660d0ad2fdfd6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SoilNormal:
+        m_Texture: {fileID: 2800000, guid: 3eed62dc7c728064dae84d443bbfc9c1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AOStrength: 1
+    - _CombScale: 14
+    - _CullMode: 2
+    - _FadeEnd: 30
+    - _FadeStart: 10
+    - _GrassHeight: 0.03
+    - _GrassInSoil: 0.6
+    - _GroundOnly: 0
+    - _HeightMax: 0.8
+    - _HeightMin: 0.3
+    - _Lean: 0.02
+    - _LitterAmount: 0.75
+    - _NormalStrength: 3
+    - _PatchAmount: 0.25
+    - _PatchScale: 18
+    - _Recolor: 0.75
+    - _RoughnessScale: 1.1
+    - _Saturation: 1
+    - _SelfShadow: 0.5
+    - _Sheen: 0.25
+    - _SheenPower: 3
+    - _ShellHeight: 0
+    - _SoilEdge: 0.9
+    - _SoilEdgeNoise: 0.6
+    - _SoilRadius: 2.3
+    - _SoilSize: 2
+    - _StencilRef: 0
+    - _StencilRefDepth: 0
+    - _StencilRefGBuffer: 2
+    - _StencilWriteMask: 6
+    - _StencilWriteMaskDepth: 8
+    - _StencilWriteMaskGBuffer: 14
+    - _TextureSize: 1.24
+    - _TileBreakScale: 4.22
+    - _TileBreakSharpness: 9.6
+    - _WindScale: 3
+    - _WindSpeed: 0.35
+    - _WindStrength: 0.01
+    - _ZClip: 1
+    - _ZTestDepthEqualForOpaque: 3
+    - _ZTestGBuffer: 3
+    m_Colors:
+    - _GrassTint: {r: 0.9, g: 1, b: 0.85, a: 1}
+    - _PatchColor: {r: 0.55, g: 0.68, b: 0.3, a: 1}
+    - _RecolorTarget: {r: 0.21999997, g: 0.41999996, b: 0.079999976, a: 1}
+    - _SheenColor: {r: 0.45, g: 0.58, b: 0.31999996, a: 1}
+    - _SoilCenter: {r: 0, g: 0, b: 0, a: 0}
+    - _SoilTint: {r: 0.78, g: 0.72, b: 0.66, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
