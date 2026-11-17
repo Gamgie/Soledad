@@ -135,6 +135,13 @@ namespace Soledad
             }
 
             if (next != null) next.weight = 1f;
+            // The previous act's meshes, particles and lights do not fade with the weight: hide it (it is kept,
+            // inactive, when it is the act after the new one)
+            if (previous != null && previous != next)
+            {
+                previous.weight = 0f;
+                previous.gameObject.SetActive(false);
+            }
             _shownAct = next;
             _shownIndex = target;
 

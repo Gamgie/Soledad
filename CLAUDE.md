@@ -47,7 +47,8 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
 - `ShowController` (`Assets/Scripts/Show`): OSCQuery only sees `Root Scene`, so an act scene is loaded additively,
   its root is moved under `Root Scene` in the main scene, and the emptied act scene is unloaded at once. Setting
   `act` (1 to 5, 0 = none; also `NextAct()` / `PreviousAct()`) crossfades `Act.weight` over `transitionDuration`,
-  keeps only the shown act and the next one (preloaded, inactive), and destroys the others. Loaded act roots are
+  keeps only the shown act and the next one (preloaded, inactive), and destroys the others. After a crossfade the
+  previous act is deactivated (its meshes and particles do not fade with the weight). Loaded act roots are
   added to OSCQuery's excluded objects (`hideActsFromOSCQuery`, on by default; OSCQuery's object filter must stay in
   Exclude mode), so the Chataigne tree is the same whichever act is loaded and a resync rebuilds it identically.
   Act parameters are reached through the generated controllers on `Show` (below).
@@ -246,6 +247,40 @@ sky, no bloom, fog off.
     cost 4 ms more for the same image), bloom 0.45. Measured GPU cost (laptop, dome 2048): volumetric fog ~7 ms,
     volumetric lights ~6.5 ms, the ring's point light shadows ~3 ms, the dome itself ~11 ms.
   `1m Ref` (scale cube at the centre) is turned off: it sat in the middle of the ring.
+
+- **Act 4, See Through** (`Assets/Acts/Act4_SeeThrough/`): a lone tree on top of a green hill; what looks alone is
+  connected (roots, organisms around it). Camera: an insect flying around and through the tree, also under the
+  ground. The tree is Gamgie's photogrammetry scan from Colombia (`Tree_AF.glb`, one mesh of 20.6 M vertices,
+  about 5.7 m tall and 3.6 m wide at the roots, trunk cut where it splits into 5 or 6 stems, no crown), loaded as
+  lit particles by Oxipital (`StreamingAssets/emitters`). Planned: a crown grafted on the cut stems (mesh, not
+  particles), particles falling from the roots below the ground (emitted from a top-view map of the roots, pulled
+  down with a linear force plus Perlin into strings; ref Marshmallow Laser Feast, Of the Oak), the act's own sun.
+  - `Hill` (on `Act4_SeeThrough/Hill`): a perfect sphere (`radius` 50 m, 100 m wide) with its top at the object's
+    origin (the tree's foot), drawn down to `capAngle` (100 degrees); mesh built on the child `Hill Mesh`, never
+    saved, UVs = surface coordinates in metres (seamless), outward faces only (the ground vanishes from below), no
+    shadow casting (a convex sphere cannot shadow itself, it only made acne). Material `Materials/Hill Ground.mat`.
+  - `HillVegetation` (same object): layers (a prefab, LOD 0 and LOD 1 of its LODGroup, or a mesh and materials)
+    scattered on the hill once, seeded, along the sphere normal, with patches and a bare `clearRadius` around the
+    top, drawn with `Graphics.RenderMeshInstanced` from `RenderPipelineManager.beginCameraRendering` (every camera:
+    dome, Scene view in edit mode). Culling per 4 m cell: distance (`maxDistance`, density down to `farDensity`),
+    behind the hill's horizon, and nothing while the camera is below the surface. Layers (Meadow prefabs, ~280 k
+    instances, Act 4 at 135 fps alone): short meadow grass detailed (3D blades, shadows, up to 18 m) and crossed
+    cards (up to 110 m, density down to 10 %), low tufts, a few tall clumps, clover and daisies, sparse chamomile,
+    cornflower and poppy in patches. Ground `Materials/Hill Ground.mat`: Meadow's meadow grass ground (HDRP Lit,
+    triplanar), tinted darker.
+  - **Meadow Environment** (NatureManufacture, Asset Store) in `Assets/NatureManufacture Assets`, trimmed to what
+    Act 4 uses (466 MB instead of 3.9 GB): the grass, flower and detail prefabs above with their models, materials
+    and textures, the meadow grass ground, insects and particles (bees, butterfly, pollen dust, falling leaves, for
+    later), the wind, the HDRP foliage shader (`Foliage Shaders/NM_Foliage.shader`) and its diffusion profiles
+    (`HD Settings`, registered in `Assets/Settings/HDRPDefaultResources/DefaultSettingsVolumeProfile.asset`). The HDRP
+    versions were taken from its HD RP 17.3 support pack (the built-in ones do not render in HDRP); trees, rocks,
+    bushes, fences, roads, demo scenes and the support packs were deleted (reimport from the Asset Store if needed).
+    The grass materials' Healthy and Dry colours are tinted towards a deeper green.
+  - `Wind` (Meadow `Prefab_Wind`, `NM_Wind`, 20 km/h): global wind for the foliage shader, direction = its forward.
+  - `Hill Lighting` (`HillLighting`): while the act is shown, a clear day Sun (50 degrees high, azimuth -40,
+    100000 lux, warm white), all `[Animate]` (`Show/Act4Controller`), restored when disabled and around saves.
+  - Act 4 Volume: Physically Based Sky tinted teal-blue (zenith and horizon tints, dark green-grey ground below the
+    horizon), volumetric clouds (Sparse preset: a few white cumulus), light fog (6 km), fixed exposure EV 13.6.
 
 ## Film workflow: perform, then render
 

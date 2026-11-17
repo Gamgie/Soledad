@@ -910,6 +910,7 @@ GameObject:
   - component: {fileID: 517179243}
   - component: {fileID: 517179244}
   - component: {fileID: 517179245}
+  - component: {fileID: 517179246}
   m_Layer: 0
   m_Name: Show
   m_TagString: Untagged
@@ -1052,6 +1053,22 @@ MonoBehaviour:
   BulbSpawner_riseSpeedMax: 3.5
   BulbSpawner_driftMin: 0.5
   BulbSpawner_driftMax: 6
+--- !u!114 &517179246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 517179239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 679c8e3bf3e24e64e89bc49a02ee5e1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.Act4Controller
+  HillLighting_sunElevation: 50
+  HillLighting_sunAzimuth: -40
+  HillLighting_sunIntensity: 100000
+  HillLighting_sunColor: {r: 1, g: 0.96, b: 0.9, a: 1}
 --- !u!114 &567022511 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9198803938699052465, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
@@ -1201,7 +1218,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4592129141062553480, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: field of view
-      value: 49.9
+      value: 24.24999
       objectReference: {fileID: 0}
     - target: {fileID: 4592129141062553480, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_TargetTexture
@@ -1209,7 +1226,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4592129141062553480, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: orthographic size
-      value: 10
+      value: 2.06
       objectReference: {fileID: 0}
     - target: {fileID: 5919385600610907065, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1253,7 +1270,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7063691907787950941, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: 7420833268190230354, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: TAAQuality
