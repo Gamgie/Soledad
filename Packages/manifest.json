@@ -1,8 +1,8 @@
 {
   "dependencies": {
     "com.andbc.texturepacker": "2.0.7",
-    "com.gamgie.oxipital.camera": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Camera#v1.7.5",
-    "com.gamgie.oxipital.core": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Core#v1.7.5",
+    "com.gamgie.oxipital.camera": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Camera#v1.7.6",
+    "com.gamgie.oxipital.core": "https://github.com/Gamgie/Oxipital-Packages.git?path=/Core#v1.7.6",
     "com.pfc.dome-tools": "0.8.1",
     "com.unity.ai.assistant": "2.21.0-pre.2",
     "com.unity.ai.inference": "2.6.1",
