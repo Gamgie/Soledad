@@ -68,6 +68,15 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
   next compile restores it; the controller value of a renamed field is lost unless it had a fixed name.
 - `Act.weight` scales every Volume under the act, so two acts blend during a transition. Act-specific scripts read it
   to fade their own content.
+- The Sun of Soledad_Main is lit by the acts through `SunControl` (`Assets/Scripts/Show`): an act script implements
+  `ISunDriver` (`DrivesSun` = its `overrideSun`, `DriveSun(sun, data)` sets what it wants), calls `Register` /
+  `Unregister` in OnEnable / OnDisable and `Drive(this)` every frame. Act scripts never keep the Sun's own values:
+  `SunControl` takes them once, when the first driver takes the Sun, on a hidden never-saved `SunOriginal` on the
+  Sun (kept through script reloads), gives them back while any scene is saved and when the last driver lets go.
+  One driver sets the Sun at a time: the one whose act has the highest `weight` (the incoming act halfway through a
+  crossfade), the last enabled on a tie (in the Editor, the act scene opened last); when it changes, the Sun's own
+  values come back first. Before this, two acts enabled at once took each other's light for the original and saved
+  it into Soledad_Main. Drivers: Act 2 `FlythroughTerrain`, Act 3 `AbyssLighting`, Act 4 `HillLighting`.
 - Working on an act in the Editor: open `Soledad_Main`, then the act scene additively. On Play, `ShowController`
   takes over the open act scene and shows it. Keep `Soledad_Main` as the active scene.
 - Object names under `Root Scene` and public fields are Chataigne addresses: do not rename them casually.

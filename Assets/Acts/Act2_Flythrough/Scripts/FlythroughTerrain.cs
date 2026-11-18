@@ -27,7 +27,7 @@ namespace Soledad
     /// Time is accumulated from Time.deltaTime, so a Recorder capture at a fixed frame rate is deterministic.
     /// </summary>
     [ExecuteAlways]
-    public class FlythroughTerrain : MonoBehaviour, Oxipital.ICameraGround
+    public class FlythroughTerrain : MonoBehaviour, Oxipital.ICameraGround, ISunDriver
     {
         [Header("Flight (the Oxipital cameras)")]
         [Tooltip("Play mode: hand the flight path and this landscape (its ground) to the Spline camera while the act is shown. " +
@@ -237,13 +237,8 @@ namespace Soledad
                 ResetFlight();
                 if (startOnSplineCamera) _cameraController.cameraType = Oxipital.CameraController.CameraMovementType.Spline;
             }
+            SunControl.Register(this);
             Tick(0f);
-#if UNITY_EDITOR
-            UnityEditor.SceneManagement.EditorSceneManager.sceneSaving -= OnSceneSaving;
-            UnityEditor.SceneManagement.EditorSceneManager.sceneSaving += OnSceneSaving;
-            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved -= OnSceneSaved;
-            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved += OnSceneSaved;
-#endif
         }
 
         // Cameras whose far plane was pushed out, with their own value to restore
@@ -355,107 +350,28 @@ namespace Soledad
 
         // ---------------------------------------------------------------- sun
 
-        Light _sun;
-        // The Sun's own values, serialized so a script reload in the Editor keeps them (otherwise the act would take
-        // its own values for the originals after a recompile and leave them on the Sun)
-        [SerializeField, HideInInspector] Quaternion _sunOriginal;
-        [SerializeField, HideInInspector] bool _sunOverridden;
-        UnityEngine.Rendering.HighDefinition.HDAdditionalLightData _sunData;
-        [SerializeField, HideInInspector] int _sunResolutionOriginal;
-        [SerializeField, HideInInspector] float _sunPenumbraOriginal;
-        [SerializeField, HideInInspector] bool _sunResolutionUseOverride;
-        [SerializeField, HideInInspector] float _sunTemperatureOriginal;
-        [SerializeField, HideInInspector] bool _sunUseTemperatureOriginal;
-        [SerializeField, HideInInspector] Color _sunColorOriginal;
+        // The Sun's own values are kept by SunControl (several acts may be enabled at once), which gives them back
+        // when the act ends and around scene saves, so Soledad_Main never keeps the act's sun
+        public bool DrivesSun => overrideSun;
 
-        void ApplySun()
+        public void DriveSun(Light sun, UnityEngine.Rendering.HighDefinition.HDAdditionalLightData data)
         {
-            if (!overrideSun)
-            {
-                RestoreSun();
-                return;
-            }
-            if (_sun == null) _sun = FindSun();
-            if (_sun == null) return;
-            if (_sunData == null) _sunData = _sun.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
-            if (!_sunOverridden)
-            {
-                _sunOriginal = _sun.transform.rotation;
-                _sunData = _sun.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
-                if (_sunData != null)
-                {
-                    _sunResolutionOriginal = _sunData.shadowResolution.@override;
-                    _sunResolutionUseOverride = _sunData.shadowResolution.useOverride;
-                    _sunData.shadowResolution.useOverride = true;
-                    _sunData.shadowResolution.@override = sunShadowResolution;
-                    _sunPenumbraOriginal = _sunData.dirLightPCSSMaxPenumbraSize;
-                    _sunData.dirLightPCSSMaxPenumbraSize = sunMaxPenumbra;
-                }
-                _sunTemperatureOriginal = _sun.colorTemperature;
-                _sunUseTemperatureOriginal = _sun.useColorTemperature;
-                _sunColorOriginal = _sun.color;
-                _sunOverridden = true;
-            }
             var rotation = Quaternion.Euler(sunElevation, sunAzimuth, 0f);
-            if (_sun.transform.rotation != rotation) _sun.transform.rotation = rotation;
+            if (sun.transform.rotation != rotation) sun.transform.rotation = rotation;
             // Warm light for the low sun: a colour temperature on a white filter (the Physically Based Sky reddens it more near the horizon)
-            if (!_sun.useColorTemperature) _sun.useColorTemperature = true;
-            if (_sun.color != Color.white) _sun.color = Color.white;
-            if (_sun.colorTemperature != sunTemperature) _sun.colorTemperature = sunTemperature;
+            if (!sun.useColorTemperature) sun.useColorTemperature = true;
+            if (sun.color != Color.white) sun.color = Color.white;
+            if (sun.colorTemperature != sunTemperature) sun.colorTemperature = sunTemperature;
+            if (data == null) return;
+            if (!data.shadowResolution.useOverride) data.shadowResolution.useOverride = true;
+            if (data.shadowResolution.@override != sunShadowResolution) data.shadowResolution.@override = sunShadowResolution;
+            if (data.dirLightPCSSMaxPenumbraSize != sunMaxPenumbra) data.dirLightPCSSMaxPenumbraSize = sunMaxPenumbra;
         }
-
-        void RestoreSun()
-        {
-            if (_sunOverridden && _sun != null)
-            {
-                _sun.transform.rotation = _sunOriginal;
-                if (_sunData != null)
-                {
-                    _sunData.shadowResolution.@override = _sunResolutionOriginal;
-                    _sunData.shadowResolution.useOverride = _sunResolutionUseOverride;
-                    _sunData.dirLightPCSSMaxPenumbraSize = _sunPenumbraOriginal;
-                }
-                _sun.useColorTemperature = _sunUseTemperatureOriginal;
-                _sun.colorTemperature = _sunTemperatureOriginal;
-                _sun.color = _sunColorOriginal;
-            }
-            _sunOverridden = false;
-        }
-
-        // The directional light named "Sun" (Soledad_Main), else the first directional light
-        static Light FindSun()
-        {
-            Light first = null;
-            foreach (var light in FindObjectsByType<Light>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
-            {
-                if (light.type != LightType.Directional) continue;
-                if (light.name == "Sun") return light;
-                if (first == null) first = light;
-            }
-            return first;
-        }
-
-#if UNITY_EDITOR
-        // Never save the act's sun into Soledad_Main: put the original back while a scene is written
-        void OnSceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
-        {
-            RestoreSun();
-        }
-
-        void OnSceneSaved(UnityEngine.SceneManagement.Scene scene)
-        {
-            ApplySun();
-        }
-#endif
 
         void OnDisable()
         {
-#if UNITY_EDITOR
-            UnityEditor.SceneManagement.EditorSceneManager.sceneSaving -= OnSceneSaving;
-            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved -= OnSceneSaved;
-#endif
             UnbindCameras();
-            RestoreSun();
+            SunControl.Unregister(this);
             RestoreFarClip();
             RestoreAtmosphere();
             ClearTiles(true);
@@ -506,7 +422,7 @@ namespace Soledad
             UpdateTiles(viewer);
             UpdateMaterial();
             UpdateAtmosphere();
-            ApplySun();
+            SunControl.Drive(this);
         }
 
         // ---------------------------------------------------------------- curl frame
