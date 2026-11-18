@@ -395,6 +395,10 @@ sky, no bloom, fog off.
   - `Moon` at (0, 32, 40) from the Earth (51 m), child `Moon_HighRes` (`Moon/Moon_HighRes.fbx`, 3.15 M vertices,
     radius 0.5, scale 8 = radius 4 m; `Moon.mat` HDRP Lit, colour, normal and vertex displacement maps of 200, 155
     and 32 MB, imported at 2048).
+  - Earth as particles: the Oxipital emitter `StreamingAssets/emitters/Earth.glb` (from Oxipital-Engine, 18 MB: the
+    same radius 1 UV sphere, 3223 vertices, 5888 triangles, the 8k Earth texture embedded), a custom mesh `Earth`
+    for an Orb Group (texture opacity 1 for the Earth's colours). Oxipital spreads grains by triangle, and a UV
+    sphere's triangles shrink towards the poles: the poles get denser. Not used in the scene yet.
   - `Space Lighting` (`SpaceLighting`): while the act is shown, the Sun of Soledad_Main is Seleynora's light (from +Z,
     the Moon's side: `sunElevation` 0, `sunAzimuth` 180, 78812 lux, 6570 K), all `[Animate]` (`Show/Act5Controller`),
     restored when disabled and around saves; it keeps `Sun Disc` (Unity sphere, scale 11.5, `Materials/Sun Disc.mat`
