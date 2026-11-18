@@ -76,7 +76,8 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
   One driver sets the Sun at a time: the one whose act has the highest `weight` (the incoming act halfway through a
   crossfade), the last enabled on a tie (in the Editor, the act scene opened last); when it changes, the Sun's own
   values come back first. Before this, two acts enabled at once took each other's light for the original and saved
-  it into Soledad_Main. Drivers: Act 2 `FlythroughTerrain`, Act 3 `AbyssLighting`, Act 4 `HillLighting`.
+  it into Soledad_Main. Drivers: Act 2 `FlythroughTerrain`, Act 3 `AbyssLighting`, Act 4 `HillLighting`, Act 5
+  `SpaceLighting`.
 - Working on an act in the Editor: open `Soledad_Main`, then the act scene additively. On Play, `ShowController`
   takes over the open act scene and shows it. Keep `Soledad_Main` as the active scene.
 - Object names under `Root Scene` and public fields are Chataigne addresses: do not rename them casually.
@@ -385,6 +386,26 @@ sky, no bloom, fog off.
     dark ground there read as a grey band instead of sky), volumetric clouds (Sparse preset: a few white cumulus), aerial haze (fog mean free path 3.5 km, height
     150 m to 1.2 km, out to 20 km: the mountains fade into the sky), shadows out to 2.5 km (4 cascades), indirect
     diffuse x 1.8 (lighter shaded slopes), fixed exposure EV 13.1.
+
+- **Act 5, Memento Mori** (`Assets/Acts/Act5_MementoMori/`): the Earth seen from space, the Moon away from it: the
+  scene of Oxipital-Engine's `Oxipital Seleynora` (performance version, branch `seleynora`), recentred on the Earth
+  (there the camera sat by the Moon). Assets copied from Oxipital-Engine with their `.meta` (same GUIDs):
+  - `Earth` (`Earth/Earth.fbx`, a radius 1 sphere, `Earth.mat` HDRP Lit with `Textures/1_earth_8k.jpeg`, imported at
+    8192 here, 2048 in the engine): at the act origin, scale 16 (radius 16 m), turned 62.33 degrees on Y.
+  - `Moon` at (0, 32, 40) from the Earth (51 m), child `Moon_HighRes` (`Moon/Moon_HighRes.fbx`, 3.15 M vertices,
+    radius 0.5, scale 8 = radius 4 m; `Moon.mat` HDRP Lit, colour, normal and vertex displacement maps of 200, 155
+    and 32 MB, imported at 2048).
+  - `Space Lighting` (`SpaceLighting`): while the act is shown, the Sun of Soledad_Main is Seleynora's light (from +Z,
+    the Moon's side: `sunElevation` 0, `sunAzimuth` 180, 78812 lux, 6570 K), all `[Animate]` (`Show/Act5Controller`),
+    restored when disabled and around saves; it keeps `Sun Disc` (Unity sphere, scale 11.5, `Materials/Sun Disc.mat`
+    HDRP Unlit, Seleynora's lens flare: `LensFlareComponentSRP`, default SRP flare, intensity 36.36) on the light's
+    axis, `sunDiscDistance` 500 m from the Earth (`showSunDisc`).
+  - Act 5 Volume (Seleynora's look): HDRI sky `Textures/ESO_-_Milky_Way.jpg` (cubemap) at exposure 0, **fixed
+    exposure EV 15** (so the Milky Way is practically black, as in Seleynora: raise the HDRI Sky exposure to show
+    it), fog off (Seleynora's height fog was tied to the Moon's height, meaningless once recentred), bloom 0,
+    screen space lens flare 12.71, motion blur 0.
+  - Earth at the origin: the Oxipital cameras and the Ballet's particles are centred on it, so a camera closer than
+    16 m to the origin is inside the Earth.
 
 ## Film workflow: perform, then render
 
