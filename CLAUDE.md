@@ -76,7 +76,9 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
   One driver sets the Sun at a time: the one whose act has the highest `weight` (the incoming act halfway through a
   crossfade), the last enabled on a tie (in the Editor, the act scene opened last); when it changes, the Sun's own
   values come back first. Before this, two acts enabled at once took each other's light for the original and saved
-  it into Soledad_Main. Drivers: Act 2 `FlythroughTerrain`, Act 3 `AbyssLighting`, Act 4 `HillLighting`, Act 5
+  it into Soledad_Main. Entering Play mode it gives the Sun its own values first (Unity keeps a copy of the open
+  scenes for the way back, without the hidden `SunOriginal`: the Sun came back with the act's light, which the act
+  then took for the original and the next save wrote into Soledad_Main). Drivers: Act 2 `FlythroughTerrain`, Act 3 `AbyssLighting`, Act 4 `HillLighting`, Act 5
   `SpaceLighting`.
 - Working on an act in the Editor: open `Soledad_Main`, then the act scene additively. On Play, `ShowController`
   takes over the open act scene and shows it. Keep `Soledad_Main` as the active scene.

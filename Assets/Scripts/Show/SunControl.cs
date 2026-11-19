@@ -166,6 +166,21 @@ namespace Soledad
                 _saving = false;
                 Drive(null);
             };
+            // Entering Play mode, Unity keeps a copy of the open scenes to bring back afterwards, and the hidden
+            // SunOriginal is not in it: give the Sun its own values first, or it would come back with the act's light
+            // and the act would take that for the original (then saved into Soledad_Main)
+            UnityEditor.EditorApplication.playModeStateChanged += state =>
+            {
+                if (state == UnityEditor.PlayModeStateChange.ExitingEditMode)
+                {
+                    Restore(true);
+                    _saving = true;   // no driving until Play mode starts (the drivers register again there)
+                }
+                else if (state == UnityEditor.PlayModeStateChange.EnteredPlayMode || state == UnityEditor.PlayModeStateChange.EnteredEditMode)
+                {
+                    _saving = false;
+                }
+            };
         }
 #endif
     }
