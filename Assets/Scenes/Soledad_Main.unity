@@ -957,6 +957,7 @@ MonoBehaviour:
   act: 4
   transitionDuration: 4
   preloadNextAct: 1
+  targetFrameRate: 50
 --- !u!114 &517179242
 MonoBehaviour:
   m_ObjectHideFlags: 0

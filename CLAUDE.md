@@ -83,6 +83,10 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
 - Object names under `Root Scene` and public fields are Chataigne addresses: do not rename them casually.
 - `Player Settings > Run In Background` is on (as in Oxipital-Engine): the show keeps running while Chataigne or
   TouchDesigner has the focus.
+- Live show frame rate: `ShowController.targetFrameRate` (50, 0 = no cap, not exposed to OSCQuery) caps the frame
+  rate in Play mode and turns vSync off meanwhile (all quality levels have vSync on, and Unity ignores the cap with
+  vSync on), restored when Show is disabled. Not applied while Unity Recorder renders (`Time.captureDeltaTime` set):
+  the film runs offline at its own rate. vSync off on a 60 Hz output can tear; a 50 Hz output avoids it.
 
 ## Act content
 

@@ -49,6 +49,14 @@ namespace Soledad
         [Tooltip("Once an act is shown, load the next one in the background (inactive) so the switch has no hitch.")]
         public bool preloadNextAct = true;
 
+        [OSCQuery.DoNotExpose]
+        [Tooltip("Frame rate cap of the live show, in Play mode (0 = no cap): steady frames and GPU headroom. Turns " +
+                 "vSync off while playing (with vSync on, Unity ignores the cap). Not applied while Unity Recorder " +
+                 "renders (Time.captureDeltaTime set): the film is rendered offline at its own frame rate.")]
+        [Min(0)] public int targetFrameRate = 50;
+
+        int _vSyncCount = -1;
+
         readonly Dictionary<int, Act> _loaded = new Dictionary<int, Act>();
         readonly HashSet<int> _loading = new HashSet<int>();
         readonly List<int> _toUnload = new List<int>();
@@ -73,8 +81,36 @@ namespace Soledad
 
         void Update()
         {
+            ApplyFrameRateCap();
             if (!_switching && act != _shownIndex)
                 StartCoroutine(SwitchTo(Mathf.Clamp(act, 0, actScenes.Length)));
+        }
+
+        // Live show: cap the frame rate (vSync off, or the cap is ignored). Recorder renders run uncapped.
+        void ApplyFrameRateCap()
+        {
+            bool cap = targetFrameRate > 0 && Time.captureDeltaTime <= 0f;
+            int rate = cap ? targetFrameRate : -1;
+            if (Application.targetFrameRate != rate) Application.targetFrameRate = rate;
+            if (cap)
+            {
+                if (_vSyncCount < 0) _vSyncCount = QualitySettings.vSyncCount;
+                if (QualitySettings.vSyncCount != 0) QualitySettings.vSyncCount = 0;
+            }
+            else RestoreVSync();
+        }
+
+        void RestoreVSync()
+        {
+            if (_vSyncCount < 0) return;
+            QualitySettings.vSyncCount = _vSyncCount;
+            _vSyncCount = -1;
+        }
+
+        void OnDisable()
+        {
+            Application.targetFrameRate = -1;
+            RestoreVSync();
         }
 
         // In the Editor, an act scene opened next to Soledad_Main (to work on it in context) is taken over on Play
