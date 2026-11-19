@@ -17,7 +17,7 @@ namespace Soledad
 {
     /// <summary>
     /// Writes Assets/Scripts/Show/Generated/ActNController.cs for each act folder Assets/Acts/ActN_Name/ from the
-    /// [Animate] members of its scripts: one flat public field per animated field (named Type_field, or the fixed
+    /// [Animate] members of its scripts (and of the Assets/Shared scripts its scene uses, e.g. the Earth prefab): one flat public field per animated field (named Type_field, or the fixed
     /// name given to the attribute, same type, same default, same Range and Tooltip), one forwarding method per
     /// animated method, and plain assignment code to push the values into the act (see ActController).
     ///
@@ -34,6 +34,8 @@ namespace Soledad
     static class ActControllerGenerator
     {
         const string ActsFolder = "Assets/Acts";
+        const string SharedFolder = "Assets/Shared";
+        const string ActScenesFolder = "Assets/Scenes/Acts";
         const string OutputFolder = "Assets/Scripts/Show/Generated";
         const string PendingPullKey = "Soledad.ActControllerGenerator.PendingPull";
         static readonly Regex ActFolderPattern = new Regex(@"^Act(\d+)_");
@@ -174,6 +176,32 @@ namespace Soledad
                 CollectMembers(act, type, warn);
             }
 
+            // Shared components (Assets/Shared, e.g. the Earth prefab): their [Animate] members go to the controller of
+            // every act whose scene uses them, directly or through a prefab
+            if (AssetDatabase.IsValidFolder(SharedFolder))
+            {
+                var shared = AssetDatabase.FindAssets("t:MonoScript", new[] { SharedFolder })
+                    .Select(AssetDatabase.GUIDToAssetPath)
+                    .OrderBy(p => p, StringComparer.Ordinal)
+                    .Select(p => (path: p, type: AssetDatabase.LoadAssetAtPath<MonoScript>(p)?.GetClass()))
+                    .Where(s => s.type != null && !s.type.IsAbstract && typeof(Component).IsAssignableFrom(s.type) && HasAnimate(s.type))
+                    .ToList();
+                foreach (ActModel act in acts.Values)
+                {
+                    if (shared.Count == 0) break;
+                    string scene = $"{ActScenesFolder}/{act.folder}.unity";
+                    if (!File.Exists(scene)) continue;
+                    var dependencies = new HashSet<string>(AssetDatabase.GetDependencies(scene, true));
+                    foreach (var s in shared)
+                    {
+                        if (!dependencies.Contains(s.path)) continue;
+                        processed.Add(s.type);
+                        CollectMembers(act, s.type, warn);
+                    }
+                }
+                foreach (var s in shared) processed.Add(s.type);   // unused for now: not an error
+            }
+
             if (warn)
             {
                 foreach (FieldInfo f in TypeCache.GetFieldsWithAttribute<AnimateAttribute>())
@@ -186,10 +214,17 @@ namespace Soledad
             return acts.Values.Where(a => a.members.Count > 0 || File.Exists(a.Path)).ToList();
         }
 
+        static bool HasAnimate(Type type)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            return type.GetFields(flags).Any(f => f.IsDefined(typeof(AnimateAttribute), true))
+                || type.GetMethods(flags).Any(m => m.IsDefined(typeof(AnimateAttribute), true));
+        }
+
         static void WarnIfOutside(MemberInfo member, Type declaring, HashSet<Type> processed)
         {
             if (processed.Any(t => declaring.IsAssignableFrom(t))) return;
-            Debug.LogWarning($"Act controllers: [Animate] on {declaring.Name}.{member.Name} is ignored, the script is not a component under {ActsFolder}/ActN_Name/.");
+            Debug.LogWarning($"Act controllers: [Animate] on {declaring.Name}.{member.Name} is ignored, the script is not a component under {ActsFolder}/ActN_Name/ or {SharedFolder}.");
         }
 
         static void CollectMembers(ActModel act, Type type, bool warn)
