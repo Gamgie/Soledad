@@ -415,10 +415,11 @@ sky, no bloom, fog off.
     restored when disabled and around saves; it keeps `Sun Disc` (Unity sphere, scale 11.5, `Materials/Sun Disc.mat`
     HDRP Unlit, Seleynora's lens flare: `LensFlareComponentSRP`, default SRP flare, intensity 36.36) on the light's
     axis, `sunDiscDistance` 500 m from the Earth (`showSunDisc`).
-  - Act 5 Volume (Seleynora's look): HDRI sky `Textures/ESO_-_Milky_Way.jpg` (cubemap) at exposure 0, **fixed
-    exposure EV 15** (so the Milky Way is practically black, as in Seleynora: raise the HDRI Sky exposure to show
-    it), fog off (Seleynora's height fog was tied to the Moon's height, meaningless once recentred), bloom 0,
-    screen space lens flare 12.71, motion blur 0.
+  - Act 5 Volume (Seleynora's look): HDRI sky `Textures/ESO_-_Milky_Way.jpg` (cubemap) at **exposure 14.2** (the
+    Milky Way shows; set by Gamgie, kept), **fixed exposure EV 15**, fog off (Seleynora's height fog was tied to the
+    Moon's height, meaningless once recentred), bloom 0.3 (threshold 0.27, scatter 0.7, High quality, Seleynora's
+    lens dirt `Textures/LensDirt02.png` at 1.4), screen space lens flare 12.71 (it feeds on the bloom: with bloom 0, as
+    Seleynora's saved profile had it, neither the bloom nor the flare showed), motion blur 0.
   - Earth at the origin: the Oxipital cameras and the Ballet's particles are centred on it, so a camera closer than
     16 m to the origin is inside the Earth.
 
