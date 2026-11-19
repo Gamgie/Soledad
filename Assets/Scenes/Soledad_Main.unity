@@ -1089,6 +1089,10 @@ MonoBehaviour:
   SpaceLighting_sunIntensity: 78812
   SpaceLighting_sunTemperature: 6570
   SpaceLighting_showSunDisc: 1
+  EarthGlobe_month: 12.7
+  EarthGlobe_dayDuration: 600
+  EarthGlobe_hour: 12
+  EarthGlobe_cloudDrift: 6
 --- !u!114 &567022511 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9198803938699052465, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}

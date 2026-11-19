@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Earth
+  m_Shader: {fileID: 4800000, guid: d98bab5cd08032043b64e3d703540f9e, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _CloudMap:
+        m_Texture: {fileID: 2800000, guid: 9edd5bdd3534341468de41738eb9d28c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DayMap:
+        m_Texture: {fileID: 2800000, guid: 4914e0abab3d53f4e93bd5cb72eefd2a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NightMap:
+        m_Texture: {fileID: 2800000, guid: ba55549322315b849b1cf57914dbd063, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterMask:
+        m_Texture: {fileID: 2800000, guid: 96ecb8ae83beb064ca05824c7c1a2486, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AtmosphereIntensity: 0.53
+    - _AtmospherePower: 5.3
+    - _CityLightsBlackLevel: 0.1
+    - _CityLightsExposureWeight: 0
+    - _CityLightsIntensity: 3
+    - _CityLightsUnderClouds: 0.8
+    - _CloudOffset: 0
+    - _CloudOpacity: 0.34
+    - _CloudSmoothness: 0
+    - _CullMode: 2
+    - _LandSmoothness: 0.099
+    - _OceanSmoothness: 0.528
+    - _StencilRef: 0
+    - _StencilRefDepth: 0
+    - _StencilRefGBuffer: 2
+    - _StencilRefMV: 32
+    - _StencilWriteMask: 6
+    - _StencilWriteMaskDepth: 8
+    - _StencilWriteMaskGBuffer: 14
+    - _StencilWriteMaskMV: 40
+    - _TerminatorEnd: -0.12
+    - _TerminatorStart: 0.05
+    - _ZClip: 1
+    - _ZTestDepthEqualForOpaque: 3
+    - _ZTestGBuffer: 4
+    m_Colors:
+    - _AtmosphereColor: {r: 0.34999996, g: 0.6, b: 1, a: 1}
+    - _CityLightsColor: {r: 1, g: 0.78, b: 0.5, a: 1}
+    - _CloudColor: {r: 0.96, g: 0.96999997, b: 1, a: 1}
+    - _DayTint: {r: 1, g: 1, b: 1, a: 1}
+    - _EarthSunDirection: {r: 0, g: 0, b: 1, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

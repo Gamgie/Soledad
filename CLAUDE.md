@@ -394,8 +394,15 @@ sky, no bloom, fog off.
 - **Act 5, Memento Mori** (`Assets/Acts/Act5_MementoMori/`): the Earth seen from space, the Moon away from it: the
   scene of Oxipital-Engine's `Oxipital Seleynora` (performance version, branch `seleynora`), recentred on the Earth
   (there the camera sat by the Moon). Assets copied from Oxipital-Engine with their `.meta` (same GUIDs):
-  - `Earth` (`Earth/Earth.fbx`, a radius 1 sphere, `Earth.mat` HDRP Lit with `Textures/1_earth_8k.jpeg`, imported at
-    8192 here, 2048 in the engine): at the act origin, scale 16 (radius 16 m), turned 62.33 degrees on Y.
+  - `Earth`: an instance of the shared Earth prefab (below, `Assets/Shared/Earth`) at the act origin, scale 16
+    (radius 16 m), `month` 12.7 (21 December), `hour` 12 (UTC: the sun over Greenwich, as Seleynora had it). The
+    sky's galactic frame in the scene (checked by rendering the sky): galactic centre (l 0) = +Z, l 90 = -X, l 270 =
+    +X (the Large Magellanic Cloud below the plane), north galactic pole = +Y. The Earth's `poleHint` is the north
+    celestial pole in that frame (l 122.93, b +27.13: 62.87 degrees from the galactic pole), so with the sun from +Z
+    (towards the galactic centre, where the real sun is in late December) the December Earth is true to the stars
+    (checked: noon sun 17.7 degrees high over Paris, New York before sunrise, Tokyo at night). The Moon at
+    (0, 32, 40) sits 39 degrees above the galactic plane, far from the ecliptic (the real Moon stays within 5 degrees
+    of it): an artistic placement.
   - `Moon` at (0, 32, 40) from the Earth (51 m), child `Moon_HighRes` (`Moon/Moon_HighRes.fbx`, 3.15 M vertices,
     radius 0.5, scale 8 = radius 4 m; `Moon.mat` HDRP Lit, colour, normal and vertex displacement maps of 200, 155
     and 32 MB, imported at 2048).
@@ -414,6 +421,48 @@ sky, no bloom, fog off.
     screen space lens flare 12.71, motion blur 0.
   - Earth at the origin: the Oxipital cameras and the Ballet's particles are centred on it, so a camera closer than
     16 m to the origin is inside the Earth.
+
+## Shared assets: the Earth
+
+`Assets/Shared/` holds assets used across acts. The ActControllerGenerator adds the `[Animate]` members of its scripts
+to the controller of every act whose scene uses them (directly or through a prefab, from the scene's dependencies):
+for example `Show/Act5Controller.EarthGlobe_month`.
+
+- **Earth** (`Assets/Shared/Earth/Earth.prefab`): drop it in an act and scale it (radius 1 m at scale 1). Its object
+  stays unrotated; `EarthGlobe` builds the globe on the child `Globe` (a UV sphere, `segments` 256 around, generated,
+  never saved) and turns it every frame:
+  - season: `month` (1 = 1 January ... 12.7 = 21 December, up to 13) sets the sun's declination (23.44 degrees
+    tilt), the angle between the axis and the sun light (`sun`, else the directional light named "Sun"); the pole
+    leans towards `poleHint` (world) as far as that angle allows;
+  - day: `hour` (UTC, 12 = the sun over Greenwich) plus the time elapsed, one turn per `dayDuration` seconds (0 =
+    still), accumulated from `Time.deltaTime` (deterministic Recorder renders), in Play mode (`runInEditMode` for a
+    preview); `ResetDay()` restarts from `hour`. `month`, `dayDuration`, `hour`, `cloudDrift` and `ResetDay` are
+    `[Animate]`;
+  - clouds drift by `cloudDrift` degrees per day over the ground; the sun direction goes to the shader
+    (`_EarthSunDirection`, global).
+  Mesh convention (as Earth.fbx and the Earth.glb emitter): north pole local +Y, Greenwich local -X, 90 E local -Z.
+- Shader `Soledad/Earth` (`Shaders/`, hand-written on HDRP's Lit passes like the Act 2 terrain): the surface is looked
+  up per pixel from the direction on the sphere (round and seamless whatever the mesh; two u coordinates with their
+  wrap on opposite meridians, the pixel keeps the continuous one). Ground: day map; smoothness from the water mask
+  (ocean 0.78: the sun glints on the sea only, land 0.25); clouds over it (colour, opacity, smoothness 0.05); city
+  lights where the sun is below the horizon (`Lights Start` / `Lights Full` sun heights), the night map's dark
+  background removed (`Map Black Level` 0.1), hidden by the clouds (0.8), emission exposure weight 0 (same brightness
+  whatever the act's exposure); an atmosphere rim on the day side (colour, intensity, thinness). Material
+  `Materials/Earth.mat`.
+- Textures (`Textures/`, mipmapped, anisotropic 8, u repeat):
+  - `EarthDay_BMNG_December_16k.jpg`: NASA Blue Marble Next Generation, December 2004, topography and bathymetry,
+    no clouds (`world.topo.bathy.200412.3x21600x10800.jpg`, 2 km/px) resized to 16384 x 8192 (Unity's largest
+    texture, 2.4 km/px), BC7. Credit: NASA Earth Observatory.
+  - `EarthNight_BlackMarble2016_3km.jpg`: NASA Black Marble 2016 colour (13500 x 6750), imported at 16384 x 8192
+    (6750 is not a multiple of 4: uncompressed it took ~360 MB), DXT1.
+  - `EarthWaterMask_GEBCO_8k.png`: from NASA's GEBCO bathymetry (`gebco_08_rev_bath_21600x10800.jpg`: land = 255,
+    even the shallowest seas below), thresholded at full resolution then 8192 x 4096, single channel. Lakes count as
+    land.
+  - `EarthClouds_SolarSystemScope_8k.jpg`: Solar System Scope 8k clouds (CC BY 4.0: credit Solar System Scope),
+    single channel. NASA's Blue Marble cloud layer is no longer online.
+  Sharper still would need NASA's 500 m tiles (eight 21600 x 21600 per map) split over several textures; AI
+  upscaling would invent coastlines. Next: a separate cloud shell (parallax, shadows on the ground), a real
+  atmosphere halo beyond the limb.
 
 ## Film workflow: perform, then render
 

@@ -21,18 +21,31 @@ namespace Soledad
         [Range(1500f, 20000f)] public float SpaceLighting_sunTemperature = 6570f;
         public bool SpaceLighting_showSunDisc = true;
 
+        [Header("EarthGlobe")]
+        [Tooltip("Time of year: 1 = 1 January, 7 = 1 July, 12.7 = winter solstice (21 December), up to 13.")]
+        [Range(1f, 13f)] public float EarthGlobe_month = 12.7f;
+        [Tooltip("Length of a day, in seconds: one turn of the Earth (0 = it stands still).")]
+        public float EarthGlobe_dayDuration = 600f;
+        [Tooltip("Start time, UTC hours: 12 = the sun over Greenwich. The time elapsed since is added to it.")]
+        [Range(0f, 24f)] public float EarthGlobe_hour = 12f;
+        [Tooltip("Cloud drift over the ground, degrees per day (eastward > 0).")]
+        public float EarthGlobe_cloudDrift = 6f;
+
         global::Soledad.SpaceLighting _target0;
+        global::Soledad.EarthGlobe _target1;
 
         protected override string ActName => "Act5_MementoMori";
 
         protected override void Bind(Transform root)
         {
             _target0 = Find<global::Soledad.SpaceLighting>(root);
+            _target1 = Find<global::Soledad.EarthGlobe>(root);
         }
 
         protected override void Unbind()
         {
             _target0 = null;
+            _target1 = null;
         }
 
         protected override void Push()
@@ -45,6 +58,18 @@ namespace Soledad
                 _target0.sunTemperature = SpaceLighting_sunTemperature;
                 _target0.showSunDisc = SpaceLighting_showSunDisc;
             }
+            if (_target1 != null)
+            {
+                _target1.month = EarthGlobe_month;
+                _target1.dayDuration = EarthGlobe_dayDuration;
+                _target1.hour = EarthGlobe_hour;
+                _target1.cloudDrift = EarthGlobe_cloudDrift;
+            }
+        }
+
+        public void EarthGlobe_ResetDay()
+        {
+            if (_target1 != null) _target1.ResetDay();
         }
     }
 }
