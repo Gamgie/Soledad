@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Soledad
 {
     /// <summary>Stable show parameters of Act3_Abyss. See ActController.</summary>
+    [ExecuteAlways]
     [DefaultExecutionOrder(-100)]
     public class Act3Controller : ActController
     {
@@ -36,6 +37,19 @@ namespace Soledad
 
         global::Soledad.AbyssLighting _target0;
         global::Soledad.BulbSpawner _target1;
+
+        float _last_AbyssLighting_sunElevation;
+        float _last_AbyssLighting_sunAzimuth;
+        float _last_AbyssLighting_sunIntensity;
+        Color _last_AbyssLighting_sunColor;
+        float _last_AbyssLighting_shaftStrength;
+        float _last_BulbSpawner_spawnRate;
+        float _last_BulbSpawner_lifeMin;
+        float _last_BulbSpawner_lifeMax;
+        float _last_BulbSpawner_riseSpeedMin;
+        float _last_BulbSpawner_riseSpeedMax;
+        float _last_BulbSpawner_driftMin;
+        float _last_BulbSpawner_driftMax;
 
         protected override string ActName => "Act3_Abyss";
 
@@ -71,6 +85,100 @@ namespace Soledad
                 _target1.driftMin = BulbSpawner_driftMin;
                 _target1.driftMax = BulbSpawner_driftMax;
             }
+        }
+
+        protected override void Remember()
+        {
+            _last_AbyssLighting_sunElevation = AbyssLighting_sunElevation;
+            _last_AbyssLighting_sunAzimuth = AbyssLighting_sunAzimuth;
+            _last_AbyssLighting_sunIntensity = AbyssLighting_sunIntensity;
+            _last_AbyssLighting_sunColor = AbyssLighting_sunColor;
+            _last_AbyssLighting_shaftStrength = AbyssLighting_shaftStrength;
+            _last_BulbSpawner_spawnRate = BulbSpawner_spawnRate;
+            _last_BulbSpawner_lifeMin = BulbSpawner_lifeMin;
+            _last_BulbSpawner_lifeMax = BulbSpawner_lifeMax;
+            _last_BulbSpawner_riseSpeedMin = BulbSpawner_riseSpeedMin;
+            _last_BulbSpawner_riseSpeedMax = BulbSpawner_riseSpeedMax;
+            _last_BulbSpawner_driftMin = BulbSpawner_driftMin;
+            _last_BulbSpawner_driftMax = BulbSpawner_driftMax;
+        }
+
+        protected override bool PushChanged()
+        {
+            bool changed = false;
+            if (AbyssLighting_sunElevation != _last_AbyssLighting_sunElevation)
+            {
+                _last_AbyssLighting_sunElevation = AbyssLighting_sunElevation;
+                if (_target0 != null) _target0.sunElevation = AbyssLighting_sunElevation;
+                changed = true;
+            }
+            if (AbyssLighting_sunAzimuth != _last_AbyssLighting_sunAzimuth)
+            {
+                _last_AbyssLighting_sunAzimuth = AbyssLighting_sunAzimuth;
+                if (_target0 != null) _target0.sunAzimuth = AbyssLighting_sunAzimuth;
+                changed = true;
+            }
+            if (AbyssLighting_sunIntensity != _last_AbyssLighting_sunIntensity)
+            {
+                _last_AbyssLighting_sunIntensity = AbyssLighting_sunIntensity;
+                if (_target0 != null) _target0.sunIntensity = AbyssLighting_sunIntensity;
+                changed = true;
+            }
+            if (AbyssLighting_sunColor != _last_AbyssLighting_sunColor)
+            {
+                _last_AbyssLighting_sunColor = AbyssLighting_sunColor;
+                if (_target0 != null) _target0.sunColor = AbyssLighting_sunColor;
+                changed = true;
+            }
+            if (AbyssLighting_shaftStrength != _last_AbyssLighting_shaftStrength)
+            {
+                _last_AbyssLighting_shaftStrength = AbyssLighting_shaftStrength;
+                if (_target0 != null) _target0.shaftStrength = AbyssLighting_shaftStrength;
+                changed = true;
+            }
+            if (BulbSpawner_spawnRate != _last_BulbSpawner_spawnRate)
+            {
+                _last_BulbSpawner_spawnRate = BulbSpawner_spawnRate;
+                if (_target1 != null) _target1.spawnRate = BulbSpawner_spawnRate;
+                changed = true;
+            }
+            if (BulbSpawner_lifeMin != _last_BulbSpawner_lifeMin)
+            {
+                _last_BulbSpawner_lifeMin = BulbSpawner_lifeMin;
+                if (_target1 != null) _target1.lifeMin = BulbSpawner_lifeMin;
+                changed = true;
+            }
+            if (BulbSpawner_lifeMax != _last_BulbSpawner_lifeMax)
+            {
+                _last_BulbSpawner_lifeMax = BulbSpawner_lifeMax;
+                if (_target1 != null) _target1.lifeMax = BulbSpawner_lifeMax;
+                changed = true;
+            }
+            if (BulbSpawner_riseSpeedMin != _last_BulbSpawner_riseSpeedMin)
+            {
+                _last_BulbSpawner_riseSpeedMin = BulbSpawner_riseSpeedMin;
+                if (_target1 != null) _target1.riseSpeedMin = BulbSpawner_riseSpeedMin;
+                changed = true;
+            }
+            if (BulbSpawner_riseSpeedMax != _last_BulbSpawner_riseSpeedMax)
+            {
+                _last_BulbSpawner_riseSpeedMax = BulbSpawner_riseSpeedMax;
+                if (_target1 != null) _target1.riseSpeedMax = BulbSpawner_riseSpeedMax;
+                changed = true;
+            }
+            if (BulbSpawner_driftMin != _last_BulbSpawner_driftMin)
+            {
+                _last_BulbSpawner_driftMin = BulbSpawner_driftMin;
+                if (_target1 != null) _target1.driftMin = BulbSpawner_driftMin;
+                changed = true;
+            }
+            if (BulbSpawner_driftMax != _last_BulbSpawner_driftMax)
+            {
+                _last_BulbSpawner_driftMax = BulbSpawner_driftMax;
+                if (_target1 != null) _target1.driftMax = BulbSpawner_driftMax;
+                changed = true;
+            }
+            return changed;
         }
     }
 }

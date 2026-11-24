@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Soledad
 {
     /// <summary>Stable show parameters of Act5_MementoMori. See ActController.</summary>
+    [ExecuteAlways]
     [DefaultExecutionOrder(-100)]
     public class Act5Controller : ActController
     {
@@ -33,6 +34,16 @@ namespace Soledad
 
         global::Soledad.SpaceLighting _target0;
         global::Soledad.EarthGlobe _target1;
+
+        float _last_SpaceLighting_sunElevation;
+        float _last_SpaceLighting_sunAzimuth;
+        float _last_SpaceLighting_sunIntensity;
+        float _last_SpaceLighting_sunTemperature;
+        bool _last_SpaceLighting_showSunDisc;
+        float _last_EarthGlobe_month;
+        float _last_EarthGlobe_dayDuration;
+        float _last_EarthGlobe_hour;
+        float _last_EarthGlobe_cloudDrift;
 
         protected override string ActName => "Act5_MementoMori";
 
@@ -65,6 +76,79 @@ namespace Soledad
                 _target1.hour = EarthGlobe_hour;
                 _target1.cloudDrift = EarthGlobe_cloudDrift;
             }
+        }
+
+        protected override void Remember()
+        {
+            _last_SpaceLighting_sunElevation = SpaceLighting_sunElevation;
+            _last_SpaceLighting_sunAzimuth = SpaceLighting_sunAzimuth;
+            _last_SpaceLighting_sunIntensity = SpaceLighting_sunIntensity;
+            _last_SpaceLighting_sunTemperature = SpaceLighting_sunTemperature;
+            _last_SpaceLighting_showSunDisc = SpaceLighting_showSunDisc;
+            _last_EarthGlobe_month = EarthGlobe_month;
+            _last_EarthGlobe_dayDuration = EarthGlobe_dayDuration;
+            _last_EarthGlobe_hour = EarthGlobe_hour;
+            _last_EarthGlobe_cloudDrift = EarthGlobe_cloudDrift;
+        }
+
+        protected override bool PushChanged()
+        {
+            bool changed = false;
+            if (SpaceLighting_sunElevation != _last_SpaceLighting_sunElevation)
+            {
+                _last_SpaceLighting_sunElevation = SpaceLighting_sunElevation;
+                if (_target0 != null) _target0.sunElevation = SpaceLighting_sunElevation;
+                changed = true;
+            }
+            if (SpaceLighting_sunAzimuth != _last_SpaceLighting_sunAzimuth)
+            {
+                _last_SpaceLighting_sunAzimuth = SpaceLighting_sunAzimuth;
+                if (_target0 != null) _target0.sunAzimuth = SpaceLighting_sunAzimuth;
+                changed = true;
+            }
+            if (SpaceLighting_sunIntensity != _last_SpaceLighting_sunIntensity)
+            {
+                _last_SpaceLighting_sunIntensity = SpaceLighting_sunIntensity;
+                if (_target0 != null) _target0.sunIntensity = SpaceLighting_sunIntensity;
+                changed = true;
+            }
+            if (SpaceLighting_sunTemperature != _last_SpaceLighting_sunTemperature)
+            {
+                _last_SpaceLighting_sunTemperature = SpaceLighting_sunTemperature;
+                if (_target0 != null) _target0.sunTemperature = SpaceLighting_sunTemperature;
+                changed = true;
+            }
+            if (SpaceLighting_showSunDisc != _last_SpaceLighting_showSunDisc)
+            {
+                _last_SpaceLighting_showSunDisc = SpaceLighting_showSunDisc;
+                if (_target0 != null) _target0.showSunDisc = SpaceLighting_showSunDisc;
+                changed = true;
+            }
+            if (EarthGlobe_month != _last_EarthGlobe_month)
+            {
+                _last_EarthGlobe_month = EarthGlobe_month;
+                if (_target1 != null) _target1.month = EarthGlobe_month;
+                changed = true;
+            }
+            if (EarthGlobe_dayDuration != _last_EarthGlobe_dayDuration)
+            {
+                _last_EarthGlobe_dayDuration = EarthGlobe_dayDuration;
+                if (_target1 != null) _target1.dayDuration = EarthGlobe_dayDuration;
+                changed = true;
+            }
+            if (EarthGlobe_hour != _last_EarthGlobe_hour)
+            {
+                _last_EarthGlobe_hour = EarthGlobe_hour;
+                if (_target1 != null) _target1.hour = EarthGlobe_hour;
+                changed = true;
+            }
+            if (EarthGlobe_cloudDrift != _last_EarthGlobe_cloudDrift)
+            {
+                _last_EarthGlobe_cloudDrift = EarthGlobe_cloudDrift;
+                if (_target1 != null) _target1.cloudDrift = EarthGlobe_cloudDrift;
+                changed = true;
+            }
+            return changed;
         }
 
         public void EarthGlobe_ResetDay()

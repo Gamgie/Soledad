@@ -4,40 +4,58 @@ using UnityEngine.Playables;
 namespace Soledad
 {
     /// <summary>
-    /// Starts a film Timeline (PlayableDirector, Play On Awake off) in step with the Spline camera: in Play mode, once
-    /// the act has handed its spline to the camera, it switches the camera to Spline, puts the ride at
-    /// <see cref="startDistance"/> at full speed, then plays the director. The Timeline's keys are then in time with
-    /// distances along the path (speed x time), and a Recorder render repeats exactly.
+    /// The film Timeline of one act (PlayableDirector, Play On Awake off, on a child of Film in Soledad_Main). In Play
+    /// mode, when <see cref="Film.playTimelines"/> is on and its act is shown at full weight (the act scene opened next
+    /// to Soledad_Main is shown on Play), it plays the director from its start. With <see cref="rideSpline"/> it first
+    /// waits for the act to hand its path to the Spline camera, switches the camera to Spline and puts the ride at
+    /// <see cref="startDistance"/>, so a ride by speed is in time with the keys and a Recorder render repeats exactly.
     /// </summary>
     [OSCQuery.DoNotExpose]
     public class FilmTimeline : MonoBehaviour
     {
         public PlayableDirector director;
+        public ShowController show;
+        [Tooltip("Act of this Timeline (1 to 5): it plays once that act is shown.")]
+        [Range(1, 5)] public int act = 1;
         public Oxipital.CameraController cameraController;
+
+        [Tooltip("Wait for the act's path, switch the camera to Spline and restart its ride before playing.")]
+        public bool rideSpline;
         [Tooltip("Distance along the act's path (m) where the shot starts, for a ride by speed. A Timeline that rides by progress places the camera itself.")]
         public float startDistance;
-        [Tooltip("Start by itself when entering Play mode. Off: call Play() (or play the director by hand).")]
-        public bool playOnStart = true;
 
+        Film _film;
         bool _started;
+
+        void Start()
+        {
+            _film = GetComponentInParent<Film>();
+        }
 
         void Update()
         {
-            if (_started || !playOnStart) return;
-            var spline = cameraController != null ? cameraController.splineCamera : null;
-            if (spline == null || spline.spline == null) return;      // the act has not handed its path yet
+            if (_started || _film == null || !_film.playTimelines) return;
+            if (show == null || show.ShownAct != act) return;
+            if (rideSpline)
+            {
+                var spline = cameraController != null ? cameraController.splineCamera : null;
+                if (spline == null || spline.spline == null) return;      // the act has not handed its path yet
+            }
             Play();
         }
 
-        /// <summary>Ride from startDistance and play the Timeline from its start.</summary>
+        /// <summary>Play the Timeline from its start (ride restarted first with <see cref="rideSpline"/>).</summary>
         public void Play()
         {
-            var spline = cameraController != null ? cameraController.splineCamera : null;
-            if (spline == null || director == null) return;
+            if (director == null) return;
             _started = true;
-            cameraController.cameraType = Oxipital.CameraController.CameraMovementType.Spline;
-            spline.startDistance = startDistance;
-            spline.ResetRide();
+            if (rideSpline && cameraController != null && cameraController.splineCamera != null)
+            {
+                var spline = cameraController.splineCamera;
+                cameraController.cameraType = Oxipital.CameraController.CameraMovementType.Spline;
+                spline.startDistance = startDistance;
+                spline.ResetRide();
+            }
             director.time = 0;
             director.Play();
         }

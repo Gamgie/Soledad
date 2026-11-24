@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Soledad
 {
     /// <summary>Stable show parameters of Act2_Flythrough. See ActController.</summary>
+    [ExecuteAlways]
     [DefaultExecutionOrder(-100)]
     public class Act2Controller : ActController
     {
@@ -36,6 +37,17 @@ namespace Soledad
 
         global::Soledad.BogotaSequence _target0;
         global::Soledad.FlythroughTerrain _target1;
+
+        bool _last_BogotaSequence_showBogota;
+        bool _last_BogotaSequence_showLandscape;
+        bool _last_BogotaSequence_rideBogota;
+        global::Soledad.CurlFrame _last_FlythroughTerrain_curlFrame;
+        float _last_FlythroughTerrain_curlAxis;
+        float _last_FlythroughTerrain_curlLateral;
+        float _last_FlythroughTerrain_curlForward;
+        float _last_FlythroughTerrain_sunElevation;
+        float _last_FlythroughTerrain_sunAzimuth;
+        float _last_FlythroughTerrain_sunTemperature;
 
         protected override string ActName => "Act2_Flythrough";
 
@@ -69,6 +81,86 @@ namespace Soledad
                 _target1.sunAzimuth = FlythroughTerrain_sunAzimuth;
                 _target1.sunTemperature = FlythroughTerrain_sunTemperature;
             }
+        }
+
+        protected override void Remember()
+        {
+            _last_BogotaSequence_showBogota = BogotaSequence_showBogota;
+            _last_BogotaSequence_showLandscape = BogotaSequence_showLandscape;
+            _last_BogotaSequence_rideBogota = BogotaSequence_rideBogota;
+            _last_FlythroughTerrain_curlFrame = FlythroughTerrain_curlFrame;
+            _last_FlythroughTerrain_curlAxis = FlythroughTerrain_curlAxis;
+            _last_FlythroughTerrain_curlLateral = FlythroughTerrain_curlLateral;
+            _last_FlythroughTerrain_curlForward = FlythroughTerrain_curlForward;
+            _last_FlythroughTerrain_sunElevation = FlythroughTerrain_sunElevation;
+            _last_FlythroughTerrain_sunAzimuth = FlythroughTerrain_sunAzimuth;
+            _last_FlythroughTerrain_sunTemperature = FlythroughTerrain_sunTemperature;
+        }
+
+        protected override bool PushChanged()
+        {
+            bool changed = false;
+            if (BogotaSequence_showBogota != _last_BogotaSequence_showBogota)
+            {
+                _last_BogotaSequence_showBogota = BogotaSequence_showBogota;
+                if (_target0 != null) _target0.showBogota = BogotaSequence_showBogota;
+                changed = true;
+            }
+            if (BogotaSequence_showLandscape != _last_BogotaSequence_showLandscape)
+            {
+                _last_BogotaSequence_showLandscape = BogotaSequence_showLandscape;
+                if (_target0 != null) _target0.showLandscape = BogotaSequence_showLandscape;
+                changed = true;
+            }
+            if (BogotaSequence_rideBogota != _last_BogotaSequence_rideBogota)
+            {
+                _last_BogotaSequence_rideBogota = BogotaSequence_rideBogota;
+                if (_target0 != null) _target0.rideBogota = BogotaSequence_rideBogota;
+                changed = true;
+            }
+            if (FlythroughTerrain_curlFrame != _last_FlythroughTerrain_curlFrame)
+            {
+                _last_FlythroughTerrain_curlFrame = FlythroughTerrain_curlFrame;
+                if (_target1 != null) _target1.curlFrame = FlythroughTerrain_curlFrame;
+                changed = true;
+            }
+            if (FlythroughTerrain_curlAxis != _last_FlythroughTerrain_curlAxis)
+            {
+                _last_FlythroughTerrain_curlAxis = FlythroughTerrain_curlAxis;
+                if (_target1 != null) _target1.curlAxis = FlythroughTerrain_curlAxis;
+                changed = true;
+            }
+            if (FlythroughTerrain_curlLateral != _last_FlythroughTerrain_curlLateral)
+            {
+                _last_FlythroughTerrain_curlLateral = FlythroughTerrain_curlLateral;
+                if (_target1 != null) _target1.curlLateral = FlythroughTerrain_curlLateral;
+                changed = true;
+            }
+            if (FlythroughTerrain_curlForward != _last_FlythroughTerrain_curlForward)
+            {
+                _last_FlythroughTerrain_curlForward = FlythroughTerrain_curlForward;
+                if (_target1 != null) _target1.curlForward = FlythroughTerrain_curlForward;
+                changed = true;
+            }
+            if (FlythroughTerrain_sunElevation != _last_FlythroughTerrain_sunElevation)
+            {
+                _last_FlythroughTerrain_sunElevation = FlythroughTerrain_sunElevation;
+                if (_target1 != null) _target1.sunElevation = FlythroughTerrain_sunElevation;
+                changed = true;
+            }
+            if (FlythroughTerrain_sunAzimuth != _last_FlythroughTerrain_sunAzimuth)
+            {
+                _last_FlythroughTerrain_sunAzimuth = FlythroughTerrain_sunAzimuth;
+                if (_target1 != null) _target1.sunAzimuth = FlythroughTerrain_sunAzimuth;
+                changed = true;
+            }
+            if (FlythroughTerrain_sunTemperature != _last_FlythroughTerrain_sunTemperature)
+            {
+                _last_FlythroughTerrain_sunTemperature = FlythroughTerrain_sunTemperature;
+                if (_target1 != null) _target1.sunTemperature = FlythroughTerrain_sunTemperature;
+                changed = true;
+            }
+            return changed;
         }
 
         public void FlythroughTerrain_ResetFlight()

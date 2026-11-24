@@ -150,9 +150,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Soledad.FilmTimeline
   director: {fileID: 113057636}
+  show: {fileID: 517179241}
+  act: 2
   cameraController: {fileID: 567022511}
+  rideSpline: 1
   startDistance: 8924
-  playOnStart: 1
 --- !u!320 &113057636
 PlayableDirector:
   m_ObjectHideFlags: 0
@@ -172,6 +174,12 @@ PlayableDirector:
     value: {fileID: 517179244}
   - key: {fileID: 3374439332091558487, guid: 473bee85ff427464cbd4cdc34dfd0d56, type: 2}
     value: {fileID: 1162242059}
+  - key: {fileID: -3545053627912426540, guid: 473bee85ff427464cbd4cdc34dfd0d56, type: 2}
+    value: {fileID: 1162242059}
+  - key: {fileID: 6294170019298886161, guid: 473bee85ff427464cbd4cdc34dfd0d56, type: 2}
+    value: {fileID: 826275312}
+  - key: {fileID: -8255697076220746965, guid: 473bee85ff427464cbd4cdc34dfd0d56, type: 2}
+    value: {fileID: 826275312}
   m_ExposedReferences:
     m_References: []
 --- !u!4 &113057637
@@ -182,12 +190,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 113057634}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 448134483}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &157207112
 GameObject:
@@ -531,15 +539,15 @@ PrefabInstance:
       objectReference: {fileID: 8400000, guid: 333deaa4e0c6c3945be0ac64579b7af3, type: 2}
     - target: {fileID: 4482830018318990915, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4482830018318990915, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4482830018318990915, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -795.62585
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4580928574445178163, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_IsActive
@@ -639,11 +647,11 @@ PrefabInstance:
       objectReference: {fileID: 8400000, guid: 333deaa4e0c6c3945be0ac64579b7af3, type: 2}
     - target: {fileID: 7200512906470252900, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7200512906470252900, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7200569809757526610, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
       propertyPath: m_LocalScale.x
@@ -703,6 +711,85 @@ MonoBehaviour:
   offsetTarget: {fileID: 1302259459}
   offset: -0.01
   rigTiltOffset: 30
+--- !u!1 &319135200 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5718747801437189429, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
+  m_PrefabInstance: {fileID: 319135197}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &347778990
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 347778991}
+  - component: {fileID: 347778993}
+  - component: {fileID: 347778992}
+  m_Layer: 0
+  m_Name: Act5_Timeline
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &347778991
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347778990}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 448134483}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!320 &347778992
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347778990}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: 16d3b53d73da6194c8f64147d5a09f6c, type: 2}
+  m_InitialState: 0
+  m_WrapMode: 0
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: 6861369777571577948, guid: 16d3b53d73da6194c8f64147d5a09f6c, type: 2}
+    value: {fileID: 517179244}
+  - key: {fileID: -4960334961505980616, guid: 16d3b53d73da6194c8f64147d5a09f6c, type: 2}
+    value: {fileID: 826275312}
+  - key: {fileID: -6315642845269426191, guid: 16d3b53d73da6194c8f64147d5a09f6c, type: 2}
+    value: {fileID: 826275312}
+  m_ExposedReferences:
+    m_References: []
+--- !u!114 &347778993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347778990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81b32416fb2169b4e92f71ee3f8cac90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.FilmTimeline
+  director: {fileID: 347778992}
+  show: {fileID: 517179241}
+  act: 5
+  cameraController: {fileID: 567022511}
+  rideSpline: 0
+  startDistance: 0
 --- !u!1 &428664498 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4347002669117784366, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
@@ -896,6 +983,60 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1264136422}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &448134481
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 448134483}
+  - component: {fileID: 448134482}
+  m_Layer: 0
+  m_Name: Film
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &448134482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 448134481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d7d90291cdcaea4da2d59c59c000a11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.Film
+  format: 0
+  playTimelines: 1
+  record: 0
+  cameraController: {fileID: 567022511}
+  domeCreator: {fileID: 319135200}
+--- !u!4 &448134483
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 448134481}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1486353029}
+  - {fileID: 113057637}
+  - {fileID: 1845347616}
+  - {fileID: 728210324}
+  - {fileID: 347778991}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &517179239
 GameObject:
   m_ObjectHideFlags: 0
@@ -985,7 +1126,7 @@ MonoBehaviour:
   GridTunnel_randomDensity: 0
   GridTunnel_soloEnabled: 0
   GridTunnel_noiseAmplitude: 0
-  PhoneScreen_Zdepth: 1
+  PhoneScreen_Zdepth: 0
   PhoneScreen_alpha: 0
 --- !u!114 &517179243
 MonoBehaviour:
@@ -1072,6 +1213,8 @@ MonoBehaviour:
   HillLighting_sunIntensity: 100000
   HillLighting_sunColor: {r: 1, g: 0.96, b: 0.9, a: 1}
   TreeEmitter_density: 1
+  UndergroundTransition_blackSky: 0
+  UndergroundTransition_groundFade: 0
 --- !u!114 &517179247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1098,12 +1241,86 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9198803938699052465, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
   m_PrefabInstance: {fileID: 826275307}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 826275311}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e20dfff80a746e246adb896657b2d153, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &728210323
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 728210324}
+  - component: {fileID: 728210326}
+  - component: {fileID: 728210325}
+  m_Layer: 0
+  m_Name: Act4_Timeline
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &728210324
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728210323}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 448134483}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!320 &728210325
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728210323}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: 1c1e19113615be24ebafd690a3a90c0d, type: 2}
+  m_InitialState: 0
+  m_WrapMode: 0
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: -1423839796123369473, guid: 1c1e19113615be24ebafd690a3a90c0d, type: 2}
+    value: {fileID: 517179244}
+  - key: {fileID: 4867993086706579900, guid: 1c1e19113615be24ebafd690a3a90c0d, type: 2}
+    value: {fileID: 826275312}
+  - key: {fileID: 3148870494963381518, guid: 1c1e19113615be24ebafd690a3a90c0d, type: 2}
+    value: {fileID: 826275312}
+  m_ExposedReferences:
+    m_References: []
+--- !u!114 &728210326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728210323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81b32416fb2169b4e92f71ee3f8cac90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.FilmTimeline
+  director: {fileID: 728210325}
+  show: {fileID: 517179241}
+  act: 4
+  cameraController: {fileID: 567022511}
+  rideSpline: 0
+  startDistance: 0
 --- !u!1001 &826275307
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1286,7 +1503,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6858036796188762873, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6858036796188762873, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       propertyPath: m_Texture
@@ -1359,6 +1576,12 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1302259460}
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 69108977423954212, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 826275312}
+    - targetCorrespondingSourceObject: {fileID: 1389140324534363056, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2015745020}
     - targetCorrespondingSourceObject: {fileID: 350574687525189202, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1162242059}
@@ -1378,6 +1601,33 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 3074968854005077967, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
   m_PrefabInstance: {fileID: 826275307}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &826275311 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 69108977423954212, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
+  m_PrefabInstance: {fileID: 826275307}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &826275312
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 826275311}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1051962860 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6440636884850420878, guid: 5f59b1ee65447b04f973467c44011280, type: 3}
@@ -1616,6 +1866,82 @@ Transform:
   m_Children: []
   m_Father: {fileID: 826275308}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1486353028
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1486353029}
+  - component: {fileID: 1486353031}
+  - component: {fileID: 1486353030}
+  m_Layer: 0
+  m_Name: Act1_Timeline
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1486353029
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1486353028}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 448134483}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!320 &1486353030
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1486353028}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: df82a614c35071d44981fd68551b80b8, type: 2}
+  m_InitialState: 0
+  m_WrapMode: 0
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: 3576212656689679237, guid: df82a614c35071d44981fd68551b80b8, type: 2}
+    value: {fileID: 517179244}
+  - key: {fileID: -499565024991472957, guid: df82a614c35071d44981fd68551b80b8, type: 2}
+    value: {fileID: 826275312}
+  - key: {fileID: 6683860704587639008, guid: df82a614c35071d44981fd68551b80b8, type: 2}
+    value: {fileID: 826275312}
+  - key: {fileID: 381454633889965749, guid: df82a614c35071d44981fd68551b80b8, type: 2}
+    value: {fileID: 2015745020}
+  m_ExposedReferences:
+    m_References: []
+--- !u!114 &1486353031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1486353028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81b32416fb2169b4e92f71ee3f8cac90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.FilmTimeline
+  director: {fileID: 1486353030}
+  show: {fileID: 517179241}
+  act: 1
+  cameraController: {fileID: 567022511}
+  rideSpline: 0
+  startDistance: 0
 --- !u!1001 &1508366127
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1830,6 +2156,80 @@ MonoBehaviour:
       data1: 0
       data2: 0
   defaultFrameSettings: 0
+--- !u!1 &1845347615
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1845347616}
+  - component: {fileID: 1845347618}
+  - component: {fileID: 1845347617}
+  m_Layer: 0
+  m_Name: Act3_Timeline
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1845347616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845347615}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 448134483}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!320 &1845347617
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845347615}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: fb100a8b899afa84cb07a8336b9a83e8, type: 2}
+  m_InitialState: 0
+  m_WrapMode: 0
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: -8137920558086417980, guid: fb100a8b899afa84cb07a8336b9a83e8, type: 2}
+    value: {fileID: 517179244}
+  - key: {fileID: 6265560362169442582, guid: fb100a8b899afa84cb07a8336b9a83e8, type: 2}
+    value: {fileID: 826275312}
+  - key: {fileID: 2625750593216495640, guid: fb100a8b899afa84cb07a8336b9a83e8, type: 2}
+    value: {fileID: 826275312}
+  m_ExposedReferences:
+    m_References: []
+--- !u!114 &1845347618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845347615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81b32416fb2169b4e92f71ee3f8cac90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soledad.FilmTimeline
+  director: {fileID: 1845347617}
+  show: {fileID: 517179241}
+  act: 3
+  cameraController: {fileID: 567022511}
+  rideSpline: 0
+  startDistance: 0
 --- !u!1 &1955442908
 GameObject:
   m_ObjectHideFlags: 0
@@ -1875,6 +2275,7 @@ MonoBehaviour:
   - Camera
   - Dancer
   - VideoPlayer
+  - Animator
   excludeInternalUnityParams: 1
   excludeGlobalTransformParams: 0
   excludeLocalTransformParams: 1
@@ -1943,6 +2344,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2015745017 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1389140324534363056, guid: f60e1609337101c43a6c6c5c5de3f60f, type: 3}
+  m_PrefabInstance: {fileID: 826275307}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &2015745020
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2015745017}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1951,4 +2379,4 @@ SceneRoots:
   - {fileID: 1264136422}
   - {fileID: 1955442910}
   - {fileID: 319135197}
-  - {fileID: 113057637}
+  - {fileID: 448134483}

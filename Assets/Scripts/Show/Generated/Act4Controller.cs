@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Soledad
 {
     /// <summary>Stable show parameters of Act4_SeeThrough. See ActController.</summary>
+    [ExecuteAlways]
     [DefaultExecutionOrder(-100)]
     public class Act4Controller : ActController
     {
@@ -23,8 +24,23 @@ namespace Soledad
         [Tooltip("Fraction of the tree's particles shown (0 = none, 1 = maxInfiniteParticles of each Orb Group).")]
         [Range(0f, 1f)] public float TreeEmitter_density = 1f;
 
+        [Header("UndergroundTransition")]
+        [Tooltip("Sky to black: 0 = the day sky, 1 = black (the underground Volume's weight).")]
+        [Range(0f, 1f)] public float UndergroundTransition_blackSky = 0f;
+        [Tooltip("Hill and landscape: 0 = whole, 1 = dissolved (switched off in Play mode).")]
+        [Range(0f, 1f)] public float UndergroundTransition_groundFade = 0f;
+
         global::Soledad.HillLighting _target0;
         global::Soledad.TreeEmitter _target1;
+        global::Soledad.UndergroundTransition _target2;
+
+        float _last_HillLighting_sunElevation;
+        float _last_HillLighting_sunAzimuth;
+        float _last_HillLighting_sunIntensity;
+        Color _last_HillLighting_sunColor;
+        float _last_TreeEmitter_density;
+        float _last_UndergroundTransition_blackSky;
+        float _last_UndergroundTransition_groundFade;
 
         protected override string ActName => "Act4_SeeThrough";
 
@@ -32,12 +48,14 @@ namespace Soledad
         {
             _target0 = Find<global::Soledad.HillLighting>(root);
             _target1 = Find<global::Soledad.TreeEmitter>(root);
+            _target2 = Find<global::Soledad.UndergroundTransition>(root);
         }
 
         protected override void Unbind()
         {
             _target0 = null;
             _target1 = null;
+            _target2 = null;
         }
 
         protected override void Push()
@@ -53,6 +71,70 @@ namespace Soledad
             {
                 _target1.density = TreeEmitter_density;
             }
+            if (_target2 != null)
+            {
+                _target2.blackSky = UndergroundTransition_blackSky;
+                _target2.groundFade = UndergroundTransition_groundFade;
+            }
+        }
+
+        protected override void Remember()
+        {
+            _last_HillLighting_sunElevation = HillLighting_sunElevation;
+            _last_HillLighting_sunAzimuth = HillLighting_sunAzimuth;
+            _last_HillLighting_sunIntensity = HillLighting_sunIntensity;
+            _last_HillLighting_sunColor = HillLighting_sunColor;
+            _last_TreeEmitter_density = TreeEmitter_density;
+            _last_UndergroundTransition_blackSky = UndergroundTransition_blackSky;
+            _last_UndergroundTransition_groundFade = UndergroundTransition_groundFade;
+        }
+
+        protected override bool PushChanged()
+        {
+            bool changed = false;
+            if (HillLighting_sunElevation != _last_HillLighting_sunElevation)
+            {
+                _last_HillLighting_sunElevation = HillLighting_sunElevation;
+                if (_target0 != null) _target0.sunElevation = HillLighting_sunElevation;
+                changed = true;
+            }
+            if (HillLighting_sunAzimuth != _last_HillLighting_sunAzimuth)
+            {
+                _last_HillLighting_sunAzimuth = HillLighting_sunAzimuth;
+                if (_target0 != null) _target0.sunAzimuth = HillLighting_sunAzimuth;
+                changed = true;
+            }
+            if (HillLighting_sunIntensity != _last_HillLighting_sunIntensity)
+            {
+                _last_HillLighting_sunIntensity = HillLighting_sunIntensity;
+                if (_target0 != null) _target0.sunIntensity = HillLighting_sunIntensity;
+                changed = true;
+            }
+            if (HillLighting_sunColor != _last_HillLighting_sunColor)
+            {
+                _last_HillLighting_sunColor = HillLighting_sunColor;
+                if (_target0 != null) _target0.sunColor = HillLighting_sunColor;
+                changed = true;
+            }
+            if (TreeEmitter_density != _last_TreeEmitter_density)
+            {
+                _last_TreeEmitter_density = TreeEmitter_density;
+                if (_target1 != null) _target1.density = TreeEmitter_density;
+                changed = true;
+            }
+            if (UndergroundTransition_blackSky != _last_UndergroundTransition_blackSky)
+            {
+                _last_UndergroundTransition_blackSky = UndergroundTransition_blackSky;
+                if (_target2 != null) _target2.blackSky = UndergroundTransition_blackSky;
+                changed = true;
+            }
+            if (UndergroundTransition_groundFade != _last_UndergroundTransition_groundFade)
+            {
+                _last_UndergroundTransition_groundFade = UndergroundTransition_groundFade;
+                if (_target2 != null) _target2.groundFade = UndergroundTransition_groundFade;
+                changed = true;
+            }
+            return changed;
         }
     }
 }

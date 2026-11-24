@@ -32,12 +32,18 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
 
 ## Scene architecture
 
-- `Assets/Scenes/Soledad_Main.unity` is always loaded and is the active scene. It holds everything permanent:
+- The main scene (called Soledad_Main in this file and in the code) comes in two versions, so neither carries what
+  only the other needs: `Assets/Scenes/Soledad_Main_Film.unity` for the film (the `Film` object and its Timelines,
+  Recorder) and `Soledad_Main_Performance.unity` for the live show (to come, without the film setup). The film one
+  kept the GUID of the former `Soledad_Main.unity`. One of them is always loaded and is the active scene. It holds
+  everything permanent:
   - `Root Scene`: the object OSCQuery exposes (`OSCQuery.rootObject`), so Chataigne addresses start under it, as in
     Oxipital-Engine (the Chataigne module looks for a top-level `ballet`). It contains `Cameras` (Oxipital Camera
     prefab), `Ballet` (Oxipital Core prefab), `Show` (`ShowController`), `Sun`, `Sky and Fog Volume`, and the loaded
     acts.
-  - `OSCQuery`: server `Unity-Oxipital` on port 8999, same filters as Oxipital-Engine.
+  - `OSCQuery`: server `Unity-Oxipital` on port 8999, same filters as Oxipital-Engine plus the `Animator` component
+    excluded (the Timeline Animators on `Show` and the camera objects: nothing to drive from Chataigne, and reading
+    their properties logged warnings on every tree rebuild).
   - `Dome Creator` (pfc dome-tools): the fulldome rig. `CameraController.isFullDome` switches between the dome
     (main camera off, `Dome Creator` renders `Assets/Textures/Dome Content Texture` and the DomeMaster
     `Dome Output Texture`) and 16:9 (`Dome Creator` disabled). `DomeCameraRigFollow` on its rig follows
@@ -63,11 +69,18 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
   Open Acts` copies all of them). In Play mode the controller (`ActController`) is the source of truth: it binds
   to its act root under `Root Scene` once loaded, pushes its values every frame (also while the act is preloaded),
   and drops the references when the act is destroyed. So drive and record (Timeline) `Show/ActNController`, not the
-  act objects: values set on the act itself are overwritten. One component of each type per act is driven. If an
+  act objects: values set on the act itself are overwritten. In edit mode (`[ExecuteAlways]`, to build a Timeline
+  without Play) it binds to the act scene opened next to Soledad_Main and, on every editor update, pushes only the
+  values that changed on the controller (Timeline preview, inspector; generated `PushChanged`, last values in
+  `_last_*`): a value set on the act itself stays until the controller's own value changes. Timeline preview restores
+  the controller when it stops, which pushes the restored values to the act too. One component of each type per act is driven. If an
   `[Animate]` field is renamed or removed, the generated code stops compiling, the generator writes a stub and the
   next compile restores it; the controller value of a renamed field is lost unless it had a fixed name.
 - `Act.weight` scales every Volume under the act, so two acts blend during a transition. Act-specific scripts read it
   to fade their own content.
+- Forces: the Ballet feeds its force groups only to the Orb Groups of its own `Orb Groups` manager, so `Act` forwards
+  the same buffers (by name, `Force Group N`) to every Orb Group under the act in Play mode (`linkForces`, on): act
+  particles answer the Chataigne force groups, each scaled by its own `forceWeight`.
 - The Sun of Soledad_Main is lit by the acts through `SunControl` (`Assets/Scripts/Show`): an act script implements
   `ISunDriver` (`DrivesSun` = its `overrideSun`, `DriveSun(sun, data)` sets what it wants), calls `Register` /
   `Unregister` in OnEnable / OnDisable and `Drive(this)` every frame. Act scripts never keep the Sun's own values:
@@ -203,12 +216,12 @@ sky, no bloom, fog off.
   the approach; it lowers the exposure compensation (-1.5 EV) because the automatic exposure (HDRP default profile:
   the main `Sky and Fog Volume` is at weight 0) brightens the dark upright map. Volumes cannot change a light's
   intensity.
-  **Act 2 film Timeline**: `Act2_Timeline` in Soledad_Main (PlayableDirector, `Assets/Acts/Act2_Flythrough/Timeline/Act2_Timeline.playable`,
-  120 s at 60 fps) with two Animation tracks: `Show/Act2Controller` (curl, Bogota switches) and
+  **Act 2 film Timeline**: `Film/Act2_Timeline` in Soledad_Main (see Film workflow; `Assets/Acts/Act2_Flythrough/Timeline/Act2_Timeline.playable`,
+  120 s at 60 fps): `Show/Act2Controller` (curl, Bogota switches) in the Show group and
   `Cameras/Spline Camera target` (`useProgress` on, `progress` 0 to 1 along Bogota's path, the whole film: 76 km;
-  look, `splineUp`, offset), plus markers for each beat; the director holds its last values when it ends (Wrap Mode Hold), otherwise the
-  camera values snap back to their defaults over Bogota. `FilmTimeline`
-  (`Assets/Scripts/Show`) starts it in Play mode once the act has handed its path: camera to Spline, ride reset at
+  look, `splineUp`, offset) in each camera group (the Dome copy starts as the 16:9 one), plus markers for each beat; the director holds its last values when it ends (Wrap Mode Hold), otherwise the
+  camera values snap back to their defaults over Bogota. Its `FilmTimeline` (`rideSpline` on)
+  starts it in Play mode once the act has handed its path: camera to Spline, ride reset at
   `startDistance` (rides by speed only), then the director plays. The camera rides `Bogota Path` from t = 0
   (`rideBogota` on) by progress, so its position is keyed directly and the other beats stay put when it changes;
   speed = slope of the curve. Keys: curl 2 to 26 s, leaves the flight path 24 s, look right 30 to 36 s, Bogota
@@ -276,7 +289,7 @@ sky, no bloom, fog off.
   blades near the camera only (Ghost of Tsushima style: compute-generated blades in clumps, bent, widened with
   distance) over the current shell lawn; stronger anti-tiling; mounds less bubble-like (longer, gentler waves).
   Remind Gamgie of this when working on Act 4 again.
-  - `Tree`, `Crown` and `Tree Shadow Proxy` all sit at (0, **1.72**, 0): the scan's own ground (the root plate with its scanned soil) is
+  - `Tree`, `Crown` and `Tree Shadow Proxy` all sit at (0, **1.63**, 0): the scan's own ground (the root plate with its scanned soil) is
     1.64 to 1.83 m below the scan's origin (rim measured per direction from its points, flat within 0.5 degree), so
     this lift lays the roots on the hilltop, the rim just at grass level. Move them together.
   - **One point cloud, scan + grafted stems**: `Tree` emits from `Tree_AF_Grafted` (the scan with the first ~2.5 m of
@@ -293,6 +306,22 @@ sky, no bloom, fog off.
     16.6 ms GPU without grain shadows, 38.6 ms with (each grain was drawn again in every shadow cascade); the proxy
     itself costs nothing measurable (18.9 ms with or without it, 2 M grains). It shadows the ground and the grains (the
     crown shades the trunk). No particle removed. Bigger grains (`particleSize`) remain an option if holes show.
+  - **Roots** (the invisible connections: particles leaving the roots and falling, seen from below the hill, whose faces
+    are culled from inside), all made by `Blender/Act4_Tree/make_root_map.py` (settings at the top of each section):
+    the scanned roots from the scan's points (local relief: top of each 1 cm cell minus the mean top within 31 cm,
+    above 2 cm = root; the trunk foot solid), then the outermost scanned root of each of 56 directions grown on outward
+    by 2D space colonization to 11 m (pipe-model widths, never under 1.2 cm; `EXTENT`, `ATTRACTORS`, `SECTORS`,
+    `TIP_WIDTH`, `SEED`). Outputs: `Roots/RootMap.png` (top view, 4096 px for 24 m, white roots on black, centred on the
+    tree's axis) and the emitter `StreamingAssets/emitters/RootCloud.glb`, the roots in 3D close under the real ones:
+    2 cm quads on the underside of the scanned soil plate (lowest point of each cell) under every scanned root and the
+    trunk foot, then the grown roots as tubes of their width diving into the hill (`DIVE` 0.11 m per m, down to 2.4 m
+    under the top), ~2 cm quads everywhere so the particles spread evenly (288 k triangles, no texture: white
+    particles). Scan frame, so `Roots` (Orb Group, custom mesh `RootCloud`, Unlit Additive, life 8 s, drag 1, force
+    weight 1, particle size 0.05) sits where `Tree` sits. The flat `RootMap.glb` (cells of the map 40 cm under the hill, coloured
+    by the map) is written to `Blender/Act4_Tree` only, unused. The fall comes from the Ballet's force groups (`Act`
+    forwards them to the act's Orb Groups): tested with one force group, linear down (dancer rotation X 90, force factor
+    outside 1) at 0.01: the root lines stay readable and each drips a curtain of particles (0.3 rains them all down at
+    once, the roots vanish); Perlin can pull the curtains into strings. `Tree` has force weight 0.
   - **Soil around the roots** (`Hill Grass.mat`, Soil Patch section of `Soledad/HillGrass`): an irregular disc
     (`Radius` 2.3 m, `Edge Width` 0.9, `Edge Irregularity` 0.6, two noise octaves) of Meadow's dry meadow soil mixed
     with its forest leaf litter by patches (`Materials/Soil`, extracted from the Meadow package in the Asset Store
@@ -387,6 +416,16 @@ sky, no bloom, fog off.
   - `Hill Lighting` (`HillLighting`): while the act is shown, a clear day Sun (32 degrees high, azimuth 120,
     100000 lux, warm white: low and from the side, so the mounds model each other), all `[Animate]`
     (`Show/Act4Controller`), restored when disabled and around saves.
+  - **Underground** (`Underground Transition`, `UndergroundTransition`): the act's second step, the camera going under
+    the hill to fly through the roots. Two `[Animate]` values (`Show/Act4Controller`, `UndergroundTransition_*`; the
+    sequence itself is Gamgie's, from Chataigne or a Timeline): `blackSky` (0 to 1) is the weight of
+    `Act4_SeeThrough Underground Volume` (global, priority 11, weight 0 in the scene, profile
+    `Act4_SeeThrough Underground Volume Profile.asset`: Physically Based Sky zenith, horizon and ground tints black,
+    volumetric clouds density 0, fog tint black, all blending smoothly; the sky's own multiplier does nothing on the
+    Physically Based Sky); `groundFade` (0 to 1) dissolves `Hill` (shells and soil included) and `Landscape` in noisy
+    patches of `dissolveScale` m (globals `_GroundDissolve` / `_GroundDissolveScale` read by `Soledad/HillGrass` in
+    every pass, shadows included), and at 1 in Play mode switches their renderers and `HillGrass` off. Previewed in the
+    Editor too (keep both at 0 in the saved scenes). With both at 1 only the tree and the glowing roots remain on black.
   - Act 4 Volume: Physically Based Sky tinted teal-blue (zenith and horizon tints; its ground below the horizon is
     tinted sky blue: from the hilltop the camera sees up to 14 degrees below the horizontal past the hill's edge, and a
     dark ground there read as a grey band instead of sky), volumetric clouds (Sparse preset: a few white cumulus), aerial haze (fog mean free path 3.5 km, height
@@ -474,6 +513,27 @@ performed live with Chataigne (gamepad for the camera, Leap for the hands) again
 resolution, the values reaching Unity are recorded into a Timeline, then Unity Recorder renders that Timeline at full
 resolution (image sequences for Resolve). Camera moves can also be written directly in the Timeline. Keep VFX seeds
 fixed so re-renders match. Inputs that are not recorded (Leap, Spout, optical flow) do not reach the film.
+
+**One Timeline per act**, under `Film` in `Soledad_Main_Film` (a root object, outside `Root Scene`: not in Chataigne):
+`Film/ActN_Timeline` (PlayableDirector, Play On Awake off, Wrap Mode Hold, `FilmTimeline`) plays
+`Assets/Acts/<ActScene>/Timeline/ActN_Timeline.playable` (60 fps, fixed length, 60 s until set). Three groups:
+- `Show`: an Animation track on `Show` (its Animator drives `Show/ActNController`, the act's `[Animate]` values) and
+  anything else common to both formats.
+- `Camera 16:9` and `Camera Dome`: the camera keyed apart for each format (an Animation track on
+  `Cameras/Camera Controller`: camera type, fov, noise...; add tracks on the camera targets as needed, e.g. Act 2's
+  `Spline Camera target`), plus a `Recorder` track: 16:9 records the main camera at 3840 x 2160, Dome records
+  `Dome Output Texture` (the DomeMaster, 2048 x 2048 for now), EXR (half float, sRGB, Zip) into
+  `Recordings/<ActScene>/16x9|Dome/` (not in git).
+`Film` (`Assets/Scripts/Show/Film.cs`) holds the switches: `format` (Flat / Dome) is the output of the whole project,
+live show included: it sets `CameraController.isFullDome` (read once when the controller is enabled: set it before
+Play), the `Dome Creator` and the main camera, and mutes the other format's camera group in all five Timelines (the
+assets change: commit them in the format you work in). `record` unmutes the Recorder tracks (off: Play is a
+preview, nothing written). `playTimelines` (off for the live show): in Play mode the Timeline of the shown act
+plays from its start (`ShowController.ShownAct`, so open the act scene next to Soledad_Main, then Play);
+`rideSpline` first waits for the act's path and restarts the Spline camera ride. `Soledad > Build Film Timelines`
+(`FilmTimelineBuilder`) creates whatever is missing (Film, timelines, groups, tracks, bindings, Animators), moves
+earlier root tracks into the groups (on Show into `Show`, others into `Camera 16:9`, copied into `Camera Dome`), and
+stretches the Recorder clips to the Timeline: run it again after changing a Timeline's length.
 
 ## Commits
 

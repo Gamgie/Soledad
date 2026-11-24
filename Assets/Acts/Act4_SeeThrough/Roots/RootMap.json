@@ -1,0 +1,10 @@
+{
+ "size_px": 4096,
+ "map_size_m": 24.0,
+ "extent_m": 11.0,
+ "seeds": 46,
+ "nodes": 4538,
+ "center": "scan origin (Tree object origin)",
+ "image_x": "+X",
+ "image_y": "scan +Y (Unity -Z... see CLAUDE.md)"
+}

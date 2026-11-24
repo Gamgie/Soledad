@@ -66,6 +66,9 @@ namespace Soledad
         int _shownIndex;
         bool _switching;
 
+        /// <summary>The act shown at full weight (0 = none), once its crossfade is over.</summary>
+        public int ShownAct => _switching ? 0 : _shownIndex;
+
         public void NextAct() => act = Mathf.Min(act + 1, actScenes.Length);
 
         public void PreviousAct() => act = Mathf.Max(act - 1, 0);

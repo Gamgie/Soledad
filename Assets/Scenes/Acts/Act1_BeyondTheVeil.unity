@@ -181,7 +181,7 @@ MonoBehaviour:
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
   fadeStart: 150
   fadeEnd: 600
-  railsReveal: 1
+  railsReveal: 0
   railsStagger: 0.5
   railsOrder: 2
   railsEffect: 0
@@ -530,6 +530,7 @@ MonoBehaviour:
   minZ: 6.6
   maxZ: 694.6
   Zdepth: 1
+  alpha: 0
 --- !u!1 &1982944509
 GameObject:
   m_ObjectHideFlags: 0
@@ -560,6 +561,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Soledad.Act
   weight: 1
+  linkForces: 1
 --- !u!4 &1982944511
 Transform:
   m_ObjectHideFlags: 0

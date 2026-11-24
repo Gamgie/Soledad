@@ -58,3 +58,8 @@ float4 _SheenColor;
 // Distance
 float  _FadeStart;          // shells fade from here (m)...
 float  _FadeEnd;            // ...to here, and when the texture gets smaller than a pixel
+
+// Underground transition (globals, set by Act4Underground.cs, never on the materials): the hill and the landscape
+// dissolve in noisy patches, 0 = whole, 1 = gone
+float  _GroundDissolve;
+float  _GroundDissolveScale;    // size of the patches (m)

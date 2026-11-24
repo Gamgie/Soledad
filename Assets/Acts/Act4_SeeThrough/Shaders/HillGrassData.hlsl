@@ -37,6 +37,16 @@ void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs p
     float patch = input.texCoord2.y;
     float h = _ShellHeight;
 
+    // Underground transition: the ground dissolves in patches (world xz, so the hill, its shells and the landscape
+    // break up together; every pass clips the same way, shadows included)
+    if (_GroundDissolve > 0.0)
+    {
+        float2 xz = GetAbsolutePositionWS(input.positionRWS).xz / max(_GroundDissolveScale, 0.01);
+        float n = HG_Fbm(xz + 17.3) * 0.75 + HG_Fbm(xz * 7.9 + 41.2) * 0.25;
+        n = saturate((n - 0.2) / 0.6);
+        clip(n - lerp(-0.01, 1.01, _GroundDissolve));
+    }
+
     // Shell fade with distance and when a blade (~3 mm) gets smaller than a pixel. The pixel footprint is estimated
     // from the distance and the viewing angle, smooth over the whole surface (screen derivatives of the coordinates
     // are constant per triangle and would show the facets)

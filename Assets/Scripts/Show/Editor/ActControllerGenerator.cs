@@ -19,7 +19,8 @@ namespace Soledad
     /// Writes Assets/Scripts/Show/Generated/ActNController.cs for each act folder Assets/Acts/ActN_Name/ from the
     /// [Animate] members of its scripts (and of the Assets/Shared scripts its scene uses, e.g. the Earth prefab): one flat public field per animated field (named Type_field, or the fixed
     /// name given to the attribute, same type, same default, same Range and Tooltip), one forwarding method per
-    /// animated method, and plain assignment code to push the values into the act (see ActController).
+    /// animated method, and plain assignment code to push the values into the act (every value each frame in Play
+    /// mode; in edit mode only those that changed, see ActController).
     ///
     /// Runs after every compile and from Soledad > Generate Act Controllers. A file is only rewritten when its
     /// content changes, so the compile it triggers ends the loop. Once the code is stable it also adds the missing
@@ -297,6 +298,7 @@ namespace Soledad
             sb.Append("using UnityEngine;\n\n");
             sb.Append("namespace Soledad\n{\n");
             sb.Append($"    /// <summary>Stable show parameters of {act.folder}. See ActController.</summary>\n");
+            sb.Append("    [ExecuteAlways]\n");
             sb.Append("    [DefaultExecutionOrder(-100)]\n");
             sb.Append($"    public class {act.className} : ActController\n    {{\n");
 
@@ -324,6 +326,12 @@ namespace Soledad
                 sb.Append($"        {TypeName(type)} {Target(type)};\n");
             if (types.Count > 0) sb.Append('\n');
 
+            // Edit mode: the values last pushed, so only what changes on the controller reaches the act
+            List<Member> animated = act.members.Where(m => m.field != null).ToList();
+            foreach (Member m in animated)
+                sb.Append($"        {TypeName(m.field.FieldType)} _last_{m.name};\n");
+            if (animated.Count > 0) sb.Append('\n');
+
             sb.Append($"        protected override string ActName => \"{act.folder}\";\n\n");
 
             sb.Append("        protected override void Bind(Transform root)\n        {\n");
@@ -346,6 +354,24 @@ namespace Soledad
                     sb.Append($"                {Target(type)}.{m.field.Name} = {m.name};\n");
                 sb.Append("            }\n");
             }
+            sb.Append("        }\n\n");
+
+            sb.Append("        protected override void Remember()\n        {\n");
+            foreach (Member m in animated)
+                sb.Append($"            _last_{m.name} = {m.name};\n");
+            sb.Append("        }\n\n");
+
+            sb.Append("        protected override bool PushChanged()\n        {\n");
+            sb.Append("            bool changed = false;\n");
+            foreach (Member m in animated)
+            {
+                sb.Append($"            if ({m.name} != _last_{m.name})\n            {{\n");
+                sb.Append($"                _last_{m.name} = {m.name};\n");
+                sb.Append($"                if ({Target(m.type)} != null) {Target(m.type)}.{m.field.Name} = {m.name};\n");
+                sb.Append("                changed = true;\n");
+                sb.Append("            }\n");
+            }
+            sb.Append("            return changed;\n");
             sb.Append("        }\n");
 
             foreach (Member m in act.members.Where(m => m.method != null))

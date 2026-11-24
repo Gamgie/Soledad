@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Soledad
 {
     /// <summary>Stable show parameters of Act1_BeyondTheVeil. See ActController.</summary>
+    [ExecuteAlways]
     [DefaultExecutionOrder(-100)]
     public class Act1Controller : ActController
     {
@@ -45,6 +46,24 @@ namespace Soledad
 
         global::Soledad.GridTunnel _target0;
         global::Soledad.PhoneScreen _target1;
+
+        float _last_GridTunnel_travelSpeed;
+        float _last_GridTunnel_masterIntensity;
+        float _last_GridTunnel_railsReveal;
+        float _last_GridTunnel_railsStagger;
+        global::Soledad.GridTunnel.LineEffect _last_GridTunnel_railsEffect;
+        float _last_GridTunnel_railsEffectSpeed;
+        float _last_GridTunnel_railsEffectDelay;
+        float _last_GridTunnel_ringsReveal;
+        float _last_GridTunnel_ringsStagger;
+        global::Soledad.GridTunnel.LineEffect _last_GridTunnel_ringsEffect;
+        float _last_GridTunnel_ringsEffectSpeed;
+        float _last_GridTunnel_ringsEffectDelay;
+        float _last_GridTunnel_randomDensity;
+        bool _last_GridTunnel_soloEnabled;
+        float _last_GridTunnel_noiseAmplitude;
+        float _last_PhoneScreen_Zdepth;
+        float _last_PhoneScreen_alpha;
 
         protected override string ActName => "Act1_BeyondTheVeil";
 
@@ -85,6 +104,135 @@ namespace Soledad
                 _target1.Zdepth = PhoneScreen_Zdepth;
                 _target1.alpha = PhoneScreen_alpha;
             }
+        }
+
+        protected override void Remember()
+        {
+            _last_GridTunnel_travelSpeed = GridTunnel_travelSpeed;
+            _last_GridTunnel_masterIntensity = GridTunnel_masterIntensity;
+            _last_GridTunnel_railsReveal = GridTunnel_railsReveal;
+            _last_GridTunnel_railsStagger = GridTunnel_railsStagger;
+            _last_GridTunnel_railsEffect = GridTunnel_railsEffect;
+            _last_GridTunnel_railsEffectSpeed = GridTunnel_railsEffectSpeed;
+            _last_GridTunnel_railsEffectDelay = GridTunnel_railsEffectDelay;
+            _last_GridTunnel_ringsReveal = GridTunnel_ringsReveal;
+            _last_GridTunnel_ringsStagger = GridTunnel_ringsStagger;
+            _last_GridTunnel_ringsEffect = GridTunnel_ringsEffect;
+            _last_GridTunnel_ringsEffectSpeed = GridTunnel_ringsEffectSpeed;
+            _last_GridTunnel_ringsEffectDelay = GridTunnel_ringsEffectDelay;
+            _last_GridTunnel_randomDensity = GridTunnel_randomDensity;
+            _last_GridTunnel_soloEnabled = GridTunnel_soloEnabled;
+            _last_GridTunnel_noiseAmplitude = GridTunnel_noiseAmplitude;
+            _last_PhoneScreen_Zdepth = PhoneScreen_Zdepth;
+            _last_PhoneScreen_alpha = PhoneScreen_alpha;
+        }
+
+        protected override bool PushChanged()
+        {
+            bool changed = false;
+            if (GridTunnel_travelSpeed != _last_GridTunnel_travelSpeed)
+            {
+                _last_GridTunnel_travelSpeed = GridTunnel_travelSpeed;
+                if (_target0 != null) _target0.travelSpeed = GridTunnel_travelSpeed;
+                changed = true;
+            }
+            if (GridTunnel_masterIntensity != _last_GridTunnel_masterIntensity)
+            {
+                _last_GridTunnel_masterIntensity = GridTunnel_masterIntensity;
+                if (_target0 != null) _target0.masterIntensity = GridTunnel_masterIntensity;
+                changed = true;
+            }
+            if (GridTunnel_railsReveal != _last_GridTunnel_railsReveal)
+            {
+                _last_GridTunnel_railsReveal = GridTunnel_railsReveal;
+                if (_target0 != null) _target0.railsReveal = GridTunnel_railsReveal;
+                changed = true;
+            }
+            if (GridTunnel_railsStagger != _last_GridTunnel_railsStagger)
+            {
+                _last_GridTunnel_railsStagger = GridTunnel_railsStagger;
+                if (_target0 != null) _target0.railsStagger = GridTunnel_railsStagger;
+                changed = true;
+            }
+            if (GridTunnel_railsEffect != _last_GridTunnel_railsEffect)
+            {
+                _last_GridTunnel_railsEffect = GridTunnel_railsEffect;
+                if (_target0 != null) _target0.railsEffect = GridTunnel_railsEffect;
+                changed = true;
+            }
+            if (GridTunnel_railsEffectSpeed != _last_GridTunnel_railsEffectSpeed)
+            {
+                _last_GridTunnel_railsEffectSpeed = GridTunnel_railsEffectSpeed;
+                if (_target0 != null) _target0.railsEffectSpeed = GridTunnel_railsEffectSpeed;
+                changed = true;
+            }
+            if (GridTunnel_railsEffectDelay != _last_GridTunnel_railsEffectDelay)
+            {
+                _last_GridTunnel_railsEffectDelay = GridTunnel_railsEffectDelay;
+                if (_target0 != null) _target0.railsEffectDelay = GridTunnel_railsEffectDelay;
+                changed = true;
+            }
+            if (GridTunnel_ringsReveal != _last_GridTunnel_ringsReveal)
+            {
+                _last_GridTunnel_ringsReveal = GridTunnel_ringsReveal;
+                if (_target0 != null) _target0.ringsReveal = GridTunnel_ringsReveal;
+                changed = true;
+            }
+            if (GridTunnel_ringsStagger != _last_GridTunnel_ringsStagger)
+            {
+                _last_GridTunnel_ringsStagger = GridTunnel_ringsStagger;
+                if (_target0 != null) _target0.ringsStagger = GridTunnel_ringsStagger;
+                changed = true;
+            }
+            if (GridTunnel_ringsEffect != _last_GridTunnel_ringsEffect)
+            {
+                _last_GridTunnel_ringsEffect = GridTunnel_ringsEffect;
+                if (_target0 != null) _target0.ringsEffect = GridTunnel_ringsEffect;
+                changed = true;
+            }
+            if (GridTunnel_ringsEffectSpeed != _last_GridTunnel_ringsEffectSpeed)
+            {
+                _last_GridTunnel_ringsEffectSpeed = GridTunnel_ringsEffectSpeed;
+                if (_target0 != null) _target0.ringsEffectSpeed = GridTunnel_ringsEffectSpeed;
+                changed = true;
+            }
+            if (GridTunnel_ringsEffectDelay != _last_GridTunnel_ringsEffectDelay)
+            {
+                _last_GridTunnel_ringsEffectDelay = GridTunnel_ringsEffectDelay;
+                if (_target0 != null) _target0.ringsEffectDelay = GridTunnel_ringsEffectDelay;
+                changed = true;
+            }
+            if (GridTunnel_randomDensity != _last_GridTunnel_randomDensity)
+            {
+                _last_GridTunnel_randomDensity = GridTunnel_randomDensity;
+                if (_target0 != null) _target0.randomDensity = GridTunnel_randomDensity;
+                changed = true;
+            }
+            if (GridTunnel_soloEnabled != _last_GridTunnel_soloEnabled)
+            {
+                _last_GridTunnel_soloEnabled = GridTunnel_soloEnabled;
+                if (_target0 != null) _target0.soloEnabled = GridTunnel_soloEnabled;
+                changed = true;
+            }
+            if (GridTunnel_noiseAmplitude != _last_GridTunnel_noiseAmplitude)
+            {
+                _last_GridTunnel_noiseAmplitude = GridTunnel_noiseAmplitude;
+                if (_target0 != null) _target0.noiseAmplitude = GridTunnel_noiseAmplitude;
+                changed = true;
+            }
+            if (PhoneScreen_Zdepth != _last_PhoneScreen_Zdepth)
+            {
+                _last_PhoneScreen_Zdepth = PhoneScreen_Zdepth;
+                if (_target1 != null) _target1.Zdepth = PhoneScreen_Zdepth;
+                changed = true;
+            }
+            if (PhoneScreen_alpha != _last_PhoneScreen_alpha)
+            {
+                _last_PhoneScreen_alpha = PhoneScreen_alpha;
+                if (_target1 != null) _target1.alpha = PhoneScreen_alpha;
+                changed = true;
+            }
+            return changed;
         }
 
         public void GridTunnel_Reseed()
