@@ -8,7 +8,8 @@ namespace Soledad
     /// <see cref="minZ"/> (1) on its local Z, <see cref="alpha"/> fades it. Runs in edit mode too, so the Timeline
     /// preview of Show/Act1Controller shows it. The alpha goes through a MaterialPropertyBlock (_BaseColor), so the
     /// material asset is never edited. Applied only when a value changes. In Play mode the VideoPlayer on the same
-    /// object restarts when the phone is enabled and is clocked by game time (External Time, no frame skipping), so a
+    /// object restarts when the phone is enabled; while the Recorder renders it is paused and sought to the frame of the
+    /// game time elapsed, so a
     /// Recorder render shows the video at the speed of the film.
     /// </summary>
     [ExecuteAlways]
@@ -25,6 +26,27 @@ namespace Soledad
         float _appliedZ = float.NaN;
         VideoPlayer _video;
         double _videoClock;
+        long _videoFrame;
+
+        // While the Recorder renders (capture delta time set), the video is paused and shown at the frame of the game
+        // time elapsed since the phone was enabled, by seeking (StepForward did nothing on this clip). Its own clocks
+        // (DSP, game time, External Time) all kept running in real time while the Recorder stepped game time much
+        // slower: a render played it twice too fast. The seek lands a frame or so later, which a render frame (far
+        // longer than real time) leaves room for. Live and preview: the video plays normally on its own clock.
+        void StepVideo()
+        {
+            _videoClock += Time.deltaTime;
+            if (Time.captureDeltaTime <= 0f) return;
+            if (!_video.isPrepared) return;
+            if (_video.isPlaying) _video.Pause();
+
+            long last = (long)_video.frameCount - 1;
+            long target = (long)(_videoClock * _video.frameRate);
+            if (target > last) target = last;
+            if (target == _videoFrame) return;
+            _video.frame = target;
+            _videoFrame = target;
+        }
 
         void OnEnable()
         {
@@ -32,15 +54,14 @@ namespace Soledad
             _block ??= new MaterialPropertyBlock();
             _appliedZ = float.NaN;
 
-            // Play mode: the video follows game time, not its own clock, so a Recorder render (game time stepped one
-            // frame at a time, much slower than real time) shows the right image on every frame, and repeats
+            // Play mode: the video starts from its beginning when the phone is enabled (see StepVideo for renders)
             _video = GetComponent<VideoPlayer>();
+            _videoClock = 0.0;
+            _videoFrame = -1;
             if (Application.isPlaying && _video != null && _video.clip != null)
             {
-                _video.timeReference = VideoTimeReference.ExternalTime;
+                _video.Stop();
                 _video.skipOnDrop = false;
-                _videoClock = 0.0;
-                _video.externalReferenceTime = 0.0;
                 _video.time = 0.0;
                 _video.Play();
             }
@@ -50,11 +71,8 @@ namespace Soledad
 
         void Update()
         {
-            if (Application.isPlaying && _video != null && _video.isPlaying)
-            {
-                _videoClock += Time.deltaTime;
-                _video.externalReferenceTime = _videoClock;
-            }
+            if (Application.isPlaying && _video != null && _video.clip != null)
+                StepVideo();
 
             float z = Mathf.Lerp(maxZ, minZ, Zdepth);
             if (z != _appliedZ)

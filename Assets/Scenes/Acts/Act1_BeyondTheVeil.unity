@@ -181,21 +181,21 @@ MonoBehaviour:
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
   fadeStart: 413.1
   fadeEnd: 600
-  railsReveal: 0
+  railsReveal: 1
   railsStagger: 0.37167287
   railsOrder: 2
   railsEffect: 0
   railsEffectSpeed: 0.62
   railsEffectDelay: 1
   railsEffectMin: 0
-  ringsReveal: -0.0082092285
-  ringsStagger: 0.07295644
+  ringsReveal: 1.0006883
+  ringsStagger: 0.2167216
   ringsOrder: 2
   ringsEffect: 0
   ringsEffectSpeed: 0.5
   ringsEffectDelay: 1
   ringsEffectMin: 0
-  randomDensity: 0.0048786476
+  randomDensity: 0.009
   randomRate: 15.85
   randomRateJitter: 0
   randomFade: 0
@@ -394,7 +394,7 @@ Transform:
   m_GameObject: {fileID: 1523432169}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0.7071068, w: 0}
-  m_LocalPosition: {x: 0, y: 0, z: 11.473196}
+  m_LocalPosition: {x: 0, y: 0, z: 1.089022}
   m_LocalScale: {x: 1.1265397, y: 1.1265397, z: 2.433326}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -419,7 +419,7 @@ VideoPlayer:
   m_RenderMode: 3
   m_AspectRatio: 2
   m_DataSource: 0
-  m_TimeUpdateMode: 2
+  m_TimeUpdateMode: 1
   m_PlaybackSpeed: 1
   m_AudioOutputMode: 0
   m_TargetAudioSources:
@@ -431,7 +431,7 @@ VideoPlayer:
   m_DirectAudioMutes: 00
   m_ControlledAudioTrackCount: 1
   m_PlayOnAwake: 1
-  m_SkipOnDrop: 1
+  m_SkipOnDrop: 0
   m_Looping: 1
   m_WaitForFirstFrame: 1
   m_FrameReadyEventEnabled: 0
@@ -527,9 +527,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40da5203e77c7fb408d0c22fd382e177, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PhoneScreen
-  minZ: 1
+  minZ: 0
   maxZ: 694.6
-  Zdepth: 0.98490024
+  Zdepth: 0.99843216
   alpha: 1
 --- !u!1 &1982944509
 GameObject:

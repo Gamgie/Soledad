@@ -39,8 +39,8 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
   everything permanent:
   - `Root Scene`: the object OSCQuery exposes (`OSCQuery.rootObject`), so Chataigne addresses start under it, as in
     Oxipital-Engine (the Chataigne module looks for a top-level `ballet`). It contains `Cameras` (Oxipital Camera
-    prefab), `Ballet` (Oxipital Core prefab), `Show` (`ShowController`), `Sun`, `Sky and Fog Volume`, and the loaded
-    acts.
+    prefab), `Ballet` (Oxipital Core prefab), `Show` (`ShowController`), `Sun`, `Sky and Fog Volume`, `Take Recorder`
+    (see Takes, film scene only), and the loaded acts.
   - `OSCQuery`: server `Unity-Oxipital` on port 8999, same filters as Oxipital-Engine plus the `Animator` component
     excluded (the Timeline Animators on `Show` and the camera objects: nothing to drive from Chataigne, and reading
     their properties logged warnings on every tree rebuild).
@@ -130,8 +130,11 @@ sky, no bloom, fog off.
   objects of `Soledad_Main` from an act scene (cross-scene references are dropped on save): find them at run time.
   `PhoneScreen` (the phone): `Zdepth` and `alpha` (`[Animate]`, also in edit mode; alpha through a property block);
   its VideoPlayer (`Videos/Scrolling.MOV` into `_EmissiveColorMap`, emission exposure weight 0 so it shows under the
-  fixed exposure) restarts when the phone is enabled in Play mode and is clocked by game time (External Time, no
-  frame skipping), so Recorder renders show the video at the film's speed.
+  fixed exposure) restarts when the phone is enabled in Play mode and plays normally live. While the Recorder renders
+  (`Time.captureDeltaTime` set) it is paused and sought every frame to the frame of the game time elapsed since the
+  phone was enabled: none of the VideoPlayer's own clocks (DSP, Game Time, External Time) followed the Recorder's
+  stepped game time in tests, they kept running in real time (a render played the video twice too fast), and
+  `StepForward` did nothing on this clip. The seek lands about a frame later.
 
 - **Act 2, `FlythroughTerrain`** (`Assets/Acts/Act2_Flythrough/`, on `Act2_Flythrough/Flythrough`): a bird's
   flight over an endless landscape laid out along a route (terrain +Z): desert, mountains with a winding pass, then
@@ -139,12 +142,19 @@ sky, no bloom, fog off.
   and biome functions). The landscape is fixed in the space of `Act2_Flythrough/World` (at the origin, no floating
   origin: HDRP renders camera-relative and the route is about 13 km) and the Oxipital camera really flies through it.
   Film: the **Spline camera** (Oxipital Camera 1.5.0, `Cameras/Spline Camera target`, `SplineMovement`) rides
-  `World/Flight Path` (a Splines `SplineContainer`, editable), which the act hands to it in Play mode with itself as
-  the ground (`Oxipital.ICameraGround`, `GetGroundHeight`), so it flies at its `altitude` above the (smoothed,
-  anticipated) relief plus the spline's own height. Speed, altitude, offset, look (gamepad on `yaw1D` / `pitch1D` /
-  `roll1D` in Spline And Look or Free), bank and seeded drift are set on that object (Soledad_Main: 60 m/s, 140 m,
-  600 m look-ahead, no loop), not on the act. Show: the Spaceship camera flies freely. `ResetFlight()` (also on the
-  first show of the act) restarts the ride and puts the Spaceship at the start of the path, at the same altitude.
+  `World/Flight Path` (a Splines `SplineContainer`), which the act hands to it in Play mode **without ground**: it is
+  the one spline of the whole flight, valley then Bogota, its heights baked in (see Bogota below), so what the scene
+  shows is exactly where the camera flies (no second spline, no switch). Speed, offset, look (gamepad on `yaw1D` /
+  `pitch1D` / `roll1D` in Spline And Look or Free), bank and seeded drift are set on that object (Soledad_Main:
+  60 m/s, no loop), not on the act (its `altitude` and ground settings are unused: no ground is handed). Show: the
+  Spaceship camera flies freely. `ResetFlight()` (also on the first show of the act) restarts the ride and puts the
+  Spaceship at the start of the path.
+  **Editor preview** (`FlythroughTerrain.previewInEditor`, on): outside Play mode, while the Spline camera's
+  `useProgress` is on (a Timeline preview keys it), the act puts `Spline Camera target` at its `progress` on the flight
+  path (offset, aim ahead, `splineUp`, `followPitch` and the Spline And Look angles; no drift, bank, smoothing nor
+  spline roll) and makes `CM Spline Camera` Cinemachine's solo camera, so scrubbing the Act 2 Timeline flies the Game
+  view without Play (`SplineMovement` itself only runs in Play mode, and only gets its spline there). The target's own
+  pose comes back and the solo is released when the preview stops.
   Movie mode for now (`startOnSplineCamera`, on): the first show of the act also switches the camera to Spline, so
   Play rides the path from its start (later the gamepad picks the mode).
   Switching back to Spline joins the path at the point nearest to the camera. The curl follows the camera: around
@@ -205,36 +215,73 @@ sky, no bloom, fog off.
   the HDRP assets).
   Bogota: `World/Bogota` (prefab `Bogota/Bogota.prefab`, the GIS terrain of Bogota_GIS: zoom-18 strip and zoom-15
   surroundings, local x east, y height, z north, metres from San Rafael lake). Film ending (`Act2_Flythrough/Bogota
-  Sequence`, `BogotaSequence`): Bogota stands upright across the valley about 9 km after the hand-off, its map facing
+  Sequence`, `BogotaSequence`): Bogota stands upright across the route where the valley begins, its map facing
   the camera, so it closes the hole of the curled tube. Three `[Animate]` switches, Play mode only (in the Editor
-  everything stays visible): `showBogota` (off by default: hidden in the show), `showLandscape` (terrain, clouds,
-  monoliths, Valley) and `rideBogota` (the act hands the Spline camera `Bogota/Bogota Path` instead of the flight path,
-  without ground; the camera joins it where it is). The context menu **Build Bogota Path** places Bogota and rebuilds
-  the path from the flight path and the settings on the component (`filmStartDistance` 8924 m, `handoffDistance` 10700 m, `approachLength`
-  9000 m, `climbRadius` 500 m, `bogotaAltitude` 300 m above the ridges near the route): the flight path from
-  `filmStartDistance` (its ground height baked in at `handoffAltitude`, anticipated and smoothed), straight on from
-  `handoffDistance`, a quarter turn
-  up onto Bogota (the knots' up turns from the sky to Bogota's face), then the z18 route to the lake (64.8 km, from
-  `Bogota/film_path.json`, written by Bogota_GIS `scripts/film_path.py`: route smoothed, ground = highest within
-  300 m). On Bogota the camera needs `splineUp` 1 (its up is then the map's). Bogota closer than ~9 km sticks its
-  relief (up to 1.3 km towards the camera) into the tube. Sun and sky over upright Bogota are still to be solved.
+  everything stays visible, and the sky stays the world's): `showBogota` (off by default: hidden in the show),
+  `showLandscape` (terrain, clouds, monoliths, Valley) and `bogotaSky` (the sky over Bogota, below). **One flight path** (`World/Flight Path`, 64 km): its first `drawnKnots` knots (32, every
+  200 m, 6.1 km: desert, then the mountain pass) are the **drawn part**, edited by hand, ending at the hand-off; the
+  knots after them are the **generated tail**: straight on for `approachLength` (750 m), a quarter turn up onto
+  Bogota (`climbRadius` 500 m; the knots' up turns from the sky to Bogota's face), then the z18 route to the lake
+  (`bogotaAltitude` 300 m above the ridges near the route; 64.8 km, from `Bogota/film_path.json`, written by
+  Bogota_GIS `scripts/film_path.py`: route smoothed, ground = highest within 300 m), its first `routeTrim` (8 km)
+  skipped. The route's first point is the top of the turn, so the approach line meets the map just before it: with
+  no trim that was near the western end of the z18 strip (high res ended ~1 km below eye level, its first chunks
+  partial, the blurry z15 around); trimmed, the approach faces the middle of the corridor (z18 about 2.5 km left,
+  2 km right and over 2 km above and below the approach line; the strip is never wider than ~5 km, the z15
+  surroundings show beyond). Context menu of
+  `BogotaSequence`. Bogota's face stands about 1.3 km after the hand-off (approach + climb radius + 300 m), at
+  z ~ 7.2 km, where the valley's green starts (the valley biome is 24 % there, full by 8 km): the valley's fields
+  are never seen (Gamgie, 2026-11-25: their texture is not good enough). Along the route the mountain pass stays low
+  (ground 0 to 90 m), so the straight level approach clears it by 130 to 200 m. **Build Flight Path** places Bogota from the last drawn knot (position and level direction) and
+  rewrites the tail, keeping the drawn knots where they are; **Bake Heights And Build Flight Path** first resamples
+  the drawn part every `bakeSpacing` (200 m) at `flightAltitude` (140 m) above the relief, anticipated over
+  `groundLookAhead` (600 m) and smoothed, then builds. Both recompute every knot's tangents (move knots, not
+  tangents), so after moving drawn knots run Build; after changing the terrain shape, Bake. The old separate
+  `Bogota Path` and the `rideBogota` switch are gone (the camera stayed on one spline or the other). On Bogota the
+  camera needs `splineUp` 1 (its up is then the map's). Bogota closer than ~9 km sticks its
+  relief (up to 1.3 km towards the camera) into the tube. **Sun over upright Bogota**: the sunset Sun (5 degrees,
+  azimuth -81) is only ~4 degrees above the map's own horizon, so its relief threw shadows over 10 km long across the
+  city, and the shadows stop at the Volume's 8 km shadow distance (a lit band beyond). Once the landscape is hidden
+  (61.5 s) the Timeline turns it to 10 degrees, azimuth -35 by 70 s (`FlythroughTerrain_sunElevation` /
+  `sunAzimuth` on `Show/Act2Controller`): ~48 degrees above the map, from map bearing ~150 (south-south-east). Map
+  elevation = asin(-dot(sun forward, Bogota up)); azimuth 0 to 10 would be noon on the map (~80 degrees, flat). Its
+  colour goes from 3500 K to 6000 K over the same keys (`FlythroughTerrain_sunTemperature`): the Physically Based
+  Sky takes its blue from the light's colour, and under a 3500 K Sun the sky over Bogota stayed a dull olive.
+  **Sky over upright Bogota**: `Bogota/Bogota Sky Volume` (global Volume, priority 21, **inactive in the scene**,
+  profile `Bogota/Bogota Sky Volume Profile.asset`): Visual Environment with the planet's `centerMode` Manual and
+  `planetCenter` behind the map (along -Bogota up, its surface at the map's lowest point, ~2.5 km under the camera),
+  so the Physically Based Sky (Act 2's settings) has its zenith, horizon glow and sun height over the map. HDRP blends
+  a planet centre linearly between volumes (halfway the camera would be inside the planet), so it cannot fade: it is a
+  cut, switched on by `bogotaSky` from the Timeline at **62 s**, while Bogota's face fills the whole frame (from the
+  landscape cut at 61.5 s to the turn up at 63 s no sky is in view), so the cut is hidden. `BogotaSequence.Build`
+  writes the planet centre (field `skyVolume`): rebuild after moving Bogota. Exposure stays **automatic** all along
+  (`Bogota Volume` compensation -0.62, Gamgie's value): measured 46/255 just before the cut, 48 just after, then 60,
+  51, 61 at 64.5, 68, 75 s, nothing clipped. Earlier attempts and why they failed: a sky box entered halfway up the
+  turn showed the dark world sky until then, the automatic exposure metered it and blew out the map (96/255), and a
+  fixed exposure in the sky volume then jumped to 39/255 at the cut; fixed exposure cannot go in `Bogota Volume`
+  either (with its 1.5 km blend HDRP switches the mode to Fixed at once and blends `fixedExposure` up from 0). Act 2's
+  own Exposure override (fixed EV 12.2) is in its profile but inactive.
   `Bogota/Bogota Volume` (local Volume, priority 20, profile `Bogota/Bogota Volume Profile.asset`): a box over the
   whole map (Bogota local x and z, height -3 to +2 km), blend distance 1.5 km, so the look changes smoothly during
-  the approach; it lowers the exposure compensation (-1.5 EV) because the automatic exposure (HDRP default profile:
+  the approach; it lowers the exposure compensation (-0.62 EV) because the automatic exposure (HDRP default profile:
   the main `Sky and Fog Volume` is at weight 0) brightens the dark upright map. Volumes cannot change a light's
   intensity.
   **Act 2 film Timeline**: `Film/Act2_Timeline` in Soledad_Main (see Film workflow; `Assets/Acts/Act2_Flythrough/Timeline/Act2_Timeline.playable`,
   120 s at 60 fps): `Show/Act2Controller` (curl, Bogota switches) in the Show group and
-  `Cameras/Spline Camera target` (`useProgress` on, `progress` 0 to 1 along Bogota's path, the whole film: 76 km;
+  `Cameras/Spline Camera target` (`useProgress` on, `progress` 0 to 1 along the whole flight path, 72 km;
   look, `splineUp`, offset) in each camera group (the Dome copy starts as the 16:9 one), plus markers for each beat; the director holds its last values when it ends (Wrap Mode Hold), otherwise the
   camera values snap back to their defaults over Bogota. Its `FilmTimeline` (`rideSpline` on)
   starts it in Play mode once the act has handed its path: camera to Spline, ride reset at
-  `startDistance` (rides by speed only), then the director plays. The camera rides `Bogota Path` from t = 0
-  (`rideBogota` on) by progress, so its position is keyed directly and the other beats stay put when it changes;
-  speed = slope of the curve. Keys: curl 2 to 26 s, leaves the flight path 24 s, look right 30 to 36 s, Bogota
-  appears 33 s, faster towards Bogota from 37 s, landscape hidden 61.5 s, turn up 63 s, faster again and 300 m
-  higher over Bogota (progress 0.68 at 120 s; 1 = the lake). Rebuilding the path changes its length, so the
-  progress keys must be checked after Build Bogota Path.
+  `startDistance` (rides by speed only), then the director plays. The camera rides the flight path by progress, so
+  its position is keyed directly and the other beats stay put when it changes; speed = slope of the curve. The film
+  starts at the path's start (progress 0, the desert) and flies the desert and the mountain pass. Keys: curl 2 to
+  26 s, look right 30 to 36 s, Bogota appears 33 s, faster towards Bogota from 37 s (progress 0.027), landscape
+  hidden 61.5 s, Sun turned and whitened for Bogota 61.5 to 70 s, sky over Bogota 62 s, turn up 63 s (progress 0.108), faster again and
+  300 m higher over Bogota (progress 1 at 120 s: the lake; the 16:9 and Dome camera clips have the same curve). Building the flight path changes its length, so the progress keys must be checked after a Build or
+  a Bake. When Bogota moved to the valley's start they were remapped by hand: before the turn, distances scaled to
+  the shorter way (x 0.64, the film used to start 1.8 km before a 9 km approach in the valley), after it, the same
+  distance past the turn (also when `routeTrim` went to 8 km: the flight over Bogota starts 8 km further along the
+  route and keeps its distances).
   Kept for later (agreed with Clement): mountain erosion and more varied ridges; per-pixel dune relief to remove the
   stepped slip-face edges; vegetation and rocks scattered on the terrain; better light for the final render (SSGI,
   contact shadows, higher shadow/fog quality, path tracing: the terrain shader would need ray tracing passes and
@@ -543,6 +590,48 @@ plays from its start (`ShowController.ShownAct`, so open the act scene next to S
 (`FilmTimelineBuilder`) creates whatever is missing (Film, timelines, groups, tracks, bindings, Animators), moves
 earlier root tracks into the groups (on Show into `Show`, others into `Camera 16:9`, copied into `Camera Dome`), and
 stretches the Recorder clips to the Timeline: run it again after changing a Timeline's length.
+
+### Takes: recording what Chataigne drives into the Timeline
+
+`TakeRecorder` (`Assets/Scripts/Takes`, generic, meant to move into the Oxipital packages once proven) records values
+in Play mode into Animation clips on the Timeline that is playing, at the Timeline's time, so a camera flown live
+with the gamepad is replayed, edited in the Animation window and rendered like any keyed animation. Editor only.
+- Start / stop: `record` (exposed to OSCQuery: `Root Scene/Take Recorder`, a gamepad button in Chataigne),
+  `ToggleTake()`, or the Record button of its inspector. The take starts where the Timeline is (play from 1:20, record:
+  a punch in at 1:20), stops with `record` off, at the end of the Timeline or when Play stops.
+- What: `targets`, each a component and its members (inspector: pick the component, "Add member"): serialized fields
+  (float, int, bool, enum, Vector2/3/4, Color; `*` = all of them, e.g. a whole `ActNController`), and on a Transform
+  `position`, `rotation`, `scale` (local). Modes: Record, Angles (unwrapped; a Vector3 of Euler angles kept continuous
+  through the poles), Constant (`value` keyed over the whole take, `liveValue` set when the take starts).
+- While recording, every track of the Timeline bound to a recorded object is muted (previous takes, keyed values), so
+  the live control has the hand; they come back at the stop. Values are sampled in LateUpdate (after physics
+  interpolation and the Timeline); times are the director's, smoothed on the frame time (on the audio clock its time
+  moves by audio buffers of about 20 ms). No allocation while recording up to `reservedSamples` per curve.
+- Result (`TakeWriter`, editor): a group `<takeName> Take NN` under `timelineGroup` (a camera group follows `Film.format`),
+  one Animation track per recorded object named by its scene path, its clip in `<Timeline folder>/Takes/`
+  (`Act2_Timeline_Camera_Take03_<object>.anim`). Keys are reduced: smooth tangents from the recording, the fewest keys
+  whose curve stays within `tolerance` (1 mm) / `angleTolerance` (0.02 degree) of every sample (a 9 s test flight: 20 to 50
+  keys per curve). int and enum go through discrete bindings, whose keys hold the integer's bits (a float binding
+  wrote 1.0's bits, 1065353216, into the enum). A later take overrides earlier ones where it has keys. After its end a
+  take holds its last values, unless an earlier take goes on (punch in: then nothing outside itself); before its
+  start it gives the hand to the tracks below, unless it starts at 0. A punch in cuts at both ends where the new
+  flight left the old one: give its clip an ease in / out to blend. Change the extrapolation in the clip's inspector
+  if needed.
+- Bindings: takes are written in Play mode; the Timeline asset keeps them, but the director's bindings (and an
+  Animator added meanwhile) are scene data Unity drops when Play stops. `TakeWriter` binds the take tracks again before
+  and after Play, when a scene opens and after a script reload (menu `Soledad > Takes > Repair Take Bindings`), and
+  `TakeRecorder.Start` binds what is still missing for the Play session: save the scene after a session of takes.
+- Camera preset (Soledad_Main_Film, `Take Recorder`, takes named `Camera`, group `Camera 16:9`/`Camera Dome`): the
+  Spaceship target's Transform (position, rotation), `SpaceshipTakePlayback.followTransform` (constant 1, live 0) and
+  the Camera Controller's `cameraType` (constant Spaceship), `fov`, `cameraNoiseGain`, `cameraNoiseFrequency`.
+  `SpaceshipTakePlayback` (on `Cameras/Spaceship Camera target`, with an Animator): while `followTransform` is keyed on,
+  it puts the spaceship in manual control fed with its own Transform before each physics step and turns the
+  rigidbody's interpolation off, so the Timeline alone places the camera at every frame (the spaceship's manual
+  control sets the rigidbody at 50 Hz: a 60 fps render would have stepped; interpolation put the old pose back while
+  the Timeline was paused). Checked in Play on Act 2: camera on the recorded curve to 0.1 mm, also paused, and a punch
+  in overriding only its own span.
+- Switching the camera type at the start of a take blends over the Camera Controller's `cameraTransitionDuration`
+  (8 s in Act 2): be in Spaceship before recording.
 
 ## Commits
 

@@ -16,8 +16,10 @@ namespace Soledad
     /// Act 2 (Flythrough): a bird's flight over an endless landscape, desert, then mountains, then the valley, laid out
     /// along a route (TerrainShape). The landscape is fixed in the space of <see cref="world"/>, and the Oxipital camera
     /// (Soledad_Main) really flies through it: the Spline camera rides <see cref="flightPath"/> (handed to it in Play
-    /// mode, with this landscape as its ground, so it keeps its altitude above the relief) for the film, the Spaceship
-    /// camera flies freely for the show. <see cref="ResetFlight"/> puts both at the start of the path.
+    /// mode; one spline for the whole flight, valley then Bogota, its heights baked in by BogotaSequence, so no ground
+    /// following) for the film, the Spaceship camera flies freely for the show. <see cref="ResetFlight"/> puts both at
+    /// the start of the path. Outside Play mode, while a Timeline drives the Spline camera by progress, the camera is
+    /// previewed on the path (<see cref="previewInEditor"/>).
     ///
     /// The terrain is a quadtree of tiles around the camera named "Main Camera" (dense near it, coarse towards the
     /// horizon). Tiles are built in terrain space by a Burst job (TerrainField), with skirts hiding the seams between
@@ -30,11 +32,15 @@ namespace Soledad
     public class FlythroughTerrain : MonoBehaviour, Oxipital.ICameraGround, ISunDriver
     {
         [Header("Flight (the Oxipital cameras)")]
-        [Tooltip("Play mode: hand the flight path and this landscape (its ground) to the Spline camera while the act is shown. " +
-                 "Speed, altitude, look and drift are set on Cameras/Spline Camera target.")]
+        [Tooltip("Play mode: hand the flight path to the Spline camera while the act is shown (its heights are baked: no ground following). " +
+                 "Speed, look and drift are set on Cameras/Spline Camera target.")]
         public bool driveSplineCamera = true;
         [Tooltip("Movie mode: when the act is first shown (Play mode), switch the Oxipital camera to Spline and start the ride at the beginning of the path.")]
         public bool startOnSplineCamera = true;
+        [Tooltip("Outside Play mode, while a Timeline drives the Spline camera by progress (Timeline preview, useProgress on), " +
+                 "put it on the flight path and show it in the Game view (Cinemachine solo), so the Timeline can be scrubbed without Play. " +
+                 "Offset, look (Spline And Look), spline up and pitch are previewed; drift, bank, smoothing and the spline's roll are not.")]
+        public bool previewInEditor = true;
 
         [Header("World curl")]
         [Animate] [Tooltip("Camera Direction: the world curls along the direction the camera moves in (smoothed). Axis: along a fixed direction of the landscape (curlAxis).")]
@@ -91,7 +97,7 @@ namespace Soledad
         [Header("References")]
         [Tooltip("The fixed landscape: tiles, path and placed objects live under it.")]
         [OSCQuery.DoNotExpose] public Transform world;
-        [Tooltip("Flight path, a spline under World, ridden by the Spline camera. Keep it near the route centre line: the pass and the valley follow that line.")]
+        [Tooltip("Flight path, a spline under World, ridden by the Spline camera: the whole flight (drawn part, then the tail towards Bogota built by BogotaSequence), heights baked in. Keep it near the route centre line: the pass and the valley follow that line.")]
         [OSCQuery.DoNotExpose] public UnityEngine.Splines.SplineContainer flightPath;
         [Tooltip("The act's Volume, whose fog and clouds clear while curled.")]
         [OSCQuery.DoNotExpose] public Volume actVolume;
@@ -136,19 +142,16 @@ namespace Soledad
 
         /// <summary>
         /// Back to the start of the flight path: the Spline camera restarts its ride (at its startDistance), and the
-        /// Spaceship camera is put at the same place, at the Spline camera's altitude, looking along the path.
+        /// Spaceship camera is put at the same place, looking along the path.
         /// </summary>
         [Animate]
         public void ResetFlight()
         {
-            _ridePath = null;
-            _rideGround = true;
             if (!BindCameras()) return;
             _splineCamera.ResetRide();
             var spaceship = _cameraController.spaceshipCamera;
             if (spaceship != null && _splineCamera.EvaluatePose(_splineCamera.startDistance, out Vector3 position, out Quaternion rotation))
             {
-                position.y = GetGroundHeight(position) + _splineCamera.altitude;
                 Vector3 forward = Vector3.ProjectOnPlane(rotation * Vector3.forward, Vector3.up);
                 spaceship.SetCameraTransform(position, Quaternion.LookRotation(forward.sqrMagnitude > 1e-6f ? forward : Vector3.forward));
             }
@@ -164,21 +167,7 @@ namespace Soledad
             return space.TransformPoint(new Vector3(p.x, h, p.z)).y;
         }
 
-        // The spline the camera rides: the flight path, or another one handed by the act (BogotaSequence)
-        UnityEngine.Splines.SplineContainer _ridePath;
-        bool _rideGround = true;
         bool _terrainVisible = true;
-
-        UnityEngine.Splines.SplineContainer CurrentPath => _ridePath != null ? _ridePath : flightPath;
-
-        /// <summary>Hand the Spline camera another spline of the act (null = back to the flight path). It joins it at
-        /// the point nearest to the camera, keeping its speed. followGround: ride at altitude above this landscape.</summary>
-        public void RideSpline(UnityEngine.Splines.SplineContainer path, bool followGround)
-        {
-            _ridePath = path;
-            _rideGround = followGround;
-            BindCameras();
-        }
 
         /// <summary>Show or hide the terrain tiles (the curl, tiles and sun go on).</summary>
         public void SetTerrainVisible(bool visible)
@@ -187,25 +176,25 @@ namespace Soledad
             if (_root != null && _root.gameObject.activeSelf != visible) _root.gameObject.SetActive(visible);
         }
 
-        // Play mode: hand the path and the ground to the Spline camera of Soledad_Main. False without one.
+        // Play mode: hand the flight path to the Spline camera of Soledad_Main, without ground (its heights are baked).
+        // False without one.
         bool BindCameras()
         {
             if (!Application.isPlaying || !driveSplineCamera) return false;
             if (_cameraController == null) _cameraController = FindFirstObjectByType<Oxipital.CameraController>(FindObjectsInactive.Include);
-            var path = CurrentPath;
-            if (_cameraController == null || _cameraController.splineCamera == null || path == null) return false;
-            if (_splineCamera != _cameraController.splineCamera || _splineCamera.spline != path)
+            if (_cameraController == null || _cameraController.splineCamera == null || flightPath == null) return false;
+            if (_splineCamera != _cameraController.splineCamera || _splineCamera.spline != flightPath)
             {
                 _splineCamera = _cameraController.splineCamera;
-                _splineCamera.SetSpline(path, false);
-                _splineCamera.SetGround(_rideGround ? this : null);
+                _splineCamera.SetSpline(flightPath, false);
+                _splineCamera.SetGround(null);
             }
             return true;
         }
 
         void UnbindCameras()
         {
-            if (_splineCamera != null && (_splineCamera.spline == flightPath || _splineCamera.spline == _ridePath))
+            if (_splineCamera != null && _splineCamera.spline == flightPath)
             {
                 _splineCamera.SetSpline(null, false);
                 _splineCamera.SetGround(null);
@@ -238,6 +227,10 @@ namespace Soledad
                 if (startOnSplineCamera) _cameraController.cameraType = Oxipital.CameraController.CameraMovementType.Spline;
             }
             SunControl.Register(this);
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.update -= EditorPreview;
+            if (!Application.isPlaying) UnityEditor.EditorApplication.update += EditorPreview;
+#endif
             Tick(0f);
         }
 
@@ -370,6 +363,10 @@ namespace Soledad
 
         void OnDisable()
         {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.update -= EditorPreview;
+            StopPreview();
+#endif
             UnbindCameras();
             SunControl.Unregister(this);
             RestoreFarClip();
@@ -424,6 +421,139 @@ namespace Soledad
             UpdateAtmosphere();
             SunControl.Drive(this);
         }
+
+#if UNITY_EDITOR
+        // ---------------------------------------------------------------- editor preview of the Spline camera
+
+        // The Spline camera's own Update runs in Play mode only, and the path is handed to it in Play mode: outside
+        // Play, while a Timeline drives it by progress, its pose is computed here and its Cinemachine camera is shown
+        // solo, so scrubbing the Timeline flies the Game view along the path. Its target's own pose comes back after.
+        Oxipital.CameraController _previewController;
+        Oxipital.SplineMovement _previewCamera;
+        Unity.Cinemachine.CinemachineCamera _previewVcam;
+        double _nextPreviewSearch;
+        bool _previewing;
+        Vector3 _savedTargetPosition, _lastPreviewPosition;
+        Quaternion _savedTargetRotation, _lastPreviewRotation;
+
+        void EditorPreview()
+        {
+            if (this == null || Application.isPlaying) return;
+            if (_previewController == null && UnityEditor.EditorApplication.timeSinceStartup >= _nextPreviewSearch)
+            {
+                _nextPreviewSearch = UnityEditor.EditorApplication.timeSinceStartup + 1.0;
+                _previewController = FindFirstObjectByType<Oxipital.CameraController>(FindObjectsInactive.Include);
+            }
+            var cam = _previewController != null ? _previewController.splineCamera : null;
+            bool want = previewInEditor && isActiveAndEnabled && cam != null && cam.useProgress && HasFlightPath();
+            if (!want)
+            {
+                StopPreview();
+                return;
+            }
+            if (!PreviewPose(cam, out Vector3 position, out Quaternion rotation, out Vector3 flat)) return;
+            if (!_previewing || _previewCamera != cam)
+            {
+                StopPreview();
+                _previewCamera = cam;
+                _savedTargetPosition = cam.transform.position;
+                _savedTargetRotation = cam.transform.rotation;
+                _previewVcam = null;
+                foreach (var vcam in FindObjectsByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                    if (vcam.Follow == cam.transform) { _previewVcam = vcam; break; }
+                if (_previewVcam != null) Unity.Cinemachine.CinemachineCore.SoloCamera = _previewVcam;
+                _previewing = true;
+                _lastPreviewPosition = new Vector3(float.NaN, 0f, 0f);
+            }
+            if (position == _lastPreviewPosition && rotation == _lastPreviewRotation) return;
+            _lastPreviewPosition = position;
+            _lastPreviewRotation = rotation;
+            cam.transform.SetPositionAndRotation(position, rotation);
+            // The curl follows the previewed camera at once (outside Play its frame does not move on its own)
+            _curlReady = true;
+            _curlGround = GetGroundHeight(position);
+            _curlDirection = math.normalizesafe(new float2(flat.x, flat.z), _curlDirection);
+            _lastCameraPosition = position;
+            UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+            UnityEditor.SceneView.RepaintAll();
+        }
+
+        void StopPreview()
+        {
+            if (!_previewing) return;
+            _previewing = false;
+            if (_previewVcam != null && ReferenceEquals(Unity.Cinemachine.CinemachineCore.SoloCamera, _previewVcam))
+                Unity.Cinemachine.CinemachineCore.SoloCamera = null;
+            if (_previewCamera != null) _previewCamera.transform.SetPositionAndRotation(_savedTargetPosition, _savedTargetRotation);
+            _previewCamera = null;
+            _previewVcam = null;
+            _curlReady = false;
+            if (!Application.isPlaying) UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+        }
+
+        bool HasFlightPath() => flightPath != null && flightPath.Splines.Count > 0 && flightPath.Spline.Count >= 2;
+
+        // The Spline camera's pose at its progress on the flight path, as SplineMovement computes it without time:
+        // offset, aim ahead, spline up, pitch and the look of Spline And Look (stick x the max angles, no spring)
+        bool PreviewPose(Oxipital.SplineMovement cam, out Vector3 position, out Quaternion rotation, out Vector3 flat)
+        {
+            position = default;
+            rotation = Quaternion.identity;
+            flat = Vector3.forward;
+            var s = flightPath.Spline;
+            float length = s.GetLength();
+            if (length <= 0f) return false;
+            float distance = Mathf.Clamp01(cam.progress) * length;
+            SamplePath(s, distance, length, cam.loop, out Vector3 onSpline, out Quaternion splineRotation);
+            Vector3 forward = splineRotation * Vector3.forward;
+            if (cam.aimAhead > 0.01f)
+            {
+                SamplePath(s, distance + cam.aimAhead, length, cam.loop, out Vector3 aim, out _);
+                if ((aim - onSpline).sqrMagnitude > 1e-4f) forward = aim - onSpline;
+            }
+            forward.Normalize();
+            Vector3 up = cam.splineUp <= 0f ? Vector3.up : Vector3.Slerp(Vector3.up, splineRotation * Vector3.up, cam.splineUp).normalized;
+            flat = Vector3.ProjectOnPlane(forward, up);
+            if (flat.sqrMagnitude < 1e-8f) flat = Vector3.Cross(Vector3.right, up);
+            flat.Normalize();
+            Vector3 right = Vector3.Cross(up, flat);
+            position = onSpline + right * cam.offset.x + up * cam.offset.y;
+            float climb = Vector3.SignedAngle(flat, forward, right);
+            rotation = Quaternion.LookRotation(flat, up) * Quaternion.AngleAxis(climb * cam.followPitch, Vector3.right);
+            if (cam.rotationMode == Oxipital.SplineMovement.RotationMode.SplineAndLook)
+            {
+                float yaw = PreviewStick(cam.yaw1D, cam.stickDeadzone) * cam.maxLookYaw;
+                float pitch = PreviewStick(cam.pitch1D, cam.stickDeadzone) * cam.maxLookPitch;
+                float roll = PreviewStick(cam.roll1D, cam.stickDeadzone) * cam.maxLookRoll;
+                rotation = rotation * Quaternion.AngleAxis(yaw, Vector3.up) * Quaternion.AngleAxis(-pitch, Vector3.right)
+                                    * Quaternion.AngleAxis(-roll, Vector3.forward);
+            }
+            return true;
+        }
+
+        static float PreviewStick(float value, float deadzone)
+        {
+            float a = Mathf.Abs(Mathf.Clamp(value, -1f, 1f));
+            return a <= deadzone ? 0f : Mathf.Sign(value) * (a - deadzone) / Mathf.Max(1f - deadzone, 1e-3f);
+        }
+
+        // Same sampling as SplineMovement: the container's position and rotation, not its scale
+        void SamplePath(UnityEngine.Splines.Spline s, float d, float length, bool loop, out Vector3 position, out Quaternion rotation)
+        {
+            d = loop ? Mathf.Repeat(d, length) : Mathf.Clamp(d, 0f, length);
+            float t = UnityEngine.Splines.SplineUtility.ConvertIndexUnit(s, d, UnityEngine.Splines.PathIndexUnit.Distance, UnityEngine.Splines.PathIndexUnit.Normalized);
+            UnityEngine.Splines.SplineUtility.Evaluate(s, t, out float3 p, out float3 tangent, out float3 upVector);
+            Vector3 fwd = tangent, upv = upVector;
+            if (Vector3.Cross(fwd, upv).sqrMagnitude < 1e-10f)
+            {
+                fwd = Vector3.forward;
+                upv = Vector3.up;
+            }
+            Transform c = flightPath.transform;
+            position = c.position + c.rotation * (Vector3)p;
+            rotation = c.rotation * Quaternion.LookRotation(fwd, upv);
+        }
+#endif
 
         // ---------------------------------------------------------------- curl frame
 

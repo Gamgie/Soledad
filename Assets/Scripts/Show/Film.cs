@@ -16,6 +16,9 @@ namespace Soledad
     ///
     /// <see cref="record"/> unmutes the Recorder track of each camera group: Play then renders the shown act's
     /// Timeline to image sequences. Off, Play is a preview and nothing is written.
+    ///
+    /// A <see cref="TakeRecorder"/> whose group is a camera group follows <see cref="format"/>: its takes go into the
+    /// camera group of the format in use.
     /// </summary>
     [ExecuteAlways]
     [DefaultExecutionOrder(-1000)]      // before CameraController.OnEnable, which reads isFullDome
@@ -74,6 +77,15 @@ namespace Soledad
 
             foreach (var timeline in GetComponentsInChildren<FilmTimeline>(true))
                 ApplyTo(timeline.director, dome);
+
+            // Take recorders writing into a camera group follow the format
+            string cameraGroup = dome ? DomeCameraGroup : FlatCameraGroup;
+            foreach (var recorder in FindObjectsByType<TakeRecorder>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if ((recorder.timelineGroup == FlatCameraGroup || recorder.timelineGroup == DomeCameraGroup) && recorder.timelineGroup != cameraGroup)
+                {
+                    recorder.timelineGroup = cameraGroup;
+                    MarkDirty(recorder);
+                }
         }
 
         void ApplyTo(PlayableDirector director, bool dome)
