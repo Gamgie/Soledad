@@ -317,6 +317,9 @@ namespace Soledad
                     if (tooltip != null) sb.Append($"        [Tooltip({Quote(tooltip.tooltip)})]\n");
                     var range = m.field.GetCustomAttribute<RangeAttribute>(true);
                     string rangeText = range != null ? $"[Range({Float(range.min)}, {Float(range.max)})] " : "";
+                    var powerRange = m.field.GetCustomAttribute<PowerRangeAttribute>(true);
+                    if (powerRange != null)
+                        rangeText = $"[PowerRange({Float(powerRange.min)}, {Float(powerRange.max)}, {Float(powerRange.power)})] ";
                     sb.Append($"        {rangeText}public {TypeName(m.field.FieldType)} {m.name} = {Literal(DefaultValue(m.type, m.field), m.field.FieldType)};\n");
                 }
                 if (header) sb.Append('\n');

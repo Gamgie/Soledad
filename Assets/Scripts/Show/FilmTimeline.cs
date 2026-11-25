@@ -9,6 +9,8 @@ namespace Soledad
     /// to Soledad_Main is shown on Play), it plays the director from its start. With <see cref="rideSpline"/> it first
     /// waits for the act to hand its path to the Spline camera, switches the camera to Spline and puts the ride at
     /// <see cref="startDistance"/>, so a ride by speed is in time with the keys and a Recorder render repeats exactly.
+    /// The director follows the audio clock (DSP) in a preview, so the picture stays on the sound whatever the frame
+    /// rate, and game time when <see cref="Film.record"/> is on (the Recorder steps it one frame at a time).
     /// </summary>
     [OSCQuery.DoNotExpose]
     public class FilmTimeline : MonoBehaviour
@@ -56,6 +58,10 @@ namespace Soledad
                 spline.startDistance = startDistance;
                 spline.ResetRide();
             }
+            // Preview: the Timeline follows the audio clock, so a slow or long frame (act loading, Oxipital meshes)
+            // drops images instead of putting the picture behind the sound (game time loses every frame longer than
+            // Maximum Allowed Timestep). Recording: game time, which the Recorder steps by exactly one frame.
+            director.timeUpdateMode = _film != null && _film.record ? DirectorUpdateMode.GameTime : DirectorUpdateMode.DSPClock;
             director.time = 0;
             director.Play();
         }

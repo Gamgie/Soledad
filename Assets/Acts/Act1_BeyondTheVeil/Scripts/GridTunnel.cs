@@ -94,8 +94,8 @@ namespace Soledad
         [Range(0f, 1f)] public float ringsEffectMin = 0f;
 
         [Header("Random blink")]
-        [Tooltip("Probability that a cell is lit during one of its ticks. 0 = no random window.")]
-        [Animate] [Range(0f, 1f)] public float randomDensity = 0.02f;
+        [Tooltip("Probability that a cell is lit during one of its ticks. 0 = no random window. Curved slider: most of it covers the small values.")]
+        [Animate] [PowerRange(0f, 1f, 4f)] public float randomDensity = 0.02f;
         [Tooltip("Ticks per second per cell. 0 = static pattern.")]
         public float randomRate = 0.5f;
         [Tooltip("0 = every cell ticks at the same rate, 1 = rates spread from 0x to 2x.")]

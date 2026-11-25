@@ -63,7 +63,10 @@ The moodboard, intentions and text of each act are in Notion (Art > Soledad > Cr
   type float, int, bool, enum, Color, Vector3, and parameterless public methods; `[Animate("fixedName")]` keeps the
   address when the field is renamed). After each compile, `ActControllerGenerator` (`Assets/Scripts/Show/Editor`,
   also menu `Soledad > Generate Act Controllers`) writes `Assets/Scripts/Show/Generated/ActNController.cs` for each
-  `Assets/Acts/ActN_Name/` folder: flat fields `Type_field` (same default, Range, Tooltip) and forwarding methods.
+  `Assets/Acts/ActN_Name/` folder: flat fields `Type_field` (same default, Range or PowerRange, Tooltip) and
+  forwarding methods. `[PowerRange(min, max, power)]` (`Assets/Scripts/Show`) is a slider with a curved response
+  (value = min + range x t^power) for values whose useful part is tiny, e.g. Act 1 `randomDensity` (power 4); the
+  field still stores the real value.
   Never edit them by hand. The generator adds missing controllers to `Show` (Soledad_Main must be open, then save
   it) and copies new fields' values from the act scene when it is open (`Soledad > Pull Act Controller Values From
   Open Acts` copies all of them). In Play mode the controller (`ActController`) is the source of truth: it binds
@@ -125,6 +128,10 @@ sky, no bloom, fog off.
   `HAVE_MESH_MODIFICATION` hook of `VertMesh.hlsl`; the displacement depends on position only so walls never crack
   at the corners. Its time is accumulated from `Time.deltaTime` (deterministic Recorder renders). Do not reference
   objects of `Soledad_Main` from an act scene (cross-scene references are dropped on save): find them at run time.
+  `PhoneScreen` (the phone): `Zdepth` and `alpha` (`[Animate]`, also in edit mode; alpha through a property block);
+  its VideoPlayer (`Videos/Scrolling.MOV` into `_EmissiveColorMap`, emission exposure weight 0 so it shows under the
+  fixed exposure) restarts when the phone is enabled in Play mode and is clocked by game time (External Time, no
+  frame skipping), so Recorder renders show the video at the film's speed.
 
 - **Act 2, `FlythroughTerrain`** (`Assets/Acts/Act2_Flythrough/`, on `Act2_Flythrough/Flythrough`): a bird's
   flight over an endless landscape laid out along a route (terrain +Z): desert, mountains with a winding pass, then
@@ -528,7 +535,9 @@ fixed so re-renders match. Inputs that are not recorded (Leap, Spout, optical fl
 live show included: it sets `CameraController.isFullDome` (read once when the controller is enabled: set it before
 Play), the `Dome Creator` and the main camera, and mutes the other format's camera group in all five Timelines (the
 assets change: commit them in the format you work in). `record` unmutes the Recorder tracks (off: Play is a
-preview, nothing written). `playTimelines` (off for the live show): in Play mode the Timeline of the shown act
+preview, nothing written). In a preview `FilmTimeline` plays the director on the audio clock (DSPClock), so the
+picture stays on the sound (the Act 1 Timeline holds the temporary soundtrack) even when frames are slow; with `record`
+on, game time, stepped one frame at a time by the Recorder. `playTimelines` (off for the live show): in Play mode the Timeline of the shown act
 plays from its start (`ShowController.ShownAct`, so open the act scene next to Soledad_Main, then Play);
 `rideSpline` first waits for the act's path and restarts the Spline camera ride. `Soledad > Build Film Timelines`
 (`FilmTimelineBuilder`) creates whatever is missing (Film, timelines, groups, tracks, bindings, Animators), moves

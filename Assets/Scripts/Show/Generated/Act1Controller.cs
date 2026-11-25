@@ -34,8 +34,8 @@ namespace Soledad
         public float GridTunnel_ringsEffectSpeed = 0.5f;
         [Tooltip("Effect time offset between the first and the last ring (s), in the order above. 0 = all in sync.")]
         public float GridTunnel_ringsEffectDelay = 1f;
-        [Tooltip("Probability that a cell is lit during one of its ticks. 0 = no random window.")]
-        [Range(0f, 1f)] public float GridTunnel_randomDensity = 0.02f;
+        [Tooltip("Probability that a cell is lit during one of its ticks. 0 = no random window. Curved slider: most of it covers the small values.")]
+        [PowerRange(0f, 1f, 4f)] public float GridTunnel_randomDensity = 0.02f;
         public bool GridTunnel_soloEnabled = false;
         [Tooltip("Displacement (m). 0 = straight tunnel.")]
         public float GridTunnel_noiseAmplitude = 0f;
