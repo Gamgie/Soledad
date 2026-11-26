@@ -3774,7 +3774,7 @@ MonoBehaviour:
   driveSplineCamera: 1
   startOnSplineCamera: 1
   previewInEditor: 1
-  curlFrame: 0
+  curlFrame: 1
   curlAxis: 0
   curlHeadingSmoothing: 1.5
   curlLateral: 0
