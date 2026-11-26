@@ -612,7 +612,10 @@ preview, nothing written). In a preview `FilmTimeline` plays the director on the
 picture stays on the sound (the Act 1 Timeline holds the temporary soundtrack) even when frames are slow; with `record`
 on, game time, stepped one frame at a time by the Recorder. `playTimelines` (off for the live show): in Play mode the Timeline of the shown act
 plays from its start (`ShowController.ShownAct`, so open the act scene next to Soledad_Main, then Play);
-`rideSpline` first waits for the act's path and restarts the Spline camera ride. `Soledad > Build Film Timelines`
+`rideSpline` first waits for the act's path and restarts the Spline camera ride; the first image is then a cut
+onto the Timeline's start (keys at 0 evaluated at once, the Spline camera made to ride in that frame, Cinemachine's
+brain reset): before, the brain showed the Orbital camera it had picked before Oxipital raised the Spline camera's
+priority and blended from the origin to the path over `cameraTransitionDuration` (8 s). `Soledad > Build Film Timelines`
 (`FilmTimelineBuilder`) creates whatever is missing (Film, timelines, groups, tracks, bindings, Animators), moves
 earlier root tracks into the groups (on Show into `Show`, others into `Camera 16:9`, copied into `Camera Dome`), and
 stretches the Recorder clips to the Timeline: run it again after changing a Timeline's length.

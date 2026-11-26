@@ -11,8 +11,10 @@ namespace Soledad
     /// <see cref="startDistance"/>, so a ride by speed is in time with the keys and a Recorder render repeats exactly.
     /// The director follows the audio clock (DSP) in a preview, so the picture stays on the sound whatever the frame
     /// rate, and game time when <see cref="Film.record"/> is on (the Recorder steps it one frame at a time).
+    /// With <see cref="rideSpline"/> the first image is already at the Timeline's start, by a cut (see LateUpdate).
     /// </summary>
     [OSCQuery.DoNotExpose]
+    [DefaultExecutionOrder(-50)]        // before the cameras' Update, and LateUpdate before CinemachineBrain's (100)
     public class FilmTimeline : MonoBehaviour
     {
         public PlayableDirector director;
@@ -63,7 +65,33 @@ namespace Soledad
             // Maximum Allowed Timestep). Recording: game time, which the Recorder steps by exactly one frame.
             director.timeUpdateMode = _film != null && _film.record ? DirectorUpdateMode.GameTime : DirectorUpdateMode.DSPClock;
             director.time = 0;
+            // The keys at 0 (the Spline camera's progress, offset, look...) applied now: the director itself only
+            // evaluates after the Updates, and the camera would place itself this frame from the scene's values
+            director.Evaluate();
             director.Play();
+            _cutPending = rideSpline;
+        }
+
+        bool _cutPending;
+
+        // The frame the Timeline starts, once the cameras have updated and before Cinemachine places the main camera:
+        // the Spline camera at the Timeline's start, shown by a cut. Otherwise the first image came from the camera the
+        // brain had picked before Oxipital raised the Spline camera's priority (the Orbital one, at the origin), then an
+        // 8 s blend (cameraTransitionDuration) to the path; and the Spline camera itself only reached the start a
+        // frame later (it rides in its Update, before the Timeline's values of the frame are applied).
+        void LateUpdate()
+        {
+            if (_cutPending)
+            {
+                _cutPending = false;
+                var spline = cameraController != null ? cameraController.splineCamera : null;
+                if (spline != null)
+                {
+                    if (spline.IsActive) spline.SendMessage("Update", SendMessageOptions.DontRequireReceiver);   // ride now
+                    if (spline.virtualCamera != null) spline.virtualCamera.PreviousStateIsValid = false;         // no damping
+                    if (cameraController.cinemachineBrain != null) cameraController.cinemachineBrain.ResetState(); // no blend
+                }
+            }
         }
     }
 }
