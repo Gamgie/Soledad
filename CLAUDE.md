@@ -226,17 +226,30 @@ sky, no bloom, fog off.
   Sequence`, `BogotaSequence`): Bogota stands upright across the route where the valley begins, its map facing
   the camera, so it closes the hole of the curled tube. Three `[Animate]` switches, Play mode only (in the Editor
   everything stays visible, and the sky stays the world's): `showBogota` (off by default: hidden in the show),
-  `showLandscape` (terrain, clouds, monoliths, Valley) and `bogotaSky` (the sky over Bogota, below). **One flight path** (`World/Flight Path`, 64 km): its first `drawnKnots` knots (32, every
+  `showLandscape` (terrain, clouds, monoliths, Valley) and `bogotaSky` (the sky over Bogota, below). **One flight path** (`World/Flight Path`, 41.3 km): its first `drawnKnots` knots (32, every
   200 m, 6.1 km: desert, then the mountain pass) are the **drawn part**, edited by hand, ending at the hand-off; the
   knots after them are the **generated tail**: straight on for `approachLength` (750 m), a quarter turn up onto
   Bogota (`climbRadius` 500 m; the knots' up turns from the sky to Bogota's face), then the z18 route to the lake
   (`bogotaAltitude` 300 m above the ridges near the route; 64.8 km, from `Bogota/film_path.json`, written by
-  Bogota_GIS `scripts/film_path.py`: route smoothed, ground = highest within 300 m), its first `routeTrim` (8 km)
+  Bogota_GIS `scripts/film_path.py`: route smoothed, ground = highest within 300 m), its first `routeTrim` (18.2 km)
   skipped. The route's first point is the top of the turn, so the approach line meets the map just before it: with
   no trim that was near the western end of the z18 strip (high res ended ~1 km below eye level, its first chunks
-  partial, the blurry z15 around); trimmed, the approach faces the middle of the corridor (z18 about 2.5 km left,
-  2 km right and over 2 km above and below the approach line; the strip is never wider than ~5 km, the z15
-  surroundings show beyond). Context menu of
+  partial, the blurry z15 around); trimmed, the approach faces the middle of the corridor (the strip is never wider
+  than ~5 km, the z15 surroundings show beyond). **The path is now partly hand-made: do not Build it** unless
+  Gamgie's edits may be lost. On 2026-11-26 Gamgie reshaped the end by hand (the last four knots: a shortcut over the
+  last ~10 km and the dive, the route 64.6 to 51.6 km), then the start over Bogota was moved 10.2 km on (trim 8 to
+  18.2 km, Usme, to fly slower over Bogota) **without a Build**: the 34 knots after the top of the turn were removed,
+  and Bogota and every knot after them moved rigidly (turned 7.8 degrees about Bogota's up, so the new first route
+  direction points up) so the new start sits where the old one was; the sky's planet centre recomputed like
+  `PlaceSky`. A Build would regenerate the whole tail and lose the hand-made end. **Into the lake** (`lakeDive`, the
+  ending Gamgie first shaped by hand on 2026-11-26 and reproduced by the build to 0.5 m, since reshaped by hand, see
+  above): the route's last knot, 300 m above San Rafael reservoir (a dam lake; its surface
+  = the route's last ground height, 43 m in Bogota space), tips down (`diveEntryRotation` (17.8, 1.5, -1.3)), then one
+  knot `diveForward` 107 m on, `diveSide` 43 m right, `diveDepth` 161 m under the surface, nose down
+  (`diveRotation` (74.3, -176.1, -98.5)); both rotations are Euler angles in the route's frame (route direction, map
+  up), the dive knot's tangent as short as the last route knot's (37 m). With `splineUp` 1 and the Timeline's
+  `offset.y` 300 along the spline's up, the camera itself ends ~280 m south of the spline's end, 173 m under the
+  surface, and crosses it at about progress 0.997. Context menu of
   `BogotaSequence`. Bogota's face stands about 1.3 km after the hand-off (approach + climb radius + 300 m), at
   z ~ 7.2 km, where the valley's green starts (the valley biome is 24 % there, full by 8 km): the valley's fields
   are never seen (Gamgie, 2026-11-25: their texture is not good enough). Along the route the mountain pass stays low
@@ -276,20 +289,25 @@ sky, no bloom, fog off.
   intensity.
   **Act 2 film Timeline**: `Film/Act2_Timeline` in Soledad_Main (see Film workflow; `Assets/Acts/Act2_Flythrough/Timeline/Act2_Timeline.playable`,
   120 s at 60 fps): `Show/Act2Controller` (curl, Bogota switches) in the Show group and
-  `Cameras/Spline Camera target` (`useProgress` on, `progress` 0 to 1 along the whole flight path, 72 km;
+  `Cameras/Spline Camera target` (`useProgress` on, `progress` 0 to 1 along the whole flight path, 41.3 km;
   look, `splineUp`, offset) in each camera group (the Dome copy starts as the 16:9 one), plus markers for each beat; the director holds its last values when it ends (Wrap Mode Hold), otherwise the
   camera values snap back to their defaults over Bogota. Its `FilmTimeline` (`rideSpline` on)
   starts it in Play mode once the act has handed its path: camera to Spline, ride reset at
   `startDistance` (rides by speed only), then the director plays. The camera rides the flight path by progress, so
   its position is keyed directly and the other beats stay put when it changes; speed = slope of the curve. The film
   starts at the path's start (progress 0, the desert) and flies the desert and the mountain pass. Keys: curl 2 to
-  26 s, look right 30 to 36 s, Bogota appears 33 s, faster towards Bogota from 37 s (progress 0.027), landscape
-  hidden 61.5 s, Sun turned and whitened for Bogota 61.5 to 70 s, sky over Bogota 62 s, turn up 63 s (progress 0.108), faster again and
-  300 m higher over Bogota (progress 1 at 120 s: the lake; the 16:9 and Dome camera clips have the same curve). Building the flight path changes its length, so the progress keys must be checked after a Build or
+  26 s, look right 30 to 36 s, Bogota appears 33 s, faster towards Bogota from 37 s (1.77 km), landscape
+  hidden 61.5 s, Sun turned and whitened for Bogota 61.5 to 70 s, sky over Bogota 62 s, turn up 63 s (6.95 km, the
+  turn's start; top at 7.68 km, 65.4 s), faster again over Bogota (80 s at 14.2 km), then the dive into the lake
+  (16:9: Gamgie's keys from 103 s, offset.y 300 to 150 then 0, progress 0.990 at 109.1 s, 1 at 122.95 s; the Dome
+  clip still ends at 120 s with the old ending). Building the flight path changes its length, so the progress keys must be checked after a Build or
   a Bake. When Bogota moved to the valley's start they were remapped by hand: before the turn, distances scaled to
   the shorter way (x 0.64, the film used to start 1.8 km before a 9 km approach in the valley), after it, the same
   distance past the turn (also when `routeTrim` went to 8 km: the flight over Bogota starts 8 km further along the
-  route and keeps its distances).
+  route and keeps its distances). On 2026-11-26 (start moved to 18.2 km): keys up to the top of the turn back at
+  their designed distances (the hand-made end had shortened the path, so with unchanged progress values the turn
+  came ~7 s late), the flight over Bogota from the top to the first dive key (109.1 s) 0.765 times as long, so 24 %
+  slower at the same times, and the dive keys on the same ground as before.
   Kept for later (agreed with Clement): mountain erosion and more varied ridges; per-pixel dune relief to remove the
   stepped slip-face edges; vegetation and rocks scattered on the terrain; better light for the final render (SSGI,
   contact shadows, higher shadow/fog quality, path tracing: the terrain shader would need ray tracing passes and
