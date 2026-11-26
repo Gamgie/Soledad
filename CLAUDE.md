@@ -154,7 +154,7 @@ sky, no bloom, fog off.
   path (offset, aim ahead, `splineUp`, `followPitch` and the Spline And Look angles; no drift, bank, smoothing nor
   spline roll) and makes `CM Spline Camera` Cinemachine's solo camera, so scrubbing the Act 2 Timeline flies the Game
   view without Play (`SplineMovement` itself only runs in Play mode, and only gets its spline there). While previewing
-  it also sets that camera's lens far plane to `farClip` (40 km; the Oxipital cameras' 1 km, which the brain gives
+  it also sets that camera's lens far plane to `farClip` (150 km; the Oxipital cameras' 1 km, which the brain gives
   the main camera, cut the landscape off in the Game view). The target's own pose, the lens's far plane and the solo
   come back when the preview stops.
   Movie mode for now (`startOnSplineCamera`, on): the first show of the act also switches the camera to Spline, so
@@ -175,7 +175,11 @@ sky, no bloom, fog off.
   and material settings Ripple Coverage, Height Preference, Slope Limit, Patchiness, Border Sharpness;
   `_Smoothness` and other Lit names are taken by `LitProperties.hlsl`, so terrain properties are plain uniforms with
   their own names. In Play mode the act pushes every camera's far plane, and every Cinemachine camera's lens (the brain gives
-  it to the main camera each frame), to `farClip` (40 km) and restores them when disabled. Act 2 Volume: sunset haze (fog base 0 m, fading out by 2.5 km, 2.2 km mean free path, warm albedo
+  it to the main camera each frame), to `farClip` (150 km) and restores them when disabled. Keep `farClip` well beyond
+  the farthest ground (~70 km): with the Oxipital cameras' 1 cm near plane, HDRP's tile classification (Compute Light
+  Variants) reads reversed depth as `1 - depth`, which rounds to exactly 1 for pixels near the far plane (beyond ~36 km
+  with 40 km), takes their whole 16 px tile for sky and drops the sun there: at 40 km the curled ground showed
+  stair-stepped dark bands along the tube's far edge (not a shadow problem). Act 2 Volume: sunset haze (fog base 0 m, fading out by 2.5 km, 2.2 km mean free path, warm albedo
   (1, 0.86, 0.72), volumetric with forward glow 0.8 towards the sun, white balance +14 / +4; the Physically
   Based Sky's own Atmospheric Scattering stays off: its aerial haze flickers on ridges near the sun while flying) and
   shadows out to 8 km (4 cascades). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,

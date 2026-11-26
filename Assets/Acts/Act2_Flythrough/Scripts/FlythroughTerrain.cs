@@ -91,8 +91,11 @@ namespace Soledad
         [Range(8, 64)] public int cellsPerTile = 48;
         [Tooltip("A tile splits when the camera is closer than its size times this. More = more detail far away.")]
         [Range(1f, 6f)] public float detailDistance = 1.5f;
-        [Tooltip("Far clip plane given to every camera while the act is shown, in Play mode (m). The Oxipital cameras stop at 1 km.")]
-        public float farClip = 40000f;
+        [Tooltip("Far clip plane given to every camera while the act is shown, in Play mode (m). The Oxipital cameras stop at 1 km. " +
+                 "Keep it well beyond the farthest ground (about 70 km): with their 1 cm near plane, HDRP's tile classification takes " +
+                 "pixels near the far plane for sky (beyond ~36 km with 40 km, ~100 km with 150 km) and drops the sun on their whole " +
+                 "16 px tile: stair-stepped dark edges on the curled ground.")]
+        public float farClip = 150000f;
 
         [Header("References")]
         [Tooltip("The fixed landscape: tiles, path and placed objects live under it.")]
