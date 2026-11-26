@@ -23,7 +23,7 @@ Soledad is the first show project built this way: it must never depend on Oxipit
 | # | Scene | Act |
 |---|---|---|
 | 1 | `Assets/Scenes/Acts/Act1_BeyondTheVeil.unity` | Beyond the Veil: screens, smoke, a Tron-like digital world |
-| 2 | `Assets/Scenes/Acts/Act2_Flythrough.unity` | Flythrough: a bird's flight over desert, mountains, the Bogotá valley |
+| 2 | `Assets/Scenes/Acts/Act2_Flythrough.unity` | Flythrough: a bird's flight over the desert, mountains on the horizon, then the Bogotá valley |
 | 3 | `Assets/Scenes/Acts/Act3_Abyss.unity` | Abyss: lit particles, noise architectures, volumetric light, flocking |
 | 4 | `Assets/Scenes/Acts/Act4_SeeThrough.unity` | See Through: the tree, insects, the invisible links |
 | 5 | `Assets/Scenes/Acts/Act5_MementoMori.unity` | Memento Mori: Earth from the Moon, light ballet, gold and violet finale |
@@ -137,13 +137,12 @@ sky, no bloom, fog off.
   `StepForward` did nothing on this clip. The seek lands about a frame later.
 
 - **Act 2, `FlythroughTerrain`** (`Assets/Acts/Act2_Flythrough/`, on `Act2_Flythrough/Flythrough`): a bird's
-  flight over an endless landscape laid out along a route (terrain +Z): desert, mountains with a winding pass, then
-  the valley (fields between two ridges); shape in `TerrainShape` (`TerrainField.cs`, pure Burst-compatible height
-  and biome functions). The landscape is fixed in the space of `Act2_Flythrough/World` (at the origin, no floating
+  flight over an endless desert (terrain +Z ahead), with mountain ranges drawn by hand as splines (below); shape in
+  `TerrainShape` (`TerrainField.cs`, pure Burst-compatible height functions: dunes, relief, ranges). The landscape is fixed in the space of `Act2_Flythrough/World` (at the origin, no floating
   origin: HDRP renders camera-relative and the route is about 13 km) and the Oxipital camera really flies through it.
   Film: the **Spline camera** (Oxipital Camera 1.5.0, `Cameras/Spline Camera target`, `SplineMovement`) rides
   `World/Flight Path` (a Splines `SplineContainer`), which the act hands to it in Play mode **without ground**: it is
-  the one spline of the whole flight, valley then Bogota, its heights baked in (see Bogota below), so what the scene
+  the one spline of the whole flight, desert then Bogota, its heights baked in (see Bogota below), so what the scene
   shows is exactly where the camera flies (no second spline, no switch). Speed, offset, look (gamepad on `yaw1D` /
   `pitch1D` / `roll1D` in Spline And Look or Free), bank and seeded drift are set on that object (Soledad_Main:
   60 m/s, no loop), not on the act (its `altitude` and ground settings are unused: no ground is handed). Show: the
@@ -161,12 +160,31 @@ sky, no bloom, fog off.
   Play rides the path from its start (later the gamepad picks the mode).
   Switching back to Spline joins the path at the point nearest to the camera. The curl follows the camera: around
   the ground under it (smoothed), oriented by `curlFrame`: Camera Direction = along its smoothed direction of motion
-  (`curlHeadingSmoothing`), Axis = along the fixed landscape direction `curlAxis` (degrees, 0 = +Z). The terrain's pass and valley follow the route centre line
-  (`TerrainField.RouteX`), not the spline: keep the spline near it. Tiles (`Terrain (generated)` under `World`) form a quadtree around "Main Camera" (dense near
+  (`curlHeadingSmoothing`), Axis = along the fixed landscape direction `curlAxis` (degrees, 0 = +Z). Monoliths and clouds are spread along the
+  route centre line (`TerrainField.RouteX`, `meanderAmplitude` / `meanderWavelength`).
+  **Desert everywhere, mountains from splines** (Gamgie, 2026-11-26: the valley's fields and the mountain band across
+  the route are gone): `World/Mountain Ranges` holds one object per range, a `SplineContainer` whose splines are the
+  crest lines (plan view only, heights ignored) and a `MountainRange` (`height` on the crest, `width` = distance where
+  it has sunk back into the sand, `breakup` 0 = one range .. 1 = lone hills, `taper` = ends sinking over that many
+  widths). `FlythroughTerrain` rasterises them (Burst job) on a grid of `rangeCellSize` (150 m) whenever a knot or a
+  value changes (weight and envelope per cell: smoothstep across from the crest, edges warped by noise, height
+  wandering 0.35 to 1 along, ends tapered), sampled with a cubic B-spline (bilinear showed squares in the lighting);
+  `TerrainField` carves the envelope with ridged noise (`mountainScale`, `mountainRoughness`) and lets the dunes die
+  out under it; the shader's mountain ground follows the weight (vertex colour g). Layout traced from Gamgie's sketch
+  of 2026-11-26, its distances from the start of the flight brought from 20-74 km to 8-35 km so the fog lets them
+  through: North Far, North, North Near (+X side, 12-35 km), Ahead Far (25-30 km ahead, lost in the haze), South
+  (-X side, 8-17 km, the one that shows most), plus `Relief West` / `Relief East`, low rocky hills (280 m, breakup
+  0.45) 1.7 km either side of the flight path between 2.6 and 7.2 km. Height of the ground anywhere (other scripts):
+  `FlythroughTerrain.TerrainHeight` (or `GetGroundHeight`). After moving ranges near the route: check the flight's
+  clearance and the monoliths (below).
+  Tiles (`Terrain (generated)` under `World`) form a quadtree around "Main Camera" (dense near
   it, coarse to the horizon, `detailDistance`), built in terrain space by a parallel Burst job with skirts hiding
-  the seams, never saved. Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
-  shadows, motion vectors) with a hand-written surface (`FlythroughTerrainData.hlsl`: biome colours, rock on slopes,
-  fields, per-pixel relief from terrain coordinates) and the world curl in the `HAVE_MESH_MODIFICATION` hook
+  the seams, never saved. None beyond `viewDistance` (45 km) and, in Play mode only, none behind the camera
+  (`cullBehind`: behind a plane through it square to its horizontal view direction, kept within `behindMargin`
+  1.5 km for shadows; the dome sees 180 degrees around its view direction): 270-290 tiles instead of 366. Measured
+  on the RTX 3090 (preview): the terrain costs 0.5 to 1.4 ms GPU (pixels, not tiles). Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
+  shadows, motion vectors) with a hand-written surface (`FlythroughTerrainData.hlsl`: sand or mountain ground by weight, rock on slopes,
+  per-pixel relief from terrain coordinates) and the world curl in the `HAVE_MESH_MODIFICATION` hook
   (`curlLateral` rolls the ground into a tube around the flight direction, `curlForward` lifts it ahead into a wall;
   in Play mode the act works on a copy of its Volume profile to thin the fog and fade the volumetric clouds while
   curled, `curlClearsFog` / `curlClearsClouds`, fully cleared at `curlClearRamp`; a deep copy of its components: a plain
@@ -179,7 +197,7 @@ sky, no bloom, fog off.
   the farthest ground (~70 km): with the Oxipital cameras' 1 cm near plane, HDRP's tile classification (Compute Light
   Variants) reads reversed depth as `1 - depth`, which rounds to exactly 1 for pixels near the far plane (beyond ~36 km
   with 40 km), takes their whole 16 px tile for sky and drops the sun there: at 40 km the curled ground showed
-  stair-stepped dark bands along the tube's far edge (not a shadow problem). Act 2 Volume: sunset haze (fog base 0 m, fading out by 2.5 km, 2.2 km mean free path, warm albedo
+  stair-stepped dark bands along the tube's far edge (not a shadow problem). Act 2 Volume: sunset haze (fog base 0 m, fading out by 2.5 km, 3.5 km mean free path (2.2 km until 2026-11-26, thinned so the ranges show), warm albedo
   (1, 0.86, 0.72), volumetric with forward glow 0.8 towards the sun, white balance +14 / +4; the Physically
   Based Sky's own Atmospheric Scattering stays off: its aerial haze flickers on ridges near the sun while flying) and
   shadows out to 8 km (4 cascades). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,
@@ -227,11 +245,11 @@ sky, no bloom, fog off.
   the HDRP assets).
   Bogota: `World/Bogota` (prefab `Bogota/Bogota.prefab`, the GIS terrain of Bogota_GIS: zoom-18 strip and zoom-15
   surroundings, local x east, y height, z north, metres from San Rafael lake). Film ending (`Act2_Flythrough/Bogota
-  Sequence`, `BogotaSequence`): Bogota stands upright across the route where the valley begins, its map facing
+  Sequence`, `BogotaSequence`): Bogota stands upright across the route at the end of the drawn part, its map facing
   the camera, so it closes the hole of the curled tube. Three `[Animate]` switches, Play mode only (in the Editor
   everything stays visible, and the sky stays the world's): `showBogota` (off by default: hidden in the show),
   `showLandscape` (terrain, clouds, monoliths, Valley) and `bogotaSky` (the sky over Bogota, below). **One flight path** (`World/Flight Path`, 41.3 km): its first `drawnKnots` knots (32, every
-  200 m, 6.1 km: desert, then the mountain pass) are the **drawn part**, edited by hand, ending at the hand-off; the
+  200 m, 6.1 km of desert, between low hills from 2.6 km) are the **drawn part**, edited by hand, ending at the hand-off; the
   knots after them are the **generated tail**: straight on for `approachLength` (750 m), a quarter turn up onto
   Bogota (`climbRadius` 500 m; the knots' up turns from the sky to Bogota's face), then the z18 route to the lake
   (`bogotaAltitude` 300 m above the ridges near the route; 64.8 km, from `Bogota/film_path.json`, written by
@@ -255,9 +273,12 @@ sky, no bloom, fog off.
   `offset.y` 300 along the spline's up, the camera itself ends ~280 m south of the spline's end, 173 m under the
   surface, and crosses it at about progress 0.997. Context menu of
   `BogotaSequence`. Bogota's face stands about 1.3 km after the hand-off (approach + climb radius + 300 m), at
-  z ~ 7.2 km, where the valley's green starts (the valley biome is 24 % there, full by 8 km): the valley's fields
-  are never seen (Gamgie, 2026-11-25: their texture is not good enough). Along the route the mountain pass stays low
-  (ground 0 to 90 m), so the straight level approach clears it by 130 to 200 m. **Build Flight Path** places Bogota from the last drawn knot (position and level direction) and
+  z ~ 7.2 km (the valley's fields that used to start there are gone: Gamgie, 2026-11-25, their texture was not good
+  enough). On 2026-11-26, with the new desert, the heights of the drawn knots 0 to 30 were recomputed like the Bake
+  (140 m above the relief, anticipated, smoothed; knot frames as Build) **without a Build**: the hand-off knot and the
+  whole tail kept, the camera 119 to 185 m above the ground along the drawn part, the path 4 m longer; the 15
+  monoliths were put back on the new ground (same X/Z, the lowest ground under their foot; some came down 430 m from
+  the old mountains). **Build Flight Path** places Bogota from the last drawn knot (position and level direction) and
   rewrites the tail, keeping the drawn knots where they are; **Bake Heights And Build Flight Path** first resamples
   the drawn part every `bakeSpacing` (200 m) at `flightAltitude` (140 m) above the relief, anticipated over
   `groundLookAhead` (600 m) and smoothed, then builds. Both recompute every knot's tangents (move knots, not
@@ -299,7 +320,7 @@ sky, no bloom, fog off.
   starts it in Play mode once the act has handed its path: camera to Spline, ride reset at
   `startDistance` (rides by speed only), then the director plays. The camera rides the flight path by progress, so
   its position is keyed directly and the other beats stay put when it changes; speed = slope of the curve. The film
-  starts at the path's start (progress 0, the desert) and flies the desert and the mountain pass. Keys: curl 2 to
+  starts at the path's start (progress 0, the desert) and flies the desert, between the low hills from 2.6 km. Keys: curl 2 to
   26 s, look right 30 to 36 s, Bogota appears 33 s, faster towards Bogota from 37 s (1.77 km), landscape
   hidden 61.5 s, Sun turned and whitened for Bogota 61.5 to 70 s, sky over Bogota 62 s, turn up 63 s (6.95 km, the
   turn's start; top at 7.68 km, 65.4 s), faster again over Bogota (80 s at 14.2 km), then the dive into the lake

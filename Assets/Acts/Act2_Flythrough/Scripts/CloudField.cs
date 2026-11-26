@@ -155,7 +155,8 @@ namespace Soledad
                 for (int s = 0; s < 5; s++)
                 {
                     Vector2 offset = s == 0 ? Vector2.zero : new Vector2(s == 1 ? reach : s == 2 ? -reach : 0f, s == 3 ? reach : s == 4 ? -reach : 0f);
-                    ground = Mathf.Max(ground, TerrainField.Height(best + offset, shape));
+                    Unity.Mathematics.float2 at = best + offset;
+                    ground = Mathf.Max(ground, terrain != null ? terrain.TerrainHeight(at) : TerrainField.Height(at, shape, default));
                 }
                 float height = altitude * (1f + variation * ((float)random.NextDouble() * 2f - 1f));
                 go.transform.localPosition = new Vector3(best.x, ground + height, best.y);

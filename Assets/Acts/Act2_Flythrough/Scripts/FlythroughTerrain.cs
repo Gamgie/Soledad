@@ -13,10 +13,10 @@ namespace Soledad
     public enum CurlFrame { CameraDirection, Axis }
 
     /// <summary>
-    /// Act 2 (Flythrough): a bird's flight over an endless landscape, desert, then mountains, then the valley, laid out
-    /// along a route (TerrainShape). The landscape is fixed in the space of <see cref="world"/>, and the Oxipital camera
+    /// Act 2 (Flythrough): a bird's flight over an endless desert, with mountain ranges drawn as splines
+    /// (<see cref="MountainRange"/> objects under <see cref="world"/>) and the dunes and relief of TerrainShape. The landscape is fixed in the space of <see cref="world"/>, and the Oxipital camera
     /// (Soledad_Main) really flies through it: the Spline camera rides <see cref="flightPath"/> (handed to it in Play
-    /// mode; one spline for the whole flight, valley then Bogota, its heights baked in by BogotaSequence, so no ground
+    /// mode; one spline for the whole flight, desert then Bogota, its heights baked in by BogotaSequence, so no ground
     /// following) for the film, the Spaceship camera flies freely for the show. <see cref="ResetFlight"/> puts both at
     /// the start of the path. Outside Play mode, while a Timeline drives the Spline camera by progress, the camera is
     /// previewed on the path (<see cref="previewInEditor"/>).
@@ -24,7 +24,9 @@ namespace Soledad
     /// The terrain is a quadtree of tiles around the camera named "Main Camera" (dense near it, coarse towards the
     /// horizon). Tiles are built in terrain space by a Burst job (TerrainField), with skirts hiding the seams between
     /// levels, and drawn with Soledad/FlythroughTerrain, which also rolls the world up (<see cref="curlLateral"/>,
-    /// <see cref="curlForward"/>). Tiles and meshes are never saved in the scene.
+    /// <see cref="curlForward"/>). Tiles and meshes are never saved in the scene. In Play mode only the tiles the camera
+    /// can see are built: none behind it (<see cref="cullBehind"/>, the dome sees 180 degrees ahead), none beyond
+    /// <see cref="viewDistance"/>.
     ///
     /// Time is accumulated from Time.deltaTime, so a Recorder capture at a fixed frame rate is deterministic.
     /// </summary>
@@ -91,6 +93,14 @@ namespace Soledad
         [Range(8, 64)] public int cellsPerTile = 48;
         [Tooltip("A tile splits when the camera is closer than its size times this. More = more detail far away.")]
         [Range(1f, 6f)] public float detailDistance = 1.5f;
+        [Tooltip("No tile farther than this from the camera (m, horizontally): what the fog lets through, mountains included.")]
+        public float viewDistance = 45000f;
+        [Tooltip("Play mode: no tile behind the camera (a plane through it, square to its horizontal view direction). The dome sees 180 degrees around its view direction.")]
+        public bool cullBehind = true;
+        [Tooltip("Tiles up to this far behind the camera (m) are kept: their shadows, a turn of the head.")]
+        public float behindMargin = 1500f;
+        [Tooltip("Cell of the grid the mountain ranges are rasterised on (m). Smaller = crest lines followed more closely, slower to rebuild.")]
+        [Min(25f)] public float rangeCellSize = 150f;
         [Tooltip("Far clip plane given to every camera while the act is shown, in Play mode (m). The Oxipital cameras stop at 1 km. " +
                  "Keep it well beyond the farthest ground (about 70 km): with their 1 cm near plane, HDRP's tile classification takes " +
                  "pixels near the far plane for sky (beyond ~36 km with 40 km, ~100 km with 150 km) and drops the sun on their whole " +
@@ -166,8 +176,15 @@ namespace Soledad
         {
             Transform space = world != null ? world : transform;
             Vector3 p = space.InverseTransformPoint(worldPosition);
-            float h = TerrainField.Height(new float2(p.x, p.z), shape);
+            float h = TerrainHeight(new float2(p.x, p.z));
             return space.TransformPoint(new Vector3(p.x, h, p.z)).y;
+        }
+
+        /// <summary>Ground height (m) at a point of terrain space (the space of <see cref="world"/>), mountain ranges included.</summary>
+        public float TerrainHeight(float2 terrainPoint)
+        {
+            if (!_rangesBuilt) UpdateRanges();          // otherwise kept up to date once a frame (Tick)
+            return TerrainField.Height(terrainPoint, shape, _ranges);
         }
 
         bool _terrainVisible = true;
@@ -209,11 +226,173 @@ namespace Soledad
         uint BuildHash()
         {
             TerrainShape s = shape;
-            return math.hash(new float4(s.seed, s.desertEnd, s.mountainEnd, s.transition))
-                ^ math.hash(new float4(s.borderWarp, s.meanderAmplitude, s.meanderWavelength, s.duneHeight)) * 3u
-                ^ math.hash(new float4(s.duneWavelength, s.duneDirection, s.desertRelief, s.mountainHeight)) * 7u
-                ^ math.hash(new float4(s.mountainScale, s.passWidth, s.valleyWidth, s.valleyRidgeHeight)) * 13u
-                ^ math.hash(new float4(leafSize, levels, cellsPerTile, 0f)) * 17u;
+            return math.hash(new float4(s.seed, s.duneHeight, s.duneWavelength, s.duneDirection))
+                ^ math.hash(new float4(s.desertRelief, s.mountainScale, s.mountainRoughness, 0f)) * 7u
+                ^ math.hash(new float4(leafSize, levels, cellsPerTile, 0f)) * 17u
+                ^ _rangesHash * 31u;
+        }
+
+        // ---------------------------------------------------------------- mountain ranges
+
+        readonly List<MountainRange> _rangeList = new List<MountainRange>();
+        RangeField _ranges;
+        uint _rangesHash;
+        bool _rangesBuilt;
+
+        // The MountainRange splines under World, rasterised on a grid when they change (a knot moved, a value changed)
+        void UpdateRanges()
+        {
+            Transform space = world != null ? world : transform;
+            space.GetComponentsInChildren(false, _rangeList);
+            uint hash = math.hash(new float4(rangeCellSize, _rangeList.Count, 0f, 0f));
+            for (int r = 0; r < _rangeList.Count; r++)
+            {
+                MountainRange range = _rangeList[r];
+                var container = range.Container;
+                hash = hash * 9176u + math.hash(new float4(range.height, range.width, container.Splines.Count, r))
+                                    + math.hash(new float2(range.breakup, range.taper)) * 5u;
+                Matrix4x4 m = space.worldToLocalMatrix * container.transform.localToWorldMatrix;
+                hash = hash * 9176u + math.hash(new float4(m.m00, m.m02, m.m03, m.m13)) + math.hash(new float4(m.m20, m.m22, m.m23, m.m11));
+                for (int i = 0; i < container.Splines.Count; i++)
+                {
+                    var spline = container.Splines[i];
+                    hash = hash * 9176u + (uint)spline.Count + (spline.Closed ? 7u : 0u);
+                    for (int k = 0; k < spline.Count; k++)
+                    {
+                        var knot = spline[k];
+                        hash = hash * 9176u + math.hash(new float4(knot.Position, knot.TangentOut.z))
+                                            + math.hash(knot.Rotation.value) * 3u;
+                    }
+                }
+            }
+            if (_rangesBuilt && hash == _rangesHash) return;
+            _rangesHash = hash;
+            _rangesBuilt = true;
+            BuildRanges(space);
+        }
+
+        void BuildRanges(Transform space)
+        {
+            DisposeRanges();
+            float cell = math.max(rangeCellSize, 25f);
+            var segments = new List<float4>();
+            var parameters = new List<float4>();
+            var shapes = new List<float2>();
+            float2 min = float.MaxValue, max = float.MinValue;
+            foreach (var range in _rangeList)
+            {
+                var container = range.Container;
+                for (int i = 0; i < container.Splines.Count; i++)
+                {
+                    var spline = container.Splines[i];
+                    if (spline.Count < 2) continue;
+                    float length = container.CalculateLength(i);
+                    int n = math.max(2, (int)math.ceil(length / cell) + 1);
+                    // Ends sink over taper x width, at most a third of the range each
+                    float taper = math.min(range.taper * range.width / math.max(length, 1f), 0.33f);
+                    float2 previous = 0f;
+                    for (int k = 0; k < n; k++)
+                    {
+                        Vector3 world3 = container.EvaluatePosition(i, k / (float)(n - 1));
+                        Vector3 local = space.InverseTransformPoint(world3);
+                        float2 p = new float2(local.x, local.z);
+                        if (k > 0)
+                        {
+                            segments.Add(new float4(previous, p));
+                            parameters.Add(new float4(range.height, range.width, (k - 1) / (float)(n - 1), k / (float)(n - 1)));
+                            shapes.Add(new float2(range.breakup, taper));
+                        }
+                        min = math.min(min, p - range.width);
+                        max = math.max(max, p + range.width);
+                        previous = p;
+                    }
+                }
+            }
+            if (segments.Count == 0)
+            {
+                // No range: an empty field (a job needs a valid array; count 0 samples as nothing)
+                _ranges = new RangeField { cells = new NativeArray<float2>(1, Allocator.Persistent), cellSize = 1f };
+                return;
+            }
+
+            // Grid over all ranges, at most 2048 cells a side (coarser cells for a very wide layout)
+            min -= cell;
+            max += cell;
+            cell = math.max(cell, math.cmax(max - min) / 2047f);
+            int2 count = (int2)math.ceil((max - min) / cell) + 1;
+            _ranges = new RangeField
+            {
+                cells = new NativeArray<float2>(count.x * count.y, Allocator.Persistent),
+                origin = min,
+                cellSize = cell,
+                count = count,
+            };
+            var segmentArray = new NativeArray<float4>(segments.ToArray(), Allocator.TempJob);
+            var parameterArray = new NativeArray<float4>(parameters.ToArray(), Allocator.TempJob);
+            var shapeArray = new NativeArray<float2>(shapes.ToArray(), Allocator.TempJob);
+            new RangeJob
+            {
+                segments = segmentArray, parameters = parameterArray, shapes = shapeArray, cells = _ranges.cells,
+                origin = min, cellSize = cell, countX = count.x, seed = shape.seed * 1013f,
+            }.Schedule(count.x * count.y, 64).Complete();
+            segmentArray.Dispose();
+            parameterArray.Dispose();
+            shapeArray.Dispose();
+        }
+
+        void DisposeRanges()
+        {
+            if (_ranges.cells.IsCreated) _ranges.cells.Dispose();
+            _ranges = default;
+        }
+
+        // Per grid cell: the highest weight and envelope of all range segments. Across a range: smoothstep from the
+        // crest line (1) to width (0), measured from a warped point so the edges wander. Along it: the ends taper, the
+        // height wanders (0.35 to 1 of the range's), and breakup cuts it into separate massifs.
+        [BurstCompile]
+        struct RangeJob : IJobParallelFor
+        {
+            [ReadOnly] public NativeArray<float4> segments;      // a.xy, b.xy (terrain space)
+            [ReadOnly] public NativeArray<float4> parameters;    // height, width, position along the range at a and b (0..1)
+            [ReadOnly] public NativeArray<float2> shapes;        // breakup, end taper (fraction of the range)
+            public NativeArray<float2> cells;
+            public float2 origin;
+            public float cellSize;
+            public int countX;
+            public float seed;
+
+            public void Execute(int index)
+            {
+                float2 p = origin + new float2(index % countX, index / countX) * cellSize;
+                float2 q = p + seed;
+                float2 warped = p + 1400f * new float2(TerrainField.Fbm(q / 7000f, 3), TerrainField.Fbm(q / 7000f + 19.3f, 3));
+                float along = 0.65f + 0.5f * TerrainField.Fbm(q / 9000f + 5.1f, 3);
+                float weight = 0f, envelope = 0f;
+                for (int s = 0; s < segments.Length; s++)
+                {
+                    float4 seg = segments[s];
+                    float4 hw = parameters[s];
+                    float2 a = seg.xy, ab = seg.zw - seg.xy;
+                    float t = math.saturate(math.dot(warped - a, ab) / math.max(math.dot(ab, ab), 1e-6f));
+                    float d = math.length(warped - (a + ab * t));
+                    float w = math.saturate(1f - d / hw.y);
+                    if (w <= 0f) continue;
+                    w = w * w * (3f - 2f * w);
+                    float2 shape = shapes[s];
+                    float u = math.lerp(hw.z, hw.w, t);
+                    float taper = shape.y > 0f ? math.smoothstep(0f, shape.y, u) * math.smoothstep(1f, 1f - shape.y, u) : 1f;
+                    float massif = 1f;
+                    if (shape.x > 0f)
+                    {
+                        float n = TerrainField.Fbm(q / (hw.y * 1.5f) + 41.7f, 3);
+                        massif = math.saturate((n + 0.6f - 1.4f * shape.x) * 3f);
+                    }
+                    float k = taper * massif;
+                    weight = math.max(weight, w * k);
+                    envelope = math.max(envelope, w * k * hw.x * math.saturate(along));
+                }
+                cells[index] = new float2(weight, envelope);
+            }
         }
 
         void OnEnable()
@@ -377,6 +556,8 @@ namespace Soledad
             ClearTiles(true);
             if (_root != null) DestroyUnityObject(_root.gameObject);
             _root = null;
+            DisposeRanges();
+            _rangesBuilt = false;
         }
 
         void Update()
@@ -407,6 +588,7 @@ namespace Soledad
             if (terrainMaterial == null) return;
             EnsureRoot();
             if (_root.gameObject.activeSelf != _terrainVisible) _root.gameObject.SetActive(_terrainVisible);
+            UpdateRanges();
             uint hash = BuildHash();
             if (_dirty || hash != _builtHash)
             {
@@ -610,7 +792,20 @@ namespace Soledad
         {
             Vector3 cameraTerrain = _root.InverseTransformPoint(viewer);
             float2 c = new float2(cameraTerrain.x, cameraTerrain.z);
-            float heightAbove = math.max(1f, cameraTerrain.y - TerrainField.Height(c, shape));
+            float heightAbove = math.max(1f, cameraTerrain.y - TerrainField.Height(c, shape, _ranges));
+
+            // Play mode: what is behind the camera's horizontal view direction is never seen (16:9 or dome)
+            _cullForward = 0f;
+            if (cullBehind && Application.isPlaying)
+            {
+                Transform target = followTarget != null ? followTarget : _foundTarget;
+                if (target != null)
+                {
+                    Vector3 f = _root.InverseTransformDirection(target.forward);
+                    float2 flat = new float2(f.x, f.z);
+                    if (math.lengthsq(flat) > 0.01f) _cullForward = math.normalize(flat);
+                }
+            }
 
             _wanted.Clear();
             float rootSize = leafSize * (1 << levels);
@@ -641,6 +836,14 @@ namespace Soledad
             float size = leafSize * (1 << level);
             float2 min = new float2(ix, iz) * size;
             float2 d = math.max(math.max(min - camera, camera - (min + size)), 0f);
+            if (viewDistance > 0f && math.lengthsq(d) > viewDistance * viewDistance) return;
+            if (math.any(_cullForward != 0f))
+            {
+                // Farthest corner ahead: the tile is behind if even that one is
+                float2 rel = min - camera;
+                float ahead = math.dot(rel, _cullForward) + size * (math.max(_cullForward.x, 0f) + math.max(_cullForward.y, 0f));
+                if (ahead < -behindMargin) return;
+            }
             float distance = math.sqrt(math.lengthsq(d) + heightAbove * heightAbove);
             if (level > 0 && distance < size * detailDistance)
             {
@@ -650,6 +853,8 @@ namespace Soledad
             }
             _wanted.Add(Key(level, ix, iz));
         }
+
+        float2 _cullForward;
 
         static long Key(int level, long ix, long iz) =>
             ((long)level << 58) | (((ix + (1L << 28)) & 0x1FFFFFFFL) << 29) | ((iz + (1L << 28)) & 0x1FFFFFFFL);
@@ -690,7 +895,7 @@ namespace Soledad
                 meshes[i] = tile.mesh;
             }
 
-            new TileJob { requests = requests, meshes = meshData, ranges = ranges, cells = cells, shape = shape }
+            new TileJob { requests = requests, meshes = meshData, ranges = ranges, cells = cells, shape = shape, mountains = _ranges }
                 .Schedule(count, 1).Complete();
 
             for (int i = 0; i < count; i++)
@@ -873,6 +1078,7 @@ namespace Soledad
             public NativeArray<float2> ranges;
             public int cells;
             public TerrainShape shape;
+            public RangeField mountains;
 
             public void Execute(int index)
             {
@@ -896,11 +1102,11 @@ namespace Soledad
                     {
                         float2 p = r.origin + new float2(i, j) * step;
                         bool inside = i >= 0 && j >= 0 && i < grid && j < grid;
-                        float h = TerrainField.Height(p, shape, out float3 biome, out float duneLevel);
+                        float h = TerrainField.Height(p, shape, mountains, out float mountain, out float duneLevel);
                         heights[(i + 1) + (j + 1) * border] = h;
                         if (inside)
                         {
-                            biomes[i + j * grid] = new float4(biome, duneLevel);
+                            biomes[i + j * grid] = new float4(1f - mountain, mountain, 0f, duneLevel);
                             range = new float2(math.min(range.x, h), math.max(range.y, h));
                         }
                     }
@@ -921,7 +1127,7 @@ namespace Soledad
                             position = new float3(p.x, h, p.y),
                             normal = normal,
                             tangent = new float4(math.normalize(new float3(2f * step, dx, 0f)), -1f),   // bitangent = +Z
-                            color = biomes[i + j * grid],                 // biome weights, a = dune level
+                            color = biomes[i + j * grid],                 // desert, mountain weights, a = dune level
                             uv0 = p,
                             uv1 = new float2(h, 1f - normal.y),
                             uv2 = normal.xz,

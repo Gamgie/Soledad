@@ -7,13 +7,8 @@ float4 _SandColor;          // dune slopes
 float4 _SandDarkColor;      // dune troughs and wind shadows
 float4 _RockColor;          // steep slopes
 float4 _RockDarkColor;
-float4 _DryGrassColor;      // gentle mountain slopes
-float4 _GrassColor;         // valley fields
-float4 _FieldColorB;        // second field crop
-float4 _SoilColor;          // ploughed fields, paths
 float  _TerrainSmoothness;
 float  _RockSlope;          // slope (1 - normal.y) where rock takes over
-float  _FieldSize;          // size of the valley fields (m)
 
 // One sampler for every scanned texture (inline state: trilinear, repeat, anisotropic 8): a pixel shader has only 16
 SAMPLER(sampler_trilinear_repeat_aniso8);

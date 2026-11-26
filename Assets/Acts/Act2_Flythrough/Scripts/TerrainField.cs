@@ -1,13 +1,14 @@
 using System;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace Soledad
 {
     /// <summary>
-    /// Shape of the Act 2 landscape, laid out along the route (terrain +Z, in metres): desert, then mountains with a
-    /// winding pass along the route, then the valley (a field plain between two ridges). Changing it rebuilds the
-    /// terrain, so it is not animated.
+    /// Shape of the Act 2 landscape (terrain space, metres): desert everywhere, with mountain ranges where
+    /// <see cref="MountainRange"/> splines are drawn (their footprint comes in through a <see cref="RangeField"/>).
+    /// Changing it rebuilds the terrain, so it is not animated.
     /// </summary>
     [Serializable]
     public struct TerrainShape
@@ -16,15 +17,7 @@ namespace Soledad
         public float seed;
 
         [Header("Route (along terrain +Z)")]
-        [Tooltip("Route distance (m) where the desert gives way to the mountains.")]
-        public float desertEnd;
-        [Tooltip("Route distance (m) where the mountains open onto the valley.")]
-        public float mountainEnd;
-        [Tooltip("Length of each landscape transition (m).")]
-        public float transition;
-        [Tooltip("Irregularity of the transition borders (m).")]
-        public float borderWarp;
-        [Tooltip("Side-to-side swing of the route (m). The mountain pass and the valley follow it.")]
+        [Tooltip("Side-to-side swing of the route centre line (m), along which monoliths and clouds are spread.")]
         public float meanderAmplitude;
         [Tooltip("Length of one route swing (m).")]
         public float meanderWavelength;
@@ -38,38 +31,62 @@ namespace Soledad
         [Tooltip("Large rolling relief under the dunes (m).")]
         public float desertRelief;
 
-        [Header("Mountains")]
-        public float mountainHeight;
-        [Tooltip("Size of the main mountain features (m).")]
+        [Header("Mountains (along the Mountain Range splines)")]
+        [Tooltip("Size of the main mountain features (m): peaks and side valleys along a range.")]
         public float mountainScale;
-        [Tooltip("Half-width of the pass carved along the route (m). 0 = no pass.")]
-        public float passWidth;
-
-        [Header("Valley")]
-        [Tooltip("Width of the flat valley floor (m).")]
-        public float valleyWidth;
-        [Tooltip("Height of the ridges around the valley (m).")]
-        public float valleyRidgeHeight;
+        [Tooltip("How much of a range's height the ridged noise carves away (0 = smooth domes, 1 = deep side valleys).")]
+        [Range(0f, 1f)] public float mountainRoughness;
 
         public static TerrainShape Default => new TerrainShape
         {
             seed = 0f,
-            desertEnd = 3000f,
-            mountainEnd = 7500f,
-            transition = 1200f,
-            borderWarp = 600f,
             meanderAmplitude = 500f,
             meanderWavelength = 6000f,
             duneHeight = 35f,
             duneWavelength = 170f,
             duneDirection = 25f,
             desertRelief = 60f,
-            mountainHeight = 1100f,
             mountainScale = 2600f,
-            passWidth = 700f,
-            valleyWidth = 9000f,
-            valleyRidgeHeight = 700f,
+            mountainRoughness = 0.6f,
         };
+    }
+
+    /// <summary>
+    /// The mountain ranges rasterised on a grid (built by FlythroughTerrain from the MountainRange splines): per cell,
+    /// x = range weight (0 outside, 1 on a crest) and y = envelope height (m). Sampled bilinearly, 0 outside the grid.
+    /// Default (not created) = no ranges.
+    /// </summary>
+    public struct RangeField
+    {
+        [ReadOnly] public NativeArray<float2> cells;
+        public float2 origin;
+        public float cellSize;
+        public int2 count;
+
+        // Cubic B-spline over 4 x 4 cells: smooth slopes (bilinear left creases along the cell edges, which the
+        // lighting showed as squares on the hills)
+        public float2 Sample(float2 p)
+        {
+            if (!cells.IsCreated || cellSize <= 0f) return 0f;
+            float2 g = (p - origin) / cellSize;
+            int2 i = (int2)math.floor(g);
+            if (math.any(i < 1) || math.any(i >= count - 2)) return 0f;
+            float2 f = g - i;
+            float2 f2 = f * f, f3 = f2 * f;
+            float2 w0 = (1f - f) * (1f - f) * (1f - f) / 6f;
+            float2 w1 = (3f * f3 - 6f * f2 + 4f) / 6f;
+            float2 w2 = (-3f * f3 + 3f * f2 + 3f * f + 1f) / 6f;
+            float2 w3 = f3 / 6f;
+            float2 sum = 0f;
+            for (int y = 0; y < 4; y++)
+            {
+                float wy = y == 0 ? w0.y : y == 1 ? w1.y : y == 2 ? w2.y : w3.y;
+                int row = (i.y - 1 + y) * count.x + i.x - 1;
+                float2 r = cells[row] * w0.x + cells[row + 1] * w1.x + cells[row + 2] * w2.x + cells[row + 3] * w3.x;
+                sum += r * wy;
+            }
+            return sum;
+        }
     }
 
     /// <summary>Height and biome of the Act 2 landscape. Pure functions, usable from Burst jobs and from managed code.</summary>
@@ -89,37 +106,31 @@ namespace Soledad
             return s.meanderAmplitude * k * (math.cos(z * k) + 0.35f * 2.3f * math.cos(z * k * 2.3f + 1.7f));
         }
 
-        /// <summary>Weights of desert, mountains and valley at a terrain point (sum = 1).</summary>
-        public static float3 Biome(float2 p, in TerrainShape s)
-        {
-            float2 q = p + s.seed * 1013f;
-            float u = p.y + s.borderWarp * Fbm(q / 4000f, 3);
-            float half = math.max(s.transition, 1f) * 0.5f;
-            float desert = 1f - math.smoothstep(s.desertEnd - half, s.desertEnd + half, u);
-            float valley = math.smoothstep(s.mountainEnd - half, s.mountainEnd + half, u);
-            float mountains = math.max(0f, 1f - desert - valley);
-            return new float3(desert, mountains, valley);
-        }
-
         /// <summary>
-        /// Ground height (m) at a terrain point, its biome weights, and in the desert where the point sits on its dune
-        /// (0 = trough, 1 = crest), used by the shader to place the sand layers.
+        /// Ground height (m) at a terrain point, its mountain weight (0 = desert, 1 = mountain ground, for the shader),
+        /// and in the desert where the point sits on its dune (0 = trough, 1 = crest), used to place the sand layers.
         /// </summary>
-        public static float Height(float2 p, in TerrainShape s, out float3 biome, out float duneLevel)
+        public static float Height(float2 p, in TerrainShape s, in RangeField ranges, out float mountain, out float duneLevel)
         {
-            biome = Biome(p, s);
             float2 q = p + s.seed * 1013f;
-            float h = 0f;
-            duneLevel = 0.5f;
-            if (biome.x > 0f) h += biome.x * Desert(q, s, out duneLevel);
-            if (biome.y > 0f) h += biome.y * Mountains(p, q, s);
-            if (biome.z > 0f) h += biome.z * Valley(p, q, s);
-            return h;
+            float desert = Desert(q, s, out duneLevel);
+            float2 range = ranges.Sample(p);
+            mountain = 0f;
+            if (range.y <= 0f) return desert;
+
+            // The envelope (highest on the crest line, down to 0 at the range's edge) carved by ridged noise: peaks,
+            // saddles and side valleys along the range
+            float scale = math.max(s.mountainScale, 1f);
+            float ridges = math.saturate(Ridged(q / scale, 7) * 0.8f + 0.1f * Fbm(q / (scale * 0.3f), 3));
+            float carve = math.lerp(1f, ridges, math.saturate(s.mountainRoughness));
+            float h = range.y * carve;
+            // Dunes die out under the mountains, the range rises from the sand
+            float under = math.smoothstep(0.05f, 0.45f, range.x);
+            mountain = math.smoothstep(0.1f, 0.5f, range.x);
+            return math.lerp(desert, desert * 0.3f, under) + h;
         }
 
-        public static float Height(float2 p, in TerrainShape s, out float3 biome) => Height(p, s, out biome, out _);
-
-        public static float Height(float2 p, in TerrainShape s) => Height(p, s, out _, out _);
+        public static float Height(float2 p, in TerrainShape s, in RangeField ranges) => Height(p, s, ranges, out _, out _);
 
         static float Desert(float2 q, in TerrainShape s, out float duneLevel)
         {
@@ -171,31 +182,6 @@ namespace Soledad
             float segments = Fbm(new float2(math.dot(q, along) / (lambda * 2.2f), d / (lambda * 6f)) + seed + 9f, 3);
             float amplitude = math.saturate(0.55f + 0.9f * segments);
             return new float2(profile * amplitude * lambda, profile);     // taller when longer
-        }
-
-        static float Mountains(float2 p, float2 q, in TerrainShape s)
-        {
-            float scale = math.max(s.mountainScale, 1f);
-            float ridges = Ridged(q / scale, 8);
-            float h = s.mountainHeight * (ridges * 0.75f - 0.15f + 0.25f * Fbm(q / (scale * 3f), 3));
-
-            // Winding pass along the route, so the flight can run between the peaks
-            if (s.passWidth > 0f)
-            {
-                float side = math.abs(p.x - RouteX(p.y, s));
-                float open = math.smoothstep(s.passWidth, s.passWidth * 3f, side);
-                h = math.lerp(h * 0.12f + 20f * Fbm(q / 400f, 3), h, open);
-            }
-            return h;
-        }
-
-        static float Valley(float2 p, float2 q, in TerrainShape s)
-        {
-            float side = math.abs(p.x - RouteX(p.y, s));
-            float half = math.max(s.valleyWidth, 1f) * 0.5f;
-            float ridge = math.smoothstep(half, half + 5000f, side);
-            float floorRelief = 4f * Fbm(q / 900f, 3);
-            return floorRelief + ridge * s.valleyRidgeHeight * (0.4f + Ridged(q / 2500f, 6));
         }
 
         /// <summary>Fractal simplex noise, roughly in [-1, 1].</summary>

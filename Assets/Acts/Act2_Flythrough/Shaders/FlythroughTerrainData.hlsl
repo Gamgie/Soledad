@@ -62,30 +62,6 @@ float3 FT_FbmD(float2 p, float scale, int octaves)
 
 // ---------------------------------------------------------------- surface
 
-// Agricultural fields of the valley: irregular rectangles (jittered grid), one crop per field
-float3 FT_Fields(float2 p, out float hedge)
-{
-    float size = max(_FieldSize, 1.0);
-    // Two field orientations, swapped by a large noise, like plots following roads
-    float turn = FT_NoiseD(p / (size * 9.0)).x > 0.0 ? 0.35 : -0.2;
-    float s, c;
-    sincos(turn, s, c);
-    float2 q = float2(c * p.x - s * p.y, s * p.x + c * p.y);
-    q.x *= 0.6;                                          // long plots
-
-    float2 cell = floor(q / size);
-    float2 f = frac(q / size);
-    float2 jitter = FT_Hash2(cell) * 0.15;
-    float2 edge = min(f - jitter * 0.5, 1.0 - f);
-    hedge = 1.0 - smoothstep(0.0, 0.03, min(edge.x, edge.y));
-
-    float crop = FT_Hash(cell + 7.7);
-    float3 col = crop < 0.45 ? _GrassColor.rgb : crop < 0.75 ? _FieldColorB.rgb : crop < 0.9 ? _DryGrassColor.rgb : _SoilColor.rgb;
-    // Rows inside the field
-    float rows = 0.5 + 0.5 * sin(q.y * 6.2831853 / 3.0 + crop * 20.0);
-    return col * lerp(0.85, 1.05, rows * (crop < 0.9 ? 1.0 : 0.3));
-}
-
 // ---------------------------------------------------------------- scanned sand layers
 
 struct FTLayer
@@ -244,32 +220,21 @@ void FT_Surface(FragInputs input, out float3 baseColor, out float smoothness, ou
     // Terrain normal before the curl, for the triplanar rock
     float3 n0 = float3(input.texCoord2.x, 1.0 - slope, input.texCoord2.y);
     n0 = normalize(n0);
-    float3 biome = input.color.rgb;
-    biome /= max(biome.r + biome.g + biome.b, 1e-4);
+    float mountain = saturate(input.color.g);    // mountain weight (the rest is desert)
 
     float3 large = FT_FbmD(p, 900.0, 3);         // patches of colour across the landscape
     float3 detail = FT_FbmD(p, max(_DetailScale, 0.01), 6);
 
-    // Desert: the scanned sand layers. Mountains: volcanic ground. Valley: procedural fields (for now).
+    // Desert: the scanned sand layers. Mountains: volcanic ground.
     FTLayer desert = FT_Desert(p, slope, input.color.a, large.x);
     FTLayer ground = FT_Ground(p, large.x);
     FTLayer rock = FT_Rock(float3(p.x, height, p.y), n0);
 
-    float hedge;
-    float3 fields = FT_Fields(p, hedge);
-    fields = lerp(fields, _GrassColor.rgb * 0.45, hedge * 0.8);
-    FTLayer valley;
-    valley.albedo = fields * (0.9 + 0.2 * detail.x);
-    valley.gradient = detail.yz * _DetailStrength;
-    valley.height = 0.5;
-    valley.roughness = 1.0 - _TerrainSmoothness;
-    valley.ao = 1.0;
+    FTLayer surface = FT_Lerp(desert, ground, mountain);
 
-    FTLayer surface = FT_Lerp(FT_Lerp(desert, ground, biome.g / max(biome.r + biome.g, 1e-4)), valley, biome.b);
-
-    // Rock on steep slopes, in every biome (less in the valley), height-blended against what lies below
+    // Rock on steep slopes, in every biome, height-blended against what lies below
     float rockMask = smoothstep(_RockSlope - _RockSlopeSoftness, _RockSlope + _RockSlopeSoftness,
-                                slope + large.x * 0.06 + detail.x * 0.04) * (1.0 - biome.b * 0.5);
+                                slope + large.x * 0.06 + detail.x * 0.04);
     float rockBlend = saturate((rockMask - 0.5) * _RockBlendSharpness + (rock.height - surface.height) * 2.0 + 0.5);
     rockBlend *= step(1e-3, rockMask);
     surface = FT_Lerp(surface, rock, rockBlend);

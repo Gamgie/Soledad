@@ -10,13 +10,8 @@ Shader "Soledad/FlythroughTerrain"
         _SandDarkColor("Sand Shade", Color) = (0.62, 0.40, 0.23, 1)
         _RockColor("Rock", Color) = (0.50, 0.44, 0.38, 1)
         _RockDarkColor("Rock Dark", Color) = (0.27, 0.23, 0.20, 1)
-        _DryGrassColor("Dry Grass", Color) = (0.62, 0.55, 0.32, 1)
-        _GrassColor("Grass", Color) = (0.30, 0.45, 0.16, 1)
-        _FieldColorB("Field Crop", Color) = (0.55, 0.60, 0.24, 1)
-        _SoilColor("Soil", Color) = (0.36, 0.27, 0.18, 1)
         _TerrainSmoothness("Smoothness", Range(0, 1)) = 0.12
         _RockSlope("Rock Slope (1 - normal.y)", Range(0, 1)) = 0.35
-        _FieldSize("Field Size (m)", Float) = 140
 
         [Header(Desert Sand (scanned PBR sets))]
         [NoScaleOffset] _RippleSandAlbedo("Ripple Albedo", 2D) = "white" {}

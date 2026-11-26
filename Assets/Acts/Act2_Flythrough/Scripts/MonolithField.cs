@@ -210,7 +210,8 @@ namespace Soledad
             {
                 float angle = s * Mathf.PI * 0.5f;
                 Vector2 offset = s == 0 ? Vector2.zero : new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * reach;
-                ground = Mathf.Min(ground, TerrainField.Height(new float2(p.x + offset.x, p.y + offset.y), shape));
+                var at = new float2(p.x + offset.x, p.y + offset.y);
+                ground = Mathf.Min(ground, terrain != null ? terrain.TerrainHeight(at) : TerrainField.Height(at, shape, default));
             }
             return ground;
         }
