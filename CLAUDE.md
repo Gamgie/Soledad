@@ -153,8 +153,10 @@ sky, no bloom, fog off.
   `useProgress` is on (a Timeline preview keys it), the act puts `Spline Camera target` at its `progress` on the flight
   path (offset, aim ahead, `splineUp`, `followPitch` and the Spline And Look angles; no drift, bank, smoothing nor
   spline roll) and makes `CM Spline Camera` Cinemachine's solo camera, so scrubbing the Act 2 Timeline flies the Game
-  view without Play (`SplineMovement` itself only runs in Play mode, and only gets its spline there). The target's own
-  pose comes back and the solo is released when the preview stops.
+  view without Play (`SplineMovement` itself only runs in Play mode, and only gets its spline there). While previewing
+  it also sets that camera's lens far plane to `farClip` (40 km; the Oxipital cameras' 1 km, which the brain gives
+  the main camera, cut the landscape off in the Game view). The target's own pose, the lens's far plane and the solo
+  come back when the preview stops.
   Movie mode for now (`startOnSplineCamera`, on): the first show of the act also switches the camera to Spline, so
   Play rides the path from its start (later the gamepad picks the mode).
   Switching back to Spline joins the path at the point nearest to the camera. The curl follows the camera: around

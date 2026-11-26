@@ -435,6 +435,18 @@ namespace Soledad
         bool _previewing;
         Vector3 _savedTargetPosition, _lastPreviewPosition;
         Quaternion _savedTargetRotation, _lastPreviewRotation;
+        float _savedVcamFar;
+
+        // The solo camera's lens far plane, which the Cinemachine brain gives the main camera (1 km on the Oxipital
+        // cameras): farClip while previewing, as in Play mode (ApplyFarClip), its own value back after
+        void SetPreviewFar(float far)
+        {
+            if (_previewVcam == null) return;
+            var lens = _previewVcam.Lens;
+            if (lens.FarClipPlane == far) return;
+            lens.FarClipPlane = far;
+            _previewVcam.Lens = lens;
+        }
 
         void EditorPreview()
         {
@@ -461,10 +473,15 @@ namespace Soledad
                 _previewVcam = null;
                 foreach (var vcam in FindObjectsByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                     if (vcam.Follow == cam.transform) { _previewVcam = vcam; break; }
-                if (_previewVcam != null) Unity.Cinemachine.CinemachineCore.SoloCamera = _previewVcam;
+                if (_previewVcam != null)
+                {
+                    Unity.Cinemachine.CinemachineCore.SoloCamera = _previewVcam;
+                    _savedVcamFar = _previewVcam.Lens.FarClipPlane;
+                }
                 _previewing = true;
                 _lastPreviewPosition = new Vector3(float.NaN, 0f, 0f);
             }
+            SetPreviewFar(farClip);
             if (position == _lastPreviewPosition && rotation == _lastPreviewRotation) return;
             _lastPreviewPosition = position;
             _lastPreviewRotation = rotation;
@@ -484,6 +501,7 @@ namespace Soledad
             _previewing = false;
             if (_previewVcam != null && ReferenceEquals(Unity.Cinemachine.CinemachineCore.SoloCamera, _previewVcam))
                 Unity.Cinemachine.CinemachineCore.SoloCamera = null;
+            SetPreviewFar(_savedVcamFar);
             if (_previewCamera != null) _previewCamera.transform.SetPositionAndRotation(_savedTargetPosition, _savedTargetRotation);
             _previewCamera = null;
             _previewVcam = null;
