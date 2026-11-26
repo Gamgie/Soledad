@@ -613,9 +613,17 @@ picture stays on the sound (the Act 1 Timeline holds the temporary soundtrack) e
 on, game time, stepped one frame at a time by the Recorder. `playTimelines` (off for the live show): in Play mode the Timeline of the shown act
 plays from its start (`ShowController.ShownAct`, so open the act scene next to Soledad_Main, then Play);
 `rideSpline` first waits for the act's path and restarts the Spline camera ride; the first image is then a cut
-onto the Timeline's start (keys at 0 evaluated at once, the Spline camera made to ride in that frame, Cinemachine's
-brain reset): before, the brain showed the Orbital camera it had picked before Oxipital raised the Spline camera's
-priority and blended from the origin to the path over `cameraTransitionDuration` (8 s). `Soledad > Build Film Timelines`
+onto the Timeline's start (keys at 0 evaluated at once, the ride reset again and made to ride in that frame from
+just below its start, the Spline camera updated once with a negative deltaTime, Cinemachine's brain reset): before,
+the brain showed the Orbital camera it had picked before Oxipital raised the Spline camera's priority and blended from
+the origin to the path over `cameraTransitionDuration` (8 s); then the ride by progress read the jump from the
+distance left at load (1.7 km) back to 0 as a move backwards and looked behind, turned round once the progress rose
+and the bank (17) rolled the camera 60 degrees for 3 s; and the camera's Rotation Damping (3.9) started 6 degrees
+off (`PreviousStateIsValid = false` does not skip a component's damping, only a negative deltaTime does). The
+director is then held at 0, the camera at the start, until Oxipital's meshes are loaded (`MeshLoader.isLoaded`, also
+when recording) and, in a preview, `steadyFrames` (10) frames in a row take under `steadyFrameTime` (0.1 s) of real
+time (at most 20 s): on the audio clock the loading hitches counted, the preview started 2.5 s in and skipped 1.6 s
+more when the meshes came. `Soledad > Build Film Timelines`
 (`FilmTimelineBuilder`) creates whatever is missing (Film, timelines, groups, tracks, bindings, Animators), moves
 earlier root tracks into the groups (on Show into `Show`, others into `Camera 16:9`, copied into `Camera Dome`), and
 stretches the Recorder clips to the Timeline: run it again after changing a Timeline's length.

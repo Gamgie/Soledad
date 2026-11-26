@@ -28,8 +28,17 @@ namespace Soledad
         [Tooltip("Distance along the act's path (m) where the shot starts, for a ride by speed. A Timeline that rides by progress places the camera itself.")]
         public float startDistance;
 
+        [Tooltip("Preview only: steady frames to wait for before playing, once Oxipital's meshes are loaded, the camera held at the Timeline's start. On the audio clock the loading hitches counted: the preview started 2.5 s in, then skipped 1.6 s when the meshes came.")]
+        [Min(0)] public int steadyFrames = 10;
+        [Tooltip("Preview only: longest real frame time (s) counted as steady.")]
+        [Min(0.01f)] public float steadyFrameTime = 0.1f;
+
+        const double MaxWait = 20.0;        // a machine that never runs steady starts anyway
+
         Film _film;
-        bool _started;
+        bool _started, _waiting, _record, _cutPending;
+        int _steady;
+        double _lastRealTime, _waitStart;
 
         void Start()
         {
@@ -38,6 +47,15 @@ namespace Soledad
 
         void Update()
         {
+            if (_waiting)
+            {
+                if (Ready())
+                {
+                    _waiting = false;
+                    director.Play();
+                }
+                return;
+            }
             if (_started || _film == null || !_film.playTimelines) return;
             if (show == null || show.ShownAct != act) return;
             if (rideSpline)
@@ -46,6 +64,20 @@ namespace Soledad
                 if (spline == null || spline.spline == null) return;      // the act has not handed its path yet
             }
             Play();
+        }
+
+        // True once Oxipital's emitter meshes are loaded (asynchronous at Play; their arrival is a long frame, and the
+        // Orb Groups spawned before it sit on the default shape), then in a preview steadyFrames frames in a row took
+        // at most steadyFrameTime of real time
+        bool Ready()
+        {
+            double now = Time.realtimeSinceStartupAsDouble;
+            if (now - _waitStart > MaxWait) return true;
+            bool loaded = Oxipital.MeshLoader.isLoaded;
+            if (_record) return loaded;
+            _steady = loaded && now - _lastRealTime <= steadyFrameTime ? _steady + 1 : 0;
+            _lastRealTime = now;
+            return _steady >= steadyFrames;
         }
 
         /// <summary>Play the Timeline from its start (ride restarted first with <see cref="rideSpline"/>).</summary>
@@ -63,16 +95,20 @@ namespace Soledad
             // Preview: the Timeline follows the audio clock, so a slow or long frame (act loading, Oxipital meshes)
             // drops images instead of putting the picture behind the sound (game time loses every frame longer than
             // Maximum Allowed Timestep). Recording: game time, which the Recorder steps by exactly one frame.
-            director.timeUpdateMode = _film != null && _film.record ? DirectorUpdateMode.GameTime : DirectorUpdateMode.DSPClock;
+            _record = _film != null && _film.record;
+            director.timeUpdateMode = _record ? DirectorUpdateMode.GameTime : DirectorUpdateMode.DSPClock;
             director.time = 0;
             // The keys at 0 (the Spline camera's progress, offset, look...) applied now: the director itself only
             // evaluates after the Updates, and the camera would place itself this frame from the scene's values
             director.Evaluate();
-            director.Play();
             _cutPending = rideSpline;
+            // Held at 0 until Oxipital's meshes are loaded and, in a preview, the frames are steady: the first frames
+            // after the act shows are long, and the audio clock counts them. A Recorder render steps game time: it
+            // only waits for the meshes.
+            _waiting = true;
+            _steady = 0;
+            _lastRealTime = _waitStart = Time.realtimeSinceStartupAsDouble;
         }
-
-        bool _cutPending;
 
         // The frame the Timeline starts, once the cameras have updated and before Cinemachine places the main camera:
         // the Spline camera at the Timeline's start, shown by a cut. Otherwise the first image came from the camera the
@@ -81,17 +117,27 @@ namespace Soledad
         // frame later (it rides in its Update, before the Timeline's values of the frame are applied).
         void LateUpdate()
         {
-            if (_cutPending)
-            {
-                _cutPending = false;
-                var spline = cameraController != null ? cameraController.splineCamera : null;
-                if (spline != null)
-                {
-                    if (spline.IsActive) spline.SendMessage("Update", SendMessageOptions.DontRequireReceiver);   // ride now
-                    if (spline.virtualCamera != null) spline.virtualCamera.PreviousStateIsValid = false;         // no damping
-                    if (cameraController.cinemachineBrain != null) cameraController.cinemachineBrain.ResetState(); // no blend
-                }
-            }
+            if (!_cutPending) return;
+            _cutPending = false;
+            var spline = cameraController != null ? cameraController.splineCamera : null;
+            if (spline == null) return;
+            // The ride's state again, now that the Timeline's keys are applied: offset (otherwise smoothed from the
+            // scene's value), turn rate and look.
+            spline.ResetRide();
+            // A ride by progress takes its direction of travel from the change of distance. The ride of this frame's
+            // Update came from the distance the act left at load (1.7 km on): it read a move backwards and the
+            // camera looked behind (progress 0 does not move, so it stayed so), then turned round as the progress
+            // rose, a turn the bank took for 900 degrees/s: the camera rolled 60 degrees and took 3 s to level.
+            // From just below the start, the first ride reads a move forwards.
+            if (spline.useProgress) spline.distance = -1f;
+            if (spline.IsActive) spline.SendMessage("Update", SendMessageOptions.DontRequireReceiver);   // ride now
+            var brain = cameraController.cinemachineBrain;
+            // No damping: one update with a negative deltaTime puts the camera on the target, so the damped follow
+            // and rotation (Rotation Damping 3.9) start from there. PreviousStateIsValid = false was not enough: the
+            // components only skip their damping on a negative deltaTime, and the first image was 6 degrees off.
+            if (spline.virtualCamera != null)
+                spline.virtualCamera.InternalUpdateCameraState(brain != null ? brain.DefaultWorldUp : Vector3.up, -1f);
+            if (brain != null) brain.ResetState();                                                       // no blend
         }
     }
 }
