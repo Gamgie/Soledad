@@ -10,8 +10,10 @@ namespace Soledad
     /// the same base settings, each varied at random by up to <see cref="variation"/> and turned at random.
     ///
     /// Lives under the act's World object, at its origin: the monoliths are placed in terrain space (the landscape
-    /// of <see cref="terrain"/>), so they move with the floating origin. They are generated (deterministic for a given
-    /// seed), never saved, and follow every change made here.
+    /// of <see cref="terrain"/>). The spread runs only on demand (Spread Monoliths, Edit mode): the monoliths are then
+    /// ordinary scene objects (prefab instances under the child "Monoliths"), saved with the act scene, moved,
+    /// duplicated or deleted by hand like any object, and never placed again by this component (not on Play, not on
+    /// load). The Shape and Growth settings still apply at once to the monoliths there (without moving them).
     ///
     /// Each monolith has its own reflection probe, but refreshing one costs about a full low-resolution render per
     /// six frames: in Play mode only the <see cref="liveReflections"/> nearest grown monoliths keep a live
@@ -20,7 +22,9 @@ namespace Soledad
     [ExecuteAlways]
     public class MonolithField : MonoBehaviour
     {
-        [Header("Spread (monoliths regenerated on change)")]
+        public const string ContainerName = "Monoliths";
+
+        [Header("Spread (only with Spread Monoliths: replaces the monoliths)")]
         [Range(0, 200)] public int count = 24;
         [Tooltip("Along the route (terrain +Z, m): from, to.")]
         public Vector2 routeRange = new Vector2(500f, 16000f);
@@ -35,7 +39,7 @@ namespace Soledad
         [Range(0f, 0.5f)] public float variation = 0.2f;
         public int seed = 1;
 
-        [Header("Shape")]
+        [Header("Shape (applied to the monoliths there)")]
         [Tooltip("Side (m) of the triangle.")]
         public float side = 30f;
         [Tooltip("Height (m).")]
@@ -47,7 +51,7 @@ namespace Soledad
         [Tooltip("Depth (m) the foot goes into the ground.")]
         public float sink = 4f;
 
-        [Header("Growth")]
+        [Header("Growth (applied to the monoliths there)")]
         public Monolith.GrowthStyle growthStyle = Monolith.GrowthStyle.Scale;
         [Tooltip("Depth (m) ahead of the camera along the route (Z) where a monolith starts to grow.")]
         public float growStart = 3500f;
@@ -72,26 +76,46 @@ namespace Soledad
 
         readonly List<Monolith> _monoliths = new List<Monolith>();
         Transform _container;
-        int _spreadHash;
+        int _childCount = -1;
         bool _dirty;
         // Nearest grown monoliths this frame (indices), kept sorted by distance
         readonly int[] _nearest = new int[16];
 
-        void OnEnable() => Generate();
+        /// <summary>The monoliths there (children of "Monoliths", in order).</summary>
+        public IReadOnlyList<Monolith> Monoliths => _monoliths;
 
-        void OnDisable() => Clear();
+        void OnEnable()
+        {
+            Collect();
+            _dirty = true;
+        }
 
         void OnValidate() => _dirty = true;
 
         void Update()
         {
+            // Monoliths added, duplicated or deleted by hand
+            if (_container == null || _container.childCount != _childCount) Collect();
             if (_dirty)
             {
                 _dirty = false;
-                if (SpreadHash() != _spreadHash || _monoliths.Count != count) Generate();
-                else for (int i = 0; i < _monoliths.Count; i++) if (_monoliths[i] != null) Apply(_monoliths[i], i);
+                for (int i = 0; i < _monoliths.Count; i++) Apply(_monoliths[i], i);
             }
             if (Application.isPlaying) ChooseLiveReflections();
+        }
+
+        // The monoliths there, as saved in the scene
+        void Collect()
+        {
+            _monoliths.Clear();
+            _container = transform.Find(ContainerName);
+            _childCount = _container != null ? _container.childCount : 0;
+            if (_container == null) return;
+            for (int i = 0; i < _container.childCount; i++)
+            {
+                var m = _container.GetChild(i).GetComponent<Monolith>();
+                if (m != null) _monoliths.Add(m);
+            }
         }
 
         // Only the few nearest grown monoliths have a probe, and the very nearest of them refresh it
@@ -124,42 +148,20 @@ namespace Soledad
             }
         }
 
-        int SpreadHash()
+#if UNITY_EDITOR
+        /// <summary>Spreads the monoliths again from the Spread settings (Edit mode), replacing those there, hand moves
+        /// included. The same settings and seed give the same places.</summary>
+        public void Spread()
         {
-            unchecked
-            {
-                int h = count;
-                h = h * 31 + routeRange.GetHashCode();
-                if (density != null)
-                    foreach (var key in density.keys)
-                        h = h * 31 + key.time.GetHashCode() * 7 + key.value.GetHashCode() * 3 + key.inTangent.GetHashCode() + key.outTangent.GetHashCode() * 5;
-                h = h * 31 + width.GetHashCode();
-                h = h * 31 + routeClearance.GetHashCode();
-                h = h * 31 + variation.GetHashCode();
-                h = h * 31 + seed;
-                h = h * 31 + side.GetHashCode();
-                h = h * 31 + sink.GetHashCode();
-                h = h * 31 + (terrain != null ? terrain.GetInstanceID() : 0);
-                h = h * 31 + (monolithPrefab != null ? monolithPrefab.GetInstanceID() : 0);
-                return h;
-            }
-        }
-
-        /// <summary>Spreads the monoliths again from the settings.</summary>
-        [ContextMenu("Regenerate Monoliths")]
-        public void Generate()
-        {
-            Clear();
-            _spreadHash = SpreadHash();
-            if (monolithPrefab == null) return;
+            if (Application.isPlaying || monolithPrefab == null) return;
             if (terrain == null) terrain = FindFirstObjectByType<FlythroughTerrain>();
             TerrainShape shape = terrain != null ? terrain.shape : TerrainShape.Default;
 
-            // Built inactive, so each monolith wakes up with its own values
-            var container = new GameObject("Monoliths (generated)") { hideFlags = HideFlags.DontSave };
-            container.SetActive(false);
+            var old = transform.Find(ContainerName);
+            if (old != null) UnityEditor.Undo.DestroyObjectImmediate(old.gameObject);
+            var container = new GameObject(ContainerName);
+            UnityEditor.Undo.RegisterCreatedObjectUndo(container, "Spread Monoliths");
             container.transform.SetParent(transform, false);
-            _container = container.transform;
 
             // Density along the route: its cumulative sum, to draw positions that follow the curve
             BuildDensityTable();
@@ -187,26 +189,30 @@ namespace Soledad
                 }
                 placed.Add(best);
 
-                var go = Instantiate(monolithPrefab, _container, false);
+                var go = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(monolithPrefab, container.transform);
                 go.name = $"Monolith {i + 1}";
-                foreach (var t in go.GetComponentsInChildren<Transform>(true)) t.gameObject.hideFlags = HideFlags.DontSave;
-                var monolith = go.GetComponent<Monolith>();
-                Apply(monolith, i);
-
                 // On the lowest ground under its foot, so it never floats on a slope (the sink hides the rest)
-                float reach = side * 0.6f;
-                float ground = float.MaxValue;
-                for (int s = 0; s < 4; s++)
-                {
-                    float angle = s * Mathf.PI * 0.5f;
-                    Vector2 offset = s == 0 ? Vector2.zero : new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * reach;
-                    ground = Mathf.Min(ground, TerrainField.Height(new float2(best.x + offset.x, best.y + offset.y), shape));
-                }
-                go.transform.localPosition = new Vector3(best.x, ground, best.y);
+                go.transform.localPosition = new Vector3(best.x, Ground(best, shape), best.y);
                 go.transform.localRotation = Quaternion.Euler(0f, (float)random.NextDouble() * 360f, 0f);
-                _monoliths.Add(monolith);
+                Apply(go.GetComponent<Monolith>(), i);
             }
-            container.SetActive(true);
+            Collect();
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+        }
+#endif
+
+        // Lowest ground under a monolith's foot (terrain space)
+        float Ground(Vector2 p, TerrainShape shape)
+        {
+            float reach = side * 0.6f;
+            float ground = float.MaxValue;
+            for (int s = 0; s < 4; s++)
+            {
+                float angle = s * Mathf.PI * 0.5f;
+                Vector2 offset = s == 0 ? Vector2.zero : new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * reach;
+                ground = Mathf.Min(ground, TerrainField.Height(new float2(p.x + offset.x, p.y + offset.y), shape));
+            }
+            return ground;
         }
 
         const int DensitySteps = 128;
@@ -240,7 +246,8 @@ namespace Soledad
             return (lo + (target - _cumulative[lo]) / span) / DensitySteps;
         }
 
-        // The base settings, each varied by up to +-variation, the same for a given index and seed
+        // The base settings, each varied by up to +-variation, the same for a given index and seed. Only shape and
+        // growth: a monolith's place is never touched here
         void Apply(Monolith m, int index)
         {
             if (m == null) return;
@@ -248,26 +255,24 @@ namespace Soledad
             float V() => 1f + variation * ((float)random.NextDouble() * 2f - 1f);
 
             float scale = V();
-            m.side = side * scale;
-            m.height = height * V();
-            m.cornerRadius = cornerRadius * scale;
-            m.edgeRadius = edgeRadius * scale;
+            float s = side * scale, h = height * V(), cr = cornerRadius * scale, er = edgeRadius * scale;
+            float gs = growStart * V(), ge = growEnd * V();
+            if (m.side == s && m.height == h && m.cornerRadius == cr && m.edgeRadius == er && m.sink == sink &&
+                m.growthStyle == growthStyle && m.growStart == gs && m.growEnd == ge && m.editGrowth == editGrowth &&
+                m.keepGrown == keepGrown) return;
+#if UNITY_EDITOR
+            if (!Application.isPlaying) UnityEditor.Undo.RecordObject(m, "Monolith settings");
+#endif
+            m.side = s;
+            m.height = h;
+            m.cornerRadius = cr;
+            m.edgeRadius = er;
             m.sink = sink;
             m.growthStyle = growthStyle;
-            m.growStart = growStart * V();
-            m.growEnd = growEnd * V();
+            m.growStart = gs;
+            m.growEnd = ge;
             m.editGrowth = editGrowth;
             m.keepGrown = keepGrown;
-        }
-
-        void Clear()
-        {
-            _monoliths.Clear();
-            if (_container == null) _container = transform.Find("Monoliths (generated)");
-            if (_container == null) return;
-            if (Application.isPlaying) Destroy(_container.gameObject);
-            else DestroyImmediate(_container.gameObject);
-            _container = null;
         }
     }
 }

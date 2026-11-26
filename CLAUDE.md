@@ -207,7 +207,13 @@ sky, no bloom, fog off.
   The prefab `Prefabs/Cloud Cluster.prefab` is a single standalone cluster.
   Monoliths: `World/Monoliths` (`MonolithField`) spreads copies of `Prefabs/Monolith.prefab` along the route,
   outside `routeClearance` of the centre line, on the lowest ground under their foot, with base shape and growth
-  values varied by `variation`, random yaw, generated and never saved. A `Monolith` is a standing triangular prism
+  values varied by `variation`, random yaw. **Spread only on demand** (Gamgie, 2026-11-26: positions must never change
+  on Play): the **Spread Monoliths** button of its Inspector (Edit mode, asks before replacing) places them, as prefab
+  instances saved in the act scene under `World/Monoliths/Monoliths`; nothing else ever places them again (not on
+  load, not on Play, not on a Spread change). Move, duplicate or delete them by hand like any object (the field picks
+  up added or removed children). The Shape and Growth settings still apply at once to the monoliths there, by index
+  and seed, without moving them. Spread again with the same settings and seed gives the same places (35 monoliths,
+  seed 1, spread 2026-11-26 = the layout generated before). A `Monolith` is a standing triangular prism
   with rounded edges (mesh generated on the child `Slab`, Default layer: the Dome Creator cameras only render
   Default, TransparentFX, Ignore Raycast and Water, so never put act content on another layer), blurred mirror finish (`Monolith.mat`,
   HDRP Lit metallic), growing (Scale or Rise) by depth ahead of the camera along the route (Z), from `growStart` to `growEnd`, staying grown (`keepGrown`). Its own realtime
