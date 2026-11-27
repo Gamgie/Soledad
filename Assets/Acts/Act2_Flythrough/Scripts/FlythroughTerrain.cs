@@ -257,7 +257,9 @@ namespace Soledad
                     for (int k = 0; k < spline.Count; k++)
                     {
                         var knot = spline[k];
-                        hash = hash * 9176u + math.hash(new float4(knot.Position, knot.TangentOut.z))
+                        hash = hash * 9176u + math.hash(new float4(knot.Position, k))
+                                            + math.hash(new float4(knot.TangentIn, 0f)) * 5u
+                                            + math.hash(new float4(knot.TangentOut, 0f)) * 7u
                                             + math.hash(knot.Rotation.value) * 3u;
                     }
                 }
@@ -562,10 +564,12 @@ namespace Soledad
             Tick(Application.isPlaying ? Time.deltaTime : 0f);
         }
 
+        /// <summary>Rebuilds the terrain, mountain ranges included (they also rebuild by themselves when a knot moves).</summary>
         [ContextMenu("Rebuild Terrain")]
-        void Rebuild()
+        public void Rebuild()
         {
             _dirty = true;
+            _rangesBuilt = false;
 #if UNITY_EDITOR
             if (!Application.isPlaying) UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
 #endif
