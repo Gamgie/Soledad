@@ -4248,7 +4248,7 @@ MonoBehaviour:
   cullBehind: 1
   behindMargin: 1500
   rangeCellSize: 150
-  farClip: 150000
+  farClip: 600000
   world: {fileID: 141498848}
   flightPath: {fileID: 364613034}
   actVolume: {fileID: 1268012190}

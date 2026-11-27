@@ -99,10 +99,10 @@ namespace Soledad
         [Tooltip("Cell of the grid the mountain ranges are rasterised on (m). Smaller = crest lines followed more closely, slower to rebuild.")]
         [Min(25f)] public float rangeCellSize = 150f;
         [Tooltip("Far clip plane given to every camera while the act is shown, in Play mode (m). The Oxipital cameras stop at 1 km. " +
-                 "Keep it well beyond the farthest ground (about 70 km): with their 1 cm near plane, HDRP's tile classification takes " +
-                 "pixels near the far plane for sky (beyond ~36 km with 40 km, ~100 km with 150 km) and drops the sun on their whole " +
-                 "16 px tile: stair-stepped dark edges on the curled ground.")]
-        public float farClip = 150000f;
+                 "Keep it well beyond the farthest ground (about 115 km): with their 1 cm near plane, HDRP's tile classification takes " +
+                 "pixels near the far plane for sky (beyond ~36 km with 40 km, ~100 km with 150 km, ~210 km with 600 km, never " +
+                 "closer than ~330 km however far) and drops the sun on their whole 16 px tile: stair-stepped dark edges on the curled ground.")]
+        public float farClip = 600000f;
 
         [Header("References")]
         [Tooltip("The fixed landscape: tiles, path and placed objects live under it.")]
