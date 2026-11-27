@@ -179,12 +179,15 @@ sky, no bloom, fog off.
   `FlythroughTerrain.TerrainHeight` (or `GetGroundHeight`). After moving ranges near the route: check the flight's
   clearance and the monoliths (below).
   Tiles (`Terrain (generated)` under `World`) form a quadtree around "Main Camera" (dense near
-  it, coarse to the horizon, `detailDistance`), built in terrain space by a parallel Burst job with skirts hiding
+  it, coarse to the horizon, `detailDistance`) over 4 x 4 root tiles of 32 km around the root corner nearest to it
+  (the covered square only moves when the camera crosses the middle of a root tile, its edge 48 to 80 km away; the
+  earlier 3 x 3 grid around the camera's own root tile switched a whole 32 km column at x = 0, right under the
+  flight, which the curl showed popping in overhead at frame 2934 of the film), built in terrain space by a parallel Burst job with skirts hiding
   the seams, never saved. In Play mode, while the ground is flat, none behind the camera (`cullBehind`: behind a
   plane through it square to its horizontal view direction, kept within `behindMargin` 1.5 km for shadows; the dome
-  sees 180 degrees around its view direction): about 280 tiles instead of 366. Curled, every tile is kept: the curl
+  sees 180 degrees around its view direction): about 280 tiles instead of 366 (with the 3 x 3 grid). Curled, every tile is kept: the curl
   rolls ground from behind and tens of kilometres away up overhead, back into view. A distance limit (45 km) was
-  tried and removed: the far tiles are 32 km squares, so it only dropped the four corners of the 3 x 3 grid, and
+  tried and removed: the far tiles are 32 km squares, so it only dropped the four corners of the then 3 x 3 grid, and
   curled, the remaining arms stuck out of the tube in the sky. Measured on the RTX 3090 (preview): the terrain
   costs 0.5 to 1.4 ms GPU (pixels, not tiles). Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
   shadows, motion vectors) with a hand-written surface (`FlythroughTerrainData.hlsl`: sand or mountain ground by weight, rock on slopes,

@@ -811,9 +811,13 @@ namespace Soledad
 
             _wanted.Clear();
             float rootSize = leafSize * (1 << levels);
-            long rx = (long)math.floor(c.x / rootSize), rz = (long)math.floor(c.y / rootSize);
-            for (long ix = rx - 1; ix <= rx + 1; ix++)
-                for (long iz = rz - 1; iz <= rz + 1; iz++)
+            // 4 x 4 root tiles around the root corner nearest to the camera, so the covered square changes only when the
+            // camera crosses the middle of a root tile, and its edge is always 1.5 to 2.5 root tiles away. A 3 x 3 grid
+            // around the camera's own root tile switched a whole 32 km column at every tile edge, x = 0 among them,
+            // right under the flight: curled, that column rolls up overhead and popped in or out in one frame
+            long rx = (long)math.round(c.x / rootSize), rz = (long)math.round(c.y / rootSize);
+            for (long ix = rx - 2; ix <= rx + 1; ix++)
+                for (long iz = rz - 2; iz <= rz + 1; iz++)
                     Collect(levels, ix, iz, c, heightAbove);
 
             _toRemove.Clear();
