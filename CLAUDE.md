@@ -173,7 +173,8 @@ sky, no bloom, fog off.
   out under it; the shader's mountain ground follows the weight (vertex colour g). Layout traced from Gamgie's sketch
   of 2026-11-26, its distances from the start of the flight brought from 20-74 km to 8-35 km so the fog lets them
   through: North Far, North, North Near (+X side, 12-35 km), Ahead Far (25-30 km ahead, lost in the haze), South
-  (-X side, 8-17 km, the one that shows most), plus `Relief West` / `Relief East`, low rocky hills (280 m, breakup
+  (-X side, 8-17 km, the one that shows most; reshaped by Gamgie on 2026-11-27) and South Far (added by Gamgie
+  on 2026-11-27), plus `Relief West` / `Relief East`, low rocky hills (280 m, breakup
   0.45) 1.7 km either side of the flight path between 2.6 and 7.2 km. Height of the ground anywhere (other scripts):
   `FlythroughTerrain.TerrainHeight` (or `GetGroundHeight`). After moving ranges near the route: check the flight's
   clearance and the monoliths (below).
