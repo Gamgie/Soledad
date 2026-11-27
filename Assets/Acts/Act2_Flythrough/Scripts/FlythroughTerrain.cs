@@ -24,9 +24,8 @@ namespace Soledad
     /// The terrain is a quadtree of tiles around the camera named "Main Camera" (dense near it, coarse towards the
     /// horizon). Tiles are built in terrain space by a Burst job (TerrainField), with skirts hiding the seams between
     /// levels, and drawn with Soledad/FlythroughTerrain, which also rolls the world up (<see cref="curlLateral"/>,
-    /// <see cref="curlForward"/>). Tiles and meshes are never saved in the scene. In Play mode only the tiles the camera
-    /// can see are built: none behind it (<see cref="cullBehind"/>, the dome sees 180 degrees ahead), none beyond
-    /// <see cref="viewDistance"/>.
+    /// <see cref="curlForward"/>). Tiles and meshes are never saved in the scene. In Play mode, while the ground is flat,
+    /// no tile is built behind the camera (<see cref="cullBehind"/>, the dome sees 180 degrees ahead).
     ///
     /// Time is accumulated from Time.deltaTime, so a Recorder capture at a fixed frame rate is deterministic.
     /// </summary>
@@ -93,9 +92,7 @@ namespace Soledad
         [Range(8, 64)] public int cellsPerTile = 48;
         [Tooltip("A tile splits when the camera is closer than its size times this. More = more detail far away.")]
         [Range(1f, 6f)] public float detailDistance = 1.5f;
-        [Tooltip("No tile farther than this from the camera (m, horizontally): what the fog lets through, mountains included.")]
-        public float viewDistance = 45000f;
-        [Tooltip("Play mode: no tile behind the camera (a plane through it, square to its horizontal view direction). The dome sees 180 degrees around its view direction.")]
+        [Tooltip("Play mode, ground flat: no tile behind the camera (a plane through it, square to its horizontal view direction). The dome sees 180 degrees around its view direction. Off while curled: the curl brings ground from behind and far away back into view (overhead).")]
         public bool cullBehind = true;
         [Tooltip("Tiles up to this far behind the camera (m) are kept: their shadows, a turn of the head.")]
         public float behindMargin = 1500f;
@@ -794,9 +791,10 @@ namespace Soledad
             float2 c = new float2(cameraTerrain.x, cameraTerrain.z);
             float heightAbove = math.max(1f, cameraTerrain.y - TerrainField.Height(c, shape, _ranges));
 
-            // Play mode: what is behind the camera's horizontal view direction is never seen (16:9 or dome)
+            // Play mode, flat ground: what is behind the camera's horizontal view direction is never seen (16:9 or
+            // dome). Curled, the ground rolls up overhead and comes back into view: every tile is kept
             _cullForward = 0f;
-            if (cullBehind && Application.isPlaying)
+            if (cullBehind && Application.isPlaying && curlLateral <= 0f && curlForward <= 0f)
             {
                 Transform target = followTarget != null ? followTarget : _foundTarget;
                 if (target != null)
@@ -836,7 +834,6 @@ namespace Soledad
             float size = leafSize * (1 << level);
             float2 min = new float2(ix, iz) * size;
             float2 d = math.max(math.max(min - camera, camera - (min + size)), 0f);
-            if (viewDistance > 0f && math.lengthsq(d) > viewDistance * viewDistance) return;
             if (math.any(_cullForward != 0f))
             {
                 // Farthest corner ahead: the tile is behind if even that one is

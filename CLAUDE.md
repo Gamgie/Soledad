@@ -179,10 +179,13 @@ sky, no bloom, fog off.
   clearance and the monoliths (below).
   Tiles (`Terrain (generated)` under `World`) form a quadtree around "Main Camera" (dense near
   it, coarse to the horizon, `detailDistance`), built in terrain space by a parallel Burst job with skirts hiding
-  the seams, never saved. None beyond `viewDistance` (45 km) and, in Play mode only, none behind the camera
-  (`cullBehind`: behind a plane through it square to its horizontal view direction, kept within `behindMargin`
-  1.5 km for shadows; the dome sees 180 degrees around its view direction): 270-290 tiles instead of 366. Measured
-  on the RTX 3090 (preview): the terrain costs 0.5 to 1.4 ms GPU (pixels, not tiles). Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
+  the seams, never saved. In Play mode, while the ground is flat, none behind the camera (`cullBehind`: behind a
+  plane through it square to its horizontal view direction, kept within `behindMargin` 1.5 km for shadows; the dome
+  sees 180 degrees around its view direction): about 280 tiles instead of 366. Curled, every tile is kept: the curl
+  rolls ground from behind and tens of kilometres away up overhead, back into view. A distance limit (45 km) was
+  tried and removed: the far tiles are 32 km squares, so it only dropped the four corners of the 3 x 3 grid, and
+  curled, the remaining arms stuck out of the tube in the sky. Measured on the RTX 3090 (preview): the terrain
+  costs 0.5 to 1.4 ms GPU (pixels, not tiles). Shader `Soledad/FlythroughTerrain`: HDRP's own Lit passes (GBuffer, Forward, depth,
   shadows, motion vectors) with a hand-written surface (`FlythroughTerrainData.hlsl`: sand or mountain ground by weight, rock on slopes,
   per-pixel relief from terrain coordinates) and the world curl in the `HAVE_MESH_MODIFICATION` hook
   (`curlLateral` rolls the ground into a tube around the flight direction, `curlForward` lifts it ahead into a wall;
