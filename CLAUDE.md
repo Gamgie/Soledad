@@ -233,7 +233,28 @@ sky, no bloom, fog off.
   (`Soledad/CloudCluster`: smooth union of rounded boxes eroded by billowy noise, ray-marched, lit at the point
   where it becomes visible, fake forward scattering). Colour, scattering, Samples and shadow core come from
   `CloudCube.mat`; Fluff, Puff Size, Density and Softness from the field. No physics unless `collisions` (rigidbodies
-  cost ~4 ms CPU for 40 clusters); far clusters take fewer samples and are hidden beyond `drawDistance`.
+  cost ~4 ms CPU for 40 clusters); far clusters take fewer samples and are hidden beyond `drawDistance` (14 km), fading
+  out over the `fadeDistance` (4 km) before it (`_CloudFade` per cluster, scales the volume's alpha and glow): they used
+  to pop in on the horizon at the start of the film, the fog thinning out above 2.5 km where they fly. The march has
+  **no random jitter** (2026-11-27): it only brackets where the cloud starts (the density crossing 0.12, or 0.02 on
+  thin fringes that never reach it), a bisection finds that point exactly, and opacity and thickness are integrated
+  from it at fixed steps, so neighbouring pixels agree. A per-pixel jitter (first fixed, then changing every frame for
+  TAA to average) stayed on screen as grain on the faces and dotted fringes on the edges: TAA cannot follow this
+  transparent (no depth, no motion vectors) while the camera flies (single-frame grain measured 1.49 with it, 1.03
+  without). Swapping the sun's PCSS for the fixed 7x7 PCF on the clouds made no difference (1.52 vs 1.49).
+  The thickness (occlusion, glow) is integrated over a fixed 24 steps, the last one weighted by what lies before the
+  end of the ray, then capped smoothly at the depth where the cloud turns opaque (`cap (1 - exp(-t / cap))`, cap =
+  4.6 / density): cut off at 1 % transmittance or at the box's end, it changed by whole steps from pixel to pixel and
+  drew stripes, terraces and contour lines on the faces (2026-11-28; that was most of the "stair-stepped shadows").
+  **The Sun does not light the cloud volumes**: they are on HDRP's Light Layer 1 (`CloudCluster.VolumeLightLayer`,
+  the Sun is on Light Layer default), and `Soledad/CloudCluster` adds the sun itself (HDRP's own
+  `EvaluateLight_Directional`: atmosphere and height fog; Lambert on the cloud's normal), shaded by its own density
+  marched towards the sun (6 steps growing x1.8 from `dt`, `exp(-depth x density x 0.3)`), so the cloud's shadow on
+  itself is smooth instead of the cubes' shadow-map texels. Lost: shadows of other objects (other clusters,
+  monoliths) on the clouds, and the sun's specular on them. Sky light and the scattering glow are unchanged.
+  The march stops at the opaque scene's depth (`LoadCameraDepth`): the box's front face passes the depth test, and
+  cloud density behind an object inside or beyond the box used to be drawn over it (the monoliths' tops reach the
+  clouds' altitude).
   The prefab `Prefabs/Cloud Cluster.prefab` is a single standalone cluster.
   Monoliths: `World/Monoliths` (`MonolithField`) spreads copies of `Prefabs/Monolith.prefab` along the route,
   outside `routeClearance` of the centre line, on the lowest ground under their foot, with base shape and growth

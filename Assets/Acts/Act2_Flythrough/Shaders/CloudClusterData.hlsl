@@ -248,10 +248,37 @@ void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs p
     if (_DirectionalLightCount > 0)
     {
         DirectionalLightData sun = _DirectionalLightDatas[0];
-        float cosAngle = dot(dirWS, -sun.forward);
+        float3 L = -sun.forward;
+        float cosAngle = dot(dirWS, L);
         float g = saturate(_CloudScatterPhase) * 0.95;
         float phase = (1.0 - g * g) / pow(max(1.0 + g * g - 2.0 * g * cosAngle, 1e-4), 1.5);
         emissive = sun.color * _CloudColor.rgb * (_CloudScatter * phase / PI) * alpha * exp(-thickness * _CloudDensity * 0.25);
+
+        // Direct sunlight, done here because the volume is on a light layer the Sun does not light (CloudCluster.cs):
+        // the sun's colour as HDRP gives it at this point (atmosphere, height fog), Lambert on the cloud's normal, and the
+        // cloud's shadow on itself measured through its own density towards the sun (steps growing out of the cluster),
+        // smooth from pixel to pixel instead of the shadow map's texels. Shadows of other objects on the cloud are lost.
+        LightLoopContext sunContext;            // only read for the sun's cookie
+        sunContext.sampleReflection = 0;
+    #ifdef APPLY_FOG_ON_SKY_REFLECTIONS
+        sunContext.positionWS = posInput.positionWS;
+    #endif
+        sunContext.shadowContext = InitShadowContext();
+        sunContext.contactShadow = 0;
+        sunContext.contactShadowFade = 0.0;
+        sunContext.shadowValue = 1.0;
+        float4 sunLight = EvaluateLight_Directional(sunContext, posInput, sun);
+        float depth = 0.0, ds = dt, ts = 0.5 * dt;
+        [loop]
+        for (int s = 0; s < 6; s++)
+        {
+            depth += CC_Density(surface + L * ts) * ds;
+            ts += ds;
+            ds *= 1.8;
+        }
+        float selfShadow = exp(-depth * _CloudDensity * 0.3);
+        float lambert = saturate(dot(normalWS, L));
+        emissive += sunLight.rgb * sunLight.a * sun.lightDimmer * _CloudColor.rgb * (lambert * selfShadow / PI);
     }
     #endif
 #else

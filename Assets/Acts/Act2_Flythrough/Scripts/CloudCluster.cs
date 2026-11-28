@@ -243,7 +243,14 @@ namespace Soledad
             renderer.sharedMaterial = SharedVolumeMaterial(volumeShader, cloudMaterial);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = true;
+            // On HDRP's Light Layer 1 only, which the Sun (Light Layer default) does not light: Soledad/CloudCluster lights
+            // itself with the sun and shades itself through its own density, smoothly. Lit by HDRP, its own cubes' shadow
+            // map darkened its faces in stair-stepped texels and stripes that no filtering smoothed.
+            renderer.renderingLayerMask = VolumeLightLayer;
         }
+
+        /// <summary>Rendering layer of the cloud volumes: HDRP's Light Layer 1, so the Sun (Light Layer default) skips them.</summary>
+        public const uint VolumeLightLayer = 1u << 1;
 
         void OnEnable() => Rebuild();
 
