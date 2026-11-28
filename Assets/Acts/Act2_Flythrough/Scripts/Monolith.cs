@@ -50,6 +50,12 @@ namespace Soledad
         [Header("Reflection")]
         [Tooltip("Distance (m) within which the reflection is refreshed (one cube face per frame); farther it is frozen.")]
         public float reflectionDistance = 4000f;
+        [Tooltip("Far plane (m) of the reflection's capture: the desert and the clouds farther than this are missing from it (sky instead).")]
+        public float captureFar = 30000f;
+        [Tooltip("Live reflection refreshed one cube face per frame (cheaper, an even cost). Off: all six every frame. " +
+                 "Sliced, the faces come from six different frames: the top edge (mostly the upward face) flickered " +
+                 "against the sides while the curl rolled the landscape. Never sliced while the Recorder renders.")]
+        public bool timeSlicing = false;
 
         public const int ReflectionByDistance = -1, ReflectionFrozen = 0, ReflectionLive = 1, ReflectionOff = 2;
 
@@ -65,7 +71,18 @@ namespace Soledad
         HDAdditionalReflectionData _probe;
         Mesh _mesh;
         int _builtHash;
-        float _reached;      // highest growth reached since enabled (Play mode)
+        float _reached;      // highest growth reached since enabled or since the last cut (Play mode)
+        Vector3 _lastViewer;
+        bool _hasViewer;
+        bool _wasGrown;
+
+        // A camera move longer than this in one frame (m) is a cut, not a flight (60 m/s to ~1.8 km/s in Act 2: a
+        // few metres to ~30 m per frame): the grown monoliths it passed are not kept grown. The camera sits for a frame
+        // wherever the Spline camera target was left in the scene before the Timeline puts it at the start
+        const float CutDistance = 1500f;
+
+        /// <summary>Unity Recorder is rendering (offline: the game time is stepped, the cost does not matter).</summary>
+        public static bool Recording => Application.isPlaying && Time.captureDeltaTime > 0f;
 
         void OnEnable()
         {
@@ -74,6 +91,15 @@ namespace Soledad
             _probe = reflection != null ? reflection.GetComponent<HDAdditionalReflectionData>() : null;
             _builtHash = 0;
             _reached = 0f;
+            _hasViewer = false;
+            _wasGrown = false;
+            if (_probe != null)
+            {
+                // Capture far enough for the desert and the clouds (the probe's own default stops at 1 km)
+                ref var frustum = ref _probe.settingsRaw.cameraSettings.frustum;
+                frustum.farClipPlaneRaw = captureFar;
+                frustum.nearClipPlaneRaw = Mathf.Max(frustum.nearClipPlaneRaw, 1f);
+            }
             Apply();
             if (_probe != null) _probe.RequestRenderNextUpdate();
         }
@@ -105,6 +131,10 @@ namespace Soledad
                     float depth = transform.position.z - viewer.position.z;
                     float t = Mathf.InverseLerp(growStart, growEnd, depth);
                     float target = t * t * (3f - 2f * t);
+                    // A cut (the start of the film, a jump in the Timeline): what was reached before does not count
+                    if (_hasViewer && (viewer.position - _lastViewer).sqrMagnitude > CutDistance * CutDistance) _reached = 0f;
+                    _lastViewer = viewer.position;
+                    _hasViewer = true;
                     // Once risen it stays up: the camera flying away does not send it back underground
                     growth = keepGrown ? Mathf.Max(_reached, target) : target;
                     _reached = growth;
@@ -118,11 +148,22 @@ namespace Soledad
                             _probe.enabled = on;
                             if (on) _probe.RequestRenderNextUpdate();    // a fresh reflection when it gets one back
                         }
-                        bool live = on && growth > 0.01f
+                        // Refreshed only once fully grown: while it grows, its own size changes under the probe and
+                        // the faces captured one per frame no longer matched (a glitch on the way in). A fresh capture
+                        // when it reaches full size, then live if it is near
+                        // Rise: the slab keeps its size and the probe follows it, so it can be live while rising
+                        bool grown = growth > 0.999f || growthStyle == GrowthStyle.Rise;
+                        if (on && grown && !_wasGrown) _probe.RequestRenderNextUpdate();
+                        _wasGrown = grown;
+                        bool live = on && grown
                                     && (liveReflection == ReflectionByDistance ? distance < reflectionDistance : liveReflection == ReflectionLive);
                         var mode = live ? ProbeSettings.RealtimeMode.EveryFrame : ProbeSettings.RealtimeMode.OnDemand;
                         if (_probe.realtimeMode != mode) _probe.realtimeMode = mode;
-                        if (!_probe.timeSlicing) _probe.timeSlicing = true;
+                        // Time slicing (one cube face per frame) live; all six every frame while the Recorder renders:
+                        // sliced, the faces came from six different frames, and with the camera moving (and the
+                        // curl rolling the landscape) the reflection showed seams and jumps
+                        bool slicing = timeSlicing && !Recording;
+                        if (_probe.timeSlicing != slicing) _probe.timeSlicing = slicing;
                     }
                 }
             }
@@ -152,12 +193,24 @@ namespace Soledad
 
             if (_probe != null)
             {
-                // The reflection covers the slab and a margin around it, captured from its middle
-                float h = growthStyle == GrowthStyle.Scale ? height * g : height;
-                float w = growthStyle == GrowthStyle.Scale ? side * g : side;
-                float top = growthStyle == GrowthStyle.Scale ? h - sink : g * height - sink;
-                _probe.transform.localPosition = new Vector3(0f, Mathf.Max(top * 0.5f, 1f), 0f);
-                Vector3 box = new Vector3(w, Mathf.Max(h, 1f), w * 0.866f) + Vector3.one * 4f;
+                // The reflection covers the fully grown slab and a margin around it, captured from its middle,
+                // whatever the growth: a probe moving up as the monolith grew captured its cube faces from different
+                // heights (they no longer matched), and a frozen one kept a capture taken from the ground.
+                // Centred on the prism's bounds (the triangle runs from -depth/3 to 2 depth/3 along z, around its
+                // centroid), still inside it: a box centred on the centroid stopped short of the apex, whose edge then
+                // reflected the sky (or black) when the camera came close
+                // Rise: the middle of the part out of the ground, so the probe is always inside the slab (above
+                // its top it saw its own top face, and a frozen capture jumped when it was fully grown)
+                float top = height - sink;
+                if (growthStyle == GrowthStyle.Rise) top -= (1f - g) * height;
+                float depth = side * 0.8660254f;
+                Vector3 position = new Vector3(0f, Mathf.Max(top * 0.5f, 1f), depth / 6f);
+                if (_probe.transform.localPosition != position) _probe.transform.localPosition = position;
+                Vector3 box = new Vector3(side, Mathf.Max(height, 1f), depth) + Vector3.one * 4f;
+                // HDRP's influence box ignores the transform's scale: a monolith scaled by hand (Monolith 14,
+                // 2026-11-27) grew but its box did not, and part of it reflected nothing
+                Vector3 scale = _probe.transform.lossyScale;
+                box = Vector3.Scale(box, new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
                 if (_probe.influenceVolume.boxSize != box) _probe.influenceVolume.boxSize = box;
             }
         }

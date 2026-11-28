@@ -52,7 +52,7 @@ namespace Soledad
         public float sink = 4f;
 
         [Header("Growth (applied to the monoliths there)")]
-        public Monolith.GrowthStyle growthStyle = Monolith.GrowthStyle.Scale;
+        public Monolith.GrowthStyle growthStyle = Monolith.GrowthStyle.Rise;
         [Tooltip("Depth (m) ahead of the camera along the route (Z) where a monolith starts to grow.")]
         public float growStart = 3500f;
         [Tooltip("Depth (m) ahead along the route (Z) where it is fully grown (0 = when the camera passes it).")]
@@ -68,6 +68,12 @@ namespace Soledad
         [Range(0, 16)] public int reflectionProbes = 6;
         [Tooltip("Of those, how many of the nearest keep a live reflection (each costs about 1 ms of GPU); the others keep their last one.")]
         [Range(0, 6)] public int liveReflections = 2;
+        [Tooltip("Live reflections while Unity Recorder renders (offline, the cost does not matter): a frozen reflection " +
+                 "turning live, or one still frozen while the curl rolls the landscape, jumped.")]
+        [Range(0, 16)] public int recordingLiveReflections = 8;
+        [Tooltip("Live reflections refreshed one cube face per frame (cheaper). Off: all six every frame (the top edge " +
+                 "flickered against the sides while the curl rolled the landscape). Never sliced while the Recorder renders.")]
+        public bool timeSlicing = false;
 
         [Header("References")]
         [Tooltip("The landscape (its shape gives the ground height). Empty = found in the scene.")]
@@ -122,7 +128,7 @@ namespace Soledad
         void ChooseLiveReflections()
         {
             int probes = Mathf.Min(reflectionProbes, _nearest.Length), found = 0;
-            int live = Mathf.Min(liveReflections, probes);
+            int live = Mathf.Min(Monolith.Recording ? recordingLiveReflections : liveReflections, probes);
             for (int i = 0; i < _monoliths.Count; i++)
             {
                 Monolith m = _monoliths[i];
@@ -145,6 +151,7 @@ namespace Soledad
                 for (int k = 0; k < found; k++)
                     if (_nearest[k] == i) { state = k < live ? Monolith.ReflectionLive : Monolith.ReflectionFrozen; break; }
                 m.liveReflection = state;
+                m.timeSlicing = timeSlicing;
             }
         }
 
