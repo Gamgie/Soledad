@@ -195,7 +195,38 @@ namespace Soledad
         public void SetTerrainVisible(bool visible)
         {
             _terrainVisible = visible;
-            if (_root != null && _root.gameObject.activeSelf != visible) _root.gameObject.SetActive(visible);
+            bool shown = TerrainShown;
+            if (_root != null && _root.gameObject.activeSelf != shown) _root.gameObject.SetActive(shown);
+        }
+
+#if UNITY_EDITOR
+        const string HiddenInEditorKey = "Soledad.Act2.HideDesertInEditor";
+
+        /// <summary>
+        /// Editor only, outside Play mode: hides the terrain tiles, to work on Bogota (button Hide Desert Terrain in
+        /// BogotaSequence's Inspector). Kept for the Editor session, never saved in the scene, no effect in Play mode or on a render.
+        /// </summary>
+        public static bool HiddenInEditor
+        {
+            get => UnityEditor.SessionState.GetBool(HiddenInEditorKey, false);
+            set
+            {
+                UnityEditor.SessionState.SetBool(HiddenInEditorKey, value);
+                foreach (var t in FindObjectsByType<FlythroughTerrain>(FindObjectsSortMode.None))
+                    t.SetTerrainVisible(t._terrainVisible);
+            }
+        }
+#endif
+
+        bool TerrainShown
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (!Application.isPlaying && HiddenInEditor) return false;
+#endif
+                return _terrainVisible;
+            }
         }
 
         // Play mode: hand the flight path to the Spline camera of Soledad_Main, without ground (its heights are baked).
@@ -603,7 +634,8 @@ namespace Soledad
         {
             if (terrainMaterial == null) return;
             EnsureRoot();
-            if (_root.gameObject.activeSelf != _terrainVisible) _root.gameObject.SetActive(_terrainVisible);
+            bool shown = TerrainShown;
+            if (_root.gameObject.activeSelf != shown) _root.gameObject.SetActive(shown);
             UpdateRanges();
             uint hash = BuildHash();
             if (_dirty || hash != _builtHash)
