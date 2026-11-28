@@ -205,10 +205,15 @@ sky, no bloom, fog off.
   Variants) reads reversed depth as `1 - depth`, which rounds to exactly 1 for pixels near the far plane (beyond ~36 km
   with 40 km, ~100 km with 150 km, ~210 km with 600 km, never closer than ~330 km however far), takes their whole 16 px tile for sky and drops the sun there: at 40 km the curled ground showed
   stair-stepped dark bands along the tube's far edge (not a shadow problem), again at 150 km once the 4 x 4 root
-  tiles pushed the edge further. Act 2 Volume: sunset haze (fog base 0 m, fading out by 2.5 km, 3.5 km mean free path (2.2 km until 2026-11-26, thinned so the ranges show), warm albedo
+  tiles pushed the edge further. The act also pushes the near plane to `nearClip` (1 m) the same way: with 1 cm
+  against 600 km the same classification dropped the lighting on whole 16 px tiles where a distant object meets the
+  sky: the tops of the monoliths (~1 km away) flickered in dark, sky-coloured steps (2026-11-28; gone at 1 m, checked
+  frame by frame in Play). The camera never comes within metres of anything in Act 2. Act 2 Volume: sunset haze (fog base 0 m, fading out by 2.5 km, 3.5 km mean free path (2.2 km until 2026-11-26, thinned so the ranges show), warm albedo
   (1, 0.86, 0.72), volumetric with forward glow 0.8 towards the sun, white balance +14 / +4; the Physically
-  Based Sky's own Atmospheric Scattering stays off: its aerial haze flickers on ridges near the sun while flying) and
-  shadows out to 8 km (4 cascades). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,
+  Based Sky's own Atmospheric Scattering stays off: its aerial haze flickers on ridges near the sun while flying),
+  shadows out to 8 km (4 cascades) and **motion blur 0** (HDRP's default profile has 0.5: the clouds, transparent and
+  writing no depth, took the motion of the sky behind them and smeared into streaks whenever the camera turned;
+  TAA was tested and is not the cause). Desert: two scanned PBR sand sets (`Textures/rippled_sand_*`, `dry_sand_*`,
   2 x 2 m, Megascans layout: BaseColor, Normal, Displacement, Roughness, AO) height-blended (ripples on gentle
   slopes, dry sand on slip faces) plus a larger rotated sample against tiling. Mountains and foothills: volcanic
   ground scan (`_Volcanic*`, planar + anti-tiling sample; `_Ground*` names are taken by HDRP's sky); steep slopes in

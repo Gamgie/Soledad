@@ -103,6 +103,11 @@ namespace Soledad
                  "pixels near the far plane for sky (beyond ~36 km with 40 km, ~100 km with 150 km, ~210 km with 600 km, never " +
                  "closer than ~330 km however far) and drops the sun on their whole 16 px tile: stair-stepped dark edges on the curled ground.")]
         public float farClip = 600000f;
+        [Tooltip("Near clip plane given to every camera while the act is shown, in Play mode (m; the Oxipital cameras have 1 cm). " +
+                 "With 1 cm against the 600 km far plane, HDRP's tile classification dropped the lighting on whole 16 px tiles " +
+                 "where a distant object meets the sky: the tops of the monoliths, ~1 km away, flickered in dark sky-coloured steps. " +
+                 "The camera never comes within metres of anything in Act 2.")]
+        public float nearClip = 1f;
 
         [Header("References")]
         [Tooltip("The fixed landscape: tiles, path and placed objects live under it.")]
@@ -428,7 +433,9 @@ namespace Soledad
                 if (_farCameras.Contains(cam)) continue;
                 _farCameras.Add(cam);
                 _farOriginals.Add(cam.farClipPlane);
+                _nearOriginals.Add(cam.nearClipPlane);
                 cam.farClipPlane = Mathf.Max(cam.farClipPlane, farClip);
+                cam.nearClipPlane = Mathf.Max(cam.nearClipPlane, nearClip);
             }
             // The Cinemachine brain gives the main camera its virtual camera's lens every frame (16:9): push them too
             foreach (var vcam in FindObjectsByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -437,29 +444,40 @@ namespace Soledad
                 var lens = vcam.Lens;
                 _farVcams.Add(vcam);
                 _farVcamOriginals.Add(lens.FarClipPlane);
+                _nearVcamOriginals.Add(lens.NearClipPlane);
                 lens.FarClipPlane = Mathf.Max(lens.FarClipPlane, farClip);
+                lens.NearClipPlane = Mathf.Max(lens.NearClipPlane, nearClip);
                 vcam.Lens = lens;
             }
         }
 
         readonly List<Unity.Cinemachine.CinemachineCamera> _farVcams = new List<Unity.Cinemachine.CinemachineCamera>();
         readonly List<float> _farVcamOriginals = new List<float>();
+        readonly List<float> _nearOriginals = new List<float>();
+        readonly List<float> _nearVcamOriginals = new List<float>();
 
         void RestoreFarClip()
         {
             for (int i = 0; i < _farCameras.Count; i++)
-                if (_farCameras[i] != null) _farCameras[i].farClipPlane = _farOriginals[i];
+                if (_farCameras[i] != null)
+                {
+                    _farCameras[i].farClipPlane = _farOriginals[i];
+                    _farCameras[i].nearClipPlane = _nearOriginals[i];
+                }
             _farCameras.Clear();
             _farOriginals.Clear();
+            _nearOriginals.Clear();
             for (int i = 0; i < _farVcams.Count; i++)
             {
                 if (_farVcams[i] == null) continue;
                 var lens = _farVcams[i].Lens;
                 lens.FarClipPlane = _farVcamOriginals[i];
+                lens.NearClipPlane = _nearVcamOriginals[i];
                 _farVcams[i].Lens = lens;
             }
             _farVcams.Clear();
             _farVcamOriginals.Clear();
+            _nearVcamOriginals.Clear();
         }
 
         // ---------------------------------------------------------------- atmosphere while curled
