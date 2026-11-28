@@ -18,3 +18,4 @@ float  _CloudScaleWithSize; // 0 = fixed lengths (m), 1 = lengths grow with the 
 float  _CloudReferenceSize; // cube edge (m) at which the lengths are exactly as set
 float  _CloudShadeRounding; // how round the cube is for shading (0 = its own corners, 1 = a sphere): soft light around edges
 float  _CloudSeed;          // per cube (MaterialPropertyBlock)
+float  _CloudFade;          // per cluster (MaterialPropertyBlock, always set by CloudCluster): 1 = seen, 0 = faded out at the draw distance

@@ -63,6 +63,8 @@ namespace Soledad
         public float lodDistance = 2500f;
         [Tooltip("Beyond this distance (m) the cloud and its shadow are not drawn (hidden in the fog).")]
         public float drawDistance = 14000f;
+        [Tooltip("Over this distance (m) before the draw distance the cloud fades out, so it comes in softly instead of popping on the horizon.")]
+        public float fadeDistance = 4000f;
         [Tooltip("Fraction of the material's Samples kept at the draw distance.")]
         [Range(0.1f, 1f)] public float farSamples = 0.35f;
 
@@ -80,6 +82,7 @@ namespace Soledad
         static readonly int DensityId = Shader.PropertyToID("_CloudDensity");
         static readonly int SoftnessId = Shader.PropertyToID("_CloudSoftness");
         static readonly int StepsId = Shader.PropertyToID("_CloudSteps");
+        static readonly int FadeId = Shader.PropertyToID("_CloudFade");
 
         readonly List<Rigidbody> _bodies = new List<Rigidbody>();
         readonly List<Vector3> _velocities = new List<Vector3>();
@@ -144,6 +147,7 @@ namespace Soledad
 
             // Far clouds: fewer samples, then not drawn at all (nor their shadow) beyond the draw distance
             float steps = cloudMaterial != null && cloudMaterial.HasProperty(StepsId) ? cloudMaterial.GetFloat(StepsId) : 40f;
+            float fade = 1f;
             if (Application.isPlaying)
             {
                 Transform viewer = Viewer();
@@ -153,6 +157,9 @@ namespace Soledad
                     Show(distance < drawDistance);
                     float far = Mathf.Clamp01((distance - lodDistance) / Mathf.Max(drawDistance - lodDistance, 1f));
                     steps = Mathf.Max(4f, steps * Mathf.Lerp(1f, farSamples, far));
+                    // Fully seen until fadeDistance before the draw distance, then fading out to nothing at it
+                    float t = Mathf.Clamp01((drawDistance - distance) / Mathf.Max(fadeDistance, 1f));
+                    fade = t * t * (3f - 2f * t);
                 }
             }
             if (!_shown) return;
@@ -161,6 +168,7 @@ namespace Soledad
             _volumeBlock ??= new MaterialPropertyBlock();
             _volumeBlock.Clear();
             _volumeBlock.SetFloat(StepsId, steps);
+            _volumeBlock.SetFloat(FadeId, fade);
             if (overrideLook)
             {
                 _volumeBlock.SetFloat(FluffId, fluff);

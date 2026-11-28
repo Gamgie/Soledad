@@ -225,6 +225,10 @@ void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs p
     surfaceData.tangentWS = float3(1.0, 0.0, 0.0);
 #endif
 
+    // Faded towards the draw distance, so a far cluster comes in softly instead of popping on the horizon
+    alpha *= saturate(_CloudFade);
+    emissive *= saturate(_CloudFade);
+
     float4 texCoord1 = 0.0, texCoord2 = 0.0;
     InitBuiltinData(posInput, alpha, surfaceData.normalWS, -surfaceData.normalWS, texCoord1, texCoord2, builtinData);
     builtinData.emissiveColor = emissive;

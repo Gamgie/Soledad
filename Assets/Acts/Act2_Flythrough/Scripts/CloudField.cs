@@ -63,6 +63,8 @@ namespace Soledad
         public float lodDistance = 2500f;
         [Tooltip("Beyond this distance (m) a cloud and its shadow are not drawn.")]
         public float drawDistance = 14000f;
+        [Tooltip("Over this distance (m) before the draw distance a cloud fades out, so it comes in softly instead of popping on the horizon.")]
+        public float fadeDistance = 4000f;
         [Range(0.1f, 1f)] public float farSamples = 0.35f;
 
         [Header("References")]
@@ -195,6 +197,7 @@ namespace Soledad
 
             c.lodDistance = lodDistance;
             c.drawDistance = drawDistance;
+            c.fadeDistance = fadeDistance;
             c.farSamples = farSamples;
             c.cloudMaterial = cloudMaterial;
             c.volumeShader = volumeShader;
