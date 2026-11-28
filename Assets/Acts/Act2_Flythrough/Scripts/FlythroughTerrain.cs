@@ -486,18 +486,15 @@ namespace Soledad
         UnityEngine.Rendering.HighDefinition.Fog _fog;
         UnityEngine.Rendering.HighDefinition.VolumetricClouds _clouds;
 
-        // Play mode only, and only while curled: the act Volume then uses a copy of its profile with thinner fog and
-        // fainter clouds. Flat, the real profile is back, so editing it in Play mode shows at once.
+        // Play mode: the act Volume uses a copy of its profile for the whole session, with thinner fog and fainter
+        // clouds while curled (the same values as the real profile while flat). The copy is never swapped in and out:
+        // swapping it in when the curl started rendered one frame of thick haze (frame 2592 of the 2026-11-27 render,
+        // read as a frame drop). Edit the fog's mean free path and the clouds' density on the real profile in Play
+        // mode: they are copied every frame; other edits show after Play.
         void UpdateAtmosphere()
         {
             if (!Application.isPlaying || actVolume == null) return;
-            float curl = math.max(curlLateral, curlForward);
-            bool clearing = curl > 0f && (curlClearsFog > 0f || curlClearsClouds > 0f);
-            if (!clearing)
-            {
-                RestoreAtmosphere();
-                return;
-            }
+            float curl = math.max(math.max(curlLateral, curlForward), 0f);
             if (_runtimeProfile == null)
             {
                 _sharedProfile = actVolume.sharedProfile;

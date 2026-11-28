@@ -195,7 +195,10 @@ sky, no bloom, fog off.
   (`curlLateral` rolls the ground into a tube around the flight direction, `curlForward` lifts it ahead into a wall;
   in Play mode the act works on a copy of its Volume profile to thin the fog and fade the volumetric clouds while
   curled, `curlClearsFog` / `curlClearsClouds`, fully cleared at `curlClearRamp`; a deep copy of its components: a plain
-  Instantiate of a VolumeProfile shares them and would edit the real profile);
+  Instantiate of a VolumeProfile shares them and would edit the real profile. The copy is used for the whole Play
+  session, never swapped in when the curl starts: the swap rendered one frame of thick haze, a "frame drop" at 43.2 s
+  in the 2026-11-27 render (frame 2592). Only the fog's mean free path and the clouds' density follow edits of the real
+  profile in Play mode);
   Sand placement: vertex colour alpha = dune level (0 trough, 1 crest)
   and material settings Ripple Coverage, Height Preference, Slope Limit, Patchiness, Border Sharpness;
   `_Smoothness` and other Lit names are taken by `LitProperties.hlsl`, so terrain properties are plain uniforms with
