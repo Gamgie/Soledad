@@ -136,19 +136,28 @@ void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs p
 
     float2 t = CC_RayBox(camera, dirBox, 0.5 * scale);
     t.x = max(t.x, 0.0);
+    // The march stops at the opaque scene: the box's front face passes the depth test, but the cloud behind an object
+    // inside or beyond the box was drawn over it (the tops of the monoliths, ~1 km tall, reach the clouds' altitude and
+    // were cut by cloud-shaped dark patches, seen against the sky)
+    float sceneDepth = LinearEyeDepth(LoadCameraDepth(posInput.positionSS.xy), _ZBufferParams);
+    float sceneT = sceneDepth / max(dot(dirWS, GetViewForwardDir()), 1e-4);
+    t.y = min(t.y, sceneT);
     t.y = max(t.y, t.x);
 
     // Steps inside the cloud are a fraction of the edge softness; empty space between and around the cubes is
     // skipped in one go (distance to the nearest cube). Samples = the most steps a pixel can take.
+    // No random jitter anywhere: the march only brackets where the cloud starts, then everything that is seen (surface,
+    // opacity, thickness) is measured from that point found exactly, so neighbouring pixels agree. A jitter that changed
+    // per pixel and per frame was left to TAA to average out, but TAA cannot follow this transparent (no depth, no motion
+    // vectors) while the camera flies, so the jitter stayed on screen as grain on the clouds' faces and edges.
     int maxSteps = clamp((int)_CloudSteps, 4, 128);
     float k0 = _CubeHalf[0].w;
     float dt = max(_CloudSoftness * k0 * 0.75, 1.0);
-    float jitter = CC_Hash(float3(posInput.positionSS.xy, 0.37));
-    float transmittance = 1.0, thickness = 0.0;
-    float found = 0.0;
-    float travel = t.x + jitter * dt;
+    float transmittance = 1.0;
+    float found = 0.0, crossed = 0.0;
+    float travel = t.x;
     float previous = t.x;
-    float2 bracket = float2(t.y, t.y);       // the cloud becomes visible between these two distances along the ray
+    float2 bracket = float2(t.y, t.y);       // the cloud starts between these two distances along the ray
     [loop]
     for (int i = 0; i < maxSteps; i++)
     {
