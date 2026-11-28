@@ -394,7 +394,22 @@ sky, no bloom, fog off.
   hidden 61.5 s, Sun turned and whitened for Bogota 61.5 to 70 s, sky over Bogota 62 s, turn up 63 s (6.95 km, the
   turn's start; top at 7.68 km, 65.4 s), faster again over Bogota (80 s at 14.2 km), then the dive into the lake
   (16:9: Gamgie's keys from 103 s, offset.y 300 to 150 then 0, progress 0.990 at 109.1 s, 1 at 122.95 s; the Dome
-  clip still ends at 120 s with the old ending). Building the flight path changes its length, so the progress keys must be checked after a Build or
+  clip still ends at 120 s with the old ending). `bank` is keyed in both camera groups: 17 up to 66 s, down to 4 by
+  75 s (the bank was set for the desert's 60 m/s; at ~1200 m/s over Bogota the same curves turn 30 degrees/s and
+  rolled the camera to its 60 degree limit). Tangent lengths (2026-11-27, after Gamgie reshaped the end by hand):
+  at ~1200 m/s a knot whose tangents are far from a third of its curves' lengths jolts the camera (a curvature
+  spike, and Unity's distance-to-t table is off where the parametrization bunches up: steps of 18.9 / 21 / 19.1 m
+  instead of 20). Knots 3, 5, 11 and 68 to 74 were set to Continuous with each tangent a third of its curve (positions
+  and directions kept; knot 75, the dive, untouched), knot 69's tangent turned 4 degrees to remove a 6 degree jog left
+  before the right turn at 93 s, and the progress keys moved to the same place relative to the knots. Knots 51 to 69
+  (19.5 to 25.5 km, 86.3 to 92 s) were ground + 300 m (279 to 358 m in Bogota space) and the camera rose and fell
+  with the relief: levelled at 317 m with flat tangents (ground there at most 58 m). Same before it: knots 36 to 46
+  (15 to 18 km, 81.4 to 84.9 s) at 360 m (ground at most 80 m). Their ends are eased (quintic: slope and curvature
+  zero where they meet the flat part, so the camera, which follows the path's pitch, never levels off with a jolt): the
+  climb from knot 30 (6 degrees) into the plateau at knot 36, and the descent from knot 46 to 317 m at knot 52 (2.6
+  degrees at most). A plain linear ramp ending on a flat knot jumped the camera up at 86.3 s. Knot 71's tangent turned 7 degrees
+  right and 3 up: the turn went from 3 to 22 degrees/s at the knot (a kick right at 96 s), now 16 to 10 degrees/s. When editing
+  the path, keep tangents near a third of their curve. Building the flight path changes its length, so the progress keys must be checked after a Build or
   a Bake. When Bogota moved to the valley's start they were remapped by hand: before the turn, distances scaled to
   the shorter way (x 0.64, the film used to start 1.8 km before a 9 km approach in the valley), after it, the same
   distance past the turn (also when `routeTrim` went to 8 km: the flight over Bogota starts 8 km further along the
