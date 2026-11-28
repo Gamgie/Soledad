@@ -18,6 +18,8 @@ namespace Soledad
         public bool BogotaSequence_showLandscape = true;
         [Tooltip("The sky over Bogota (Play mode): switches on skyVolume, whose planet is turned so the sky's zenith is the map's up. A cut, not a blend: key it while Bogota's face fills the frame (no sky in view).")]
         public bool BogotaSequence_bogotaSky = false;
+        [Tooltip("Bogota appearing (Play mode, with showBogota on): 0 = not there, 1 = whole. The map dissolves in from revealCentre outwards, its front torn by noise, with a glowing rim; the front reaches revealRange at 1, then the rest of the map shows at once.")]
+        [Range(0f, 1f)] public float BogotaSequence_bogotaReveal = 1f;
 
         [Header("FlythroughTerrain")]
         [Tooltip("Camera Direction: the world curls along the direction the camera moves in (smoothed). Axis: along a fixed direction of the landscape (curlAxis).")]
@@ -41,6 +43,7 @@ namespace Soledad
         bool _last_BogotaSequence_showBogota;
         bool _last_BogotaSequence_showLandscape;
         bool _last_BogotaSequence_bogotaSky;
+        float _last_BogotaSequence_bogotaReveal;
         global::Soledad.CurlFrame _last_FlythroughTerrain_curlFrame;
         float _last_FlythroughTerrain_curlAxis;
         float _last_FlythroughTerrain_curlLateral;
@@ -70,6 +73,7 @@ namespace Soledad
                 _target0.showBogota = BogotaSequence_showBogota;
                 _target0.showLandscape = BogotaSequence_showLandscape;
                 _target0.bogotaSky = BogotaSequence_bogotaSky;
+                _target0.bogotaReveal = BogotaSequence_bogotaReveal;
             }
             if (_target1 != null)
             {
@@ -88,6 +92,7 @@ namespace Soledad
             _last_BogotaSequence_showBogota = BogotaSequence_showBogota;
             _last_BogotaSequence_showLandscape = BogotaSequence_showLandscape;
             _last_BogotaSequence_bogotaSky = BogotaSequence_bogotaSky;
+            _last_BogotaSequence_bogotaReveal = BogotaSequence_bogotaReveal;
             _last_FlythroughTerrain_curlFrame = FlythroughTerrain_curlFrame;
             _last_FlythroughTerrain_curlAxis = FlythroughTerrain_curlAxis;
             _last_FlythroughTerrain_curlLateral = FlythroughTerrain_curlLateral;
@@ -116,6 +121,12 @@ namespace Soledad
             {
                 _last_BogotaSequence_bogotaSky = BogotaSequence_bogotaSky;
                 if (_target0 != null) _target0.bogotaSky = BogotaSequence_bogotaSky;
+                changed = true;
+            }
+            if (BogotaSequence_bogotaReveal != _last_BogotaSequence_bogotaReveal)
+            {
+                _last_BogotaSequence_bogotaReveal = BogotaSequence_bogotaReveal;
+                if (_target0 != null) _target0.bogotaReveal = BogotaSequence_bogotaReveal;
                 changed = true;
             }
             if (FlythroughTerrain_curlFrame != _last_FlythroughTerrain_curlFrame)

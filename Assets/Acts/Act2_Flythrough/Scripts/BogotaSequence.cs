@@ -32,6 +32,8 @@ namespace Soledad
         public bool showLandscape = true;
         [Animate] [Tooltip("The sky over Bogota (Play mode): switches on skyVolume, whose planet is turned so the sky's zenith is the map's up. A cut, not a blend: key it while Bogota's face fills the frame (no sky in view).")]
         public bool bogotaSky = false;
+        [Animate] [Range(0f, 1f)] [Tooltip("Bogota appearing (Play mode, with showBogota on): 0 = not there, 1 = whole. The map dissolves in from revealCentre outwards, its front torn by noise, with a glowing rim; the front reaches revealRange at 1, then the rest of the map shows at once.")]
+        public float bogotaReveal = 1f;
 
         [Header("References")]
         [OSCQuery.DoNotExpose] public FlythroughTerrain terrain;
@@ -82,20 +84,70 @@ namespace Soledad
         [Tooltip("Global Volume under Bogota, switched on by bogotaSky (Play mode; keep it inactive in the scene): the Physically Based Sky's planet is turned so its zenith is Bogota's up.")]
         [OSCQuery.DoNotExpose] public UnityEngine.Rendering.Volume skyVolume;
 
+        [Header("Reveal (Soledad/BogotaReveal on Bogota's map, driven by bogotaReveal)")]
+        [Tooltip("Where the map starts to appear (only its position on the map counts). None = Bogota's origin.")]
+        [OSCQuery.DoNotExpose] public Transform revealCentre;
+        [Tooltip("Distance (m, on the map) the front has reached at bogotaReveal 1. Beyond it the map shows at once when bogotaReveal reaches 1: keep it larger than what is in view.")]
+        public float revealRange = 6000f;
+        [Tooltip("Width (m) of the band where the front is torn: islands of map show up to about half of it ahead of the front.")]
+        public float revealBand = 700f;
+        [Tooltip("Size (m) of the noise that tears the front.")]
+        public float revealNoiseSize = 450f;
+        [Range(0f, 4f)] [Tooltip("How torn the front is: 0 = a clean circle.")]
+        public float revealTearing = 1.6f;
+        [Range(0.01f, 1f)] [Tooltip("Width of the glowing rim along the front (fraction of revealBand).")]
+        public float revealGlowWidth = 0.12f;
+        [ColorUsage(false, true)] [Tooltip("Colour of the glowing rim (HDR, the same whatever the exposure).")]
+        public Color revealGlowColor = new Color(6f, 2.6f, 0.6f);
+        [Range(0f, 1f)] [Tooltip("How dark the map is burnt just behind the rim.")]
+        public float revealBurn = 0.75f;
+
+        static readonly int WorldToLocalId = Shader.PropertyToID("_BogotaWorldToLocal");
+        static readonly int RevealId = Shader.PropertyToID("_BogotaReveal");
+        static readonly int RevealNoiseId = Shader.PropertyToID("_BogotaRevealNoise");
+        static readonly int RevealGlowId = Shader.PropertyToID("_BogotaRevealGlow");
+
         int _applied = -1;
 
         void Update()
         {
             int state = (showBogota ? 1 : 0) | (showLandscape ? 2 : 0) | (bogotaSky ? 4 : 0);
-            if (state == _applied) return;
-            _applied = state;
-            Apply(showBogota, showLandscape, bogotaSky);
+            if (state != _applied)
+            {
+                _applied = state;
+                Apply(showBogota, showLandscape, bogotaSky);
+            }
+            ApplyReveal();
         }
 
         void OnDisable()
         {
             if (_applied >= 0) Apply(true, true, false);
             _applied = -1;
+            Shader.SetGlobalVector(RevealNoiseId, Vector4.zero);   // no reveal: the whole map, as in the Editor
+        }
+
+        // Globals of Soledad/BogotaReveal. The radius of the front runs from just short of the centre (nothing shows,
+        // even where the noise pushes the front ahead) to revealRange past the rim and the burnt band; at 1 the reveal
+        // is off, so the whole map shows and the shader skips the noise.
+        void ApplyReveal()
+        {
+            if (bogota == null || bogotaReveal >= 1f)
+            {
+                Shader.SetGlobalVector(RevealNoiseId, Vector4.zero);
+                return;
+            }
+            Transform map = bogota.transform;
+            Vector3 centre = map.InverseTransformPoint(revealCentre != null ? revealCentre.position : map.position);
+            float band = Mathf.Max(revealBand, 1f);
+            float ahead = band * (revealTearing * 0.5f + 0.01f);
+            float behind = band * (revealTearing * 0.5f + revealGlowWidth * 4f + 0.01f);
+            float radius = Mathf.Lerp(-ahead, Mathf.Max(revealRange, 0f) + behind, Mathf.Clamp01(bogotaReveal));
+
+            Shader.SetGlobalMatrix(WorldToLocalId, map.worldToLocalMatrix);
+            Shader.SetGlobalVector(RevealId, new Vector4(centre.x, centre.z, radius, band));
+            Shader.SetGlobalVector(RevealNoiseId, new Vector4(1f / Mathf.Max(revealNoiseSize, 1f), revealTearing, revealGlowWidth, 1f));
+            Shader.SetGlobalVector(RevealGlowId, new Vector4(revealGlowColor.r, revealGlowColor.g, revealGlowColor.b, revealBurn));
         }
 
         void Apply(bool bogotaVisible, bool landscapeVisible, bool sky)

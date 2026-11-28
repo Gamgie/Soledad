@@ -275,17 +275,49 @@ sky, no bloom, fog off.
   seed 1, spread 2026-11-26 = the layout generated before). A `Monolith` is a standing triangular prism
   with rounded edges (mesh generated on the child `Slab`, Default layer: the Dome Creator cameras only render
   Default, TransparentFX, Ignore Raycast and Water, so never put act content on another layer), blurred mirror finish (`Monolith.mat`,
-  HDRP Lit metallic), growing (Scale or Rise) by depth ahead of the camera along the route (Z), from `growStart` to `growEnd`, staying grown (`keepGrown`). Its own realtime
+  HDRP Lit metallic). Its reflection probe (child `Reflection`) sits at the middle of the slab, at the
+  centre of the prism's bounds (z = depth / 6 from the triangle's centroid, still inside it), and its box (infinite
+  projection) covers the whole of it whatever the growth (a box centred on the centroid stopped short of the apex,
+  whose edge reflected the sky or black up close; HDRP's influence box ignores the transform's scale, so the box is
+  multiplied by the probe's lossy scale: a monolith scaled by hand keeps a box that covers it) (a probe moving up with the growth captured its cube faces from different
+  heights: a glitch on the way in, and a frozen one kept a capture taken from the ground); with Scale it is refreshed only once
+  fully grown (a fresh capture then, live if near; with Rise, below), and captures out to `captureFar` (30 km; the probe's own default 1 km
+  showed sky instead of the desert in the reflection). `MonolithField.reflectionProbes` 16 = every monolith keeps a
+  probe (frozen when not among the `liveReflections` nearest): turning a probe on swapped a sky-only reflection for the
+  landscape. Growing (**Rise** since 2026-11-27: up out of the ground at full size; Scale shrank the reflection with the
+  slab, which showed) by depth ahead of the camera along the route (Z), from `growStart` to `growEnd`, staying grown (`keepGrown`),
+  except across a cut: a camera move of more than 1.5 km in one frame (`Monolith.CutDistance`) forgets what was
+  reached (on Play the camera first sits a frame wherever `Spline Camera target` was left in the scene, often km
+  ahead, which grew and kept grown the monoliths behind it before the Timeline put it at the start; also a jump back
+  in the Timeline). Its own realtime
   reflection probe (128, time-sliced, inside the prism so its own faces are culled) is live only for the `liveReflections` nearest grown
   monoliths (about 1 ms GPU each), frozen for the next ones up to `reflectionProbes`, and switched off beyond (they
   reflect the sky): HDRP draws at most 32 reflection probes on screen (Maximum Cube Reflection Probes on Screen in
-  the HDRP assets).
+  the HDRP assets). Live probes render all six faces every frame (`MonolithField.timeSlicing` off; sliced, the faces
+  came from six different frames: seams when the camera moved, and the top edge, mostly the upward face, flickered
+  against the sides while the curl rolled the landscape); never sliced while Unity Recorder renders
+  (`Monolith.Recording`: `Time.captureDeltaTime` set), when `recordingLiveReflections` (8) are live instead of
+  `liveReflections`. Rising, the probe stays at the middle of the part out of the ground (always inside the slab) and
+  can be live. While curled, the monoliths stay standing (only the ground curls): they float inside the tube and
+  reflect its unlit far side, which is dark.
   Bogota: `World/Bogota` (prefab `Bogota/Bogota.prefab`, the GIS terrain of Bogota_GIS: zoom-18 strip and zoom-15
   surroundings, local x east, y height, z north, metres from San Rafael lake). Film ending (`Act2_Flythrough/Bogota
   Sequence`, `BogotaSequence`): Bogota stands upright across the route at the end of the drawn part, its map facing
   the camera, so it closes the hole of the curled tube. Three `[Animate]` switches, Play mode only (in the Editor
-  everything stays visible, and the sky stays the world's): `showBogota` (off by default: hidden in the show),
-  `showLandscape` (terrain, clouds, monoliths, Valley) and `bogotaSky` (the sky over Bogota, below). **One flight path** (`World/Flight Path`, 41.3 km): its first `drawnKnots` knots (32, every
+  everything stays visible, and the sky stays the world's; to see Bogota
+  while working, the Hide Desert Terrain button of its Inspector hides the terrain tiles outside Play mode, for the
+  Editor session only, never saved): `showBogota` (off by default: hidden in the show),
+  `showLandscape` (terrain, clouds, monoliths, Valley) and `bogotaSky` (the sky over Bogota, below).
+  **Bogota appearing** (`bogotaReveal`, `[Animate]`, 0 = not there .. 1 = whole, Play mode, with `showBogota` on): the
+  100 map materials use `Soledad/BogotaReveal` (`Shaders/BogotaReveal*`, HDRP's Lit passes, the chunk's base colour map
+  and smoothness like the HDRP Lit it replaced, double sided, alpha tested in every pass so the hidden part casts no
+  shadow): the map dissolves in from `revealCentre` (`Bogota/Reveal Centre`, where the camera's axis meets the map at
+  frame 3176, behind the monolith passing then) outwards, its front torn by noise (`revealBand`, `revealNoiseSize`,
+  `revealTearing`), a glowing rim (`revealGlowColor`, `revealGlowWidth`, exposure independent) and the map burnt just
+  behind it (`revealBurn`); the front reaches `revealRange` (6 km) at 1, then the rest shows at once. Globals pushed by
+  `BogotaSequence` every frame (`_BogotaReveal*`); at their defaults (Editor) the whole map shows. Concept and test
+  frames: 0.05 the tube's hole still empty, 0.2 Bogota coming out from behind the monolith, 0.45 filling the hole.
+  **One flight path** (`World/Flight Path`, 41.3 km): its first `drawnKnots` knots (32, every
   200 m, 6.1 km of desert, between low hills from 2.6 km) are the **drawn part**, edited by hand, ending at the hand-off; the
   knots after them are the **generated tail**: straight on for `approachLength` (750 m), a quarter turn up onto
   Bogota (`climbRadius` 500 m; the knots' up turns from the sky to Bogota's face), then the z18 route to the lake
