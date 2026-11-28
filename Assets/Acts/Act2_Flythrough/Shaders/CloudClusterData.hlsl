@@ -165,31 +165,57 @@ void GetSurfaceAndBuiltinData(FragInputs input, float3 V, inout PositionInputs p
         float3 p = cameraWS + dirWS * travel;
         float gap;
         float density = CC_Density(p, gap);
-        // Empty space is skipped, minus a per-pixel jitter: otherwise every pixel lands on the cloud at the same
-        // distances and the steps show as contour lines
-        float stride = density > 0.0 ? dt : max(dt, gap - jitter * dt);
+        float stride = density > 0.0 ? dt : max(dt, gap);
         float step = exp(-density * _CloudDensity * stride);
         float first = (found < 0.5 && 1.0 - transmittance * step > 0.03) ? 1.0 : 0.0;
         bracket = lerp(bracket, float2(previous, travel), first);
         found = max(found, first);
+        // Bracketed where the density first crosses the surface threshold, whatever the opacity reached by then
+        float cross = (crossed < 0.5 && density > 0.12) ? 1.0 : 0.0;
+        bracket = lerp(bracket, float2(previous, travel), cross);
+        crossed = max(crossed, cross);
         transmittance *= step;
-        thickness += density * stride;
         previous = travel;
         travel += stride;
     }
     clip(found - 0.5);
-    alpha = 1.0 - transmittance;
 
-    // The surface, found exactly inside its step (bisection on the density), so its shading is smooth instead of
-    // stepping in terraces
+    // Where the cloud starts, found exactly inside its step (bisection on the density), so it varies smoothly from
+    // pixel to pixel: the dense surface (0.12), or on the thin fringes that never reach it, where it turns visible (0.02)
+    float threshold = crossed > 0.5 ? 0.12 : 0.02;
     [loop]
-    for (int b = 0; b < 6; b++)
+    for (int b = 0; b < 8; b++)
     {
         float middle = 0.5 * (bracket.x + bracket.y);
-        float inside = CC_Density(cameraWS + dirWS * middle) > 0.12 ? 1.0 : 0.0;
+        float inside = CC_Density(cameraWS + dirWS * middle) > threshold ? 1.0 : 0.0;
         bracket = lerp(float2(middle, bracket.y), float2(bracket.x, middle), inside);
     }
-    float3 surface = cameraWS + dirWS * (0.5 * (bracket.x + bracket.y));
+    float surfaceT = 0.5 * (bracket.x + bracket.y);
+    float3 surface = cameraWS + dirWS * surfaceT;
+
+    // Opacity and thickness integrated from there at fixed steps: the same for neighbouring pixels, so the glow, the
+    // occlusion and the fringes' opacity do not grain
+    float thickness = 0.0;
+    {
+        float trans = 1.0;
+        [loop]
+        // Always the same number of steps, the last one weighted by how much of it lies before the end of the ray: a
+        // march cut off once opaque, or at the end of the box, took a whole step more or less from one pixel to the next,
+        // and the thickness (occlusion, glow) changed in terraces that showed as stripes and steps on the faces
+        for (int j = 0; j < 24; j++)
+        {
+            float tj = surfaceT + (j + 0.5) * dt;
+            float w = saturate((t.y - surfaceT) / dt - j);
+            float dj = CC_Density(cameraWS + dirWS * tj) * w;
+            trans *= exp(-dj * _CloudDensity * dt);
+            thickness += dj * dt;
+        }
+        alpha = 1.0 - trans;
+        // The look was set with a thickness counted until the cloud turned opaque (1 % transmittance); the same limit,
+        // reached smoothly: cut off at it, the thickness stepped with the march and drew contour lines on the faces
+        float cap = 4.6 / max(_CloudDensity, 1e-4);
+        thickness = cap * (1.0 - exp(-thickness / cap));
+    }
 
     // Normal: density gradient measured wide, blended with the nearest cube's (very round) box normal
     int nearest;
